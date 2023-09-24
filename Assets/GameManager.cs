@@ -1,0 +1,61 @@
+using System.Diagnostics;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance;
+    public LaserShot laserPrefab;
+
+    private GameObject playerShips = null;
+    private List<GameObject> enemyShips = new List<GameObject>();
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    public void RegisterPlayerShip(GameObject playerShip)
+    {
+        playerShips=playerShip;
+    }
+
+    public void RegisterEnemyShip(GameObject enemyShip)
+    {
+        enemyShips.Add(enemyShip);
+    }
+
+    public void RemovePlayerShip(GameObject playerShip)
+    {
+        playerShips=null;
+    }
+
+    public void RemoveEnemyShip(GameObject enemyShip)
+    {
+        enemyShips.Remove(enemyShip);
+    }
+
+    public void FireLaserAtTarget(Vector3 targetPosition)
+    {
+        if (playerShips != null)
+        {
+            // Calculate the direction to the target position.
+            Vector3 direction = (targetPosition - playerShips.transform.position).normalized;
+            // Instantiate the laser at the spaceship's position.
+            LaserShot laser = Instantiate(laserPrefab, playerShips.transform.position, Quaternion.identity);
+            
+            // Rotate the laser to face the target direction.
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            laser.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+            laser.StartMoving(targetPosition);
+        }
+    }
+}
