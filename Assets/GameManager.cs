@@ -7,6 +7,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
     public LaserShot laserPrefab;
+    public enum TurnTypes {Player, Enemy, Resolve}
+    public TurnTypes turn = TurnTypes.Player;
 
     private GameObject playerShips = null;
     private List<GameObject> enemyShips = new List<GameObject>();
@@ -58,4 +60,23 @@ public class GameManager : MonoBehaviour
             laser.StartMoving(targetPosition);
         }
     }
+
+    public void FinishTurn()
+    {
+        if (turn == TurnTypes.Player)
+        {
+            turn = TurnTypes.Enemy;
+        }
+        else if (turn == TurnTypes.Enemy)
+        {
+            turn = TurnTypes.Resolve;
+        }
+        else if (turn == TurnTypes.Resolve)
+        {
+            turn = TurnTypes.Player;
+        }
+        UnityEngine.Debug.Log("Turn is now:" + turn.ToString());
+    }
+
+
 }
