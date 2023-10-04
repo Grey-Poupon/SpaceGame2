@@ -9,7 +9,7 @@ public class LaserShot : MonoBehaviour
     private Vector3 targetPosition; // The position the laser should move towards.
     public GameObject explosion;
     private float start;
-
+    public Room target;
     private bool isMoving = false; // Flag to track if the laser is moving.
 
     private void Start()
@@ -44,6 +44,9 @@ public class LaserShot : MonoBehaviour
 
                 // Trigger the animation when the laser arrives.
                 Instantiate(explosion, gameObject.transform.position, Quaternion.identity);
+
+                // Tell the game manager you hit
+                GameManager.Instance.RegisterAttack(target, "Laser");
                 
                 // Destroy the laser
                 Destroy(gameObject);

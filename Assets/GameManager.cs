@@ -45,7 +45,7 @@ public class GameManager : MonoBehaviour
         enemyShips.Remove(enemyShip);
     }
 
-    public void FireLaserAtTarget(Vector3 targetPosition)
+    public void FireLaserAtTarget(Vector3 targetPosition, Room target)
     {
         if (playerShips != null)
         {
@@ -58,6 +58,9 @@ public class GameManager : MonoBehaviour
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             laser.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
             laser.StartMoving(targetPosition);
+
+            // Pass the room/target so it can call GM to do damage when it hits
+            laser.target = target;
         }
     }
 
@@ -76,6 +79,14 @@ public class GameManager : MonoBehaviour
             turn = TurnTypes.Player;
         }
         UnityEngine.Debug.Log("Turn is now:" + turn.ToString());
+    }
+
+    public void RegisterAttack(Room RoomHit,string AttackType)
+    {
+        if (AttackType == "Laser")
+        {
+            RoomHit.takeDamage(33f);
+        }
     }
 
 
