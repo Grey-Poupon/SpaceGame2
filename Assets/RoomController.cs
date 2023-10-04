@@ -22,7 +22,14 @@ public class RoomController : MonoBehaviour
     }
     void OnMouseDown()
     {
-        GameManager.Instance.FireLaserAtTarget(Camera.main.ScreenToWorldPoint(Input.mousePosition), room);
+        if (GameManager.Instance.IsActionSelected)
+        {
+            GameManager.Instance.FireLaserAtTarget(Camera.main.ScreenToWorldPoint(Input.mousePosition), room);
+        }
+        else
+        {
+            UnityEngine.Debug.Log("Press 1 to select <Attack 1>");
+        }
     }
 }
 

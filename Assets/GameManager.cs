@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,8 +11,10 @@ public class GameManager : MonoBehaviour
     public enum TurnTypes {Player, Enemy, Resolve}
     public TurnTypes turn = TurnTypes.Player;
 
-    private GameObject playerShips = null;
+    private GameObject playerShip = null;
     private List<GameObject> enemyShips = new List<GameObject>();
+
+    public Boolean IsActionSelected = false;
 
     private void Awake()
     {
@@ -25,9 +28,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void update()
+    {
+        if (IsActionSelected)
+        {
+            UnityEngine.Debug.DrawLine(playerShip.transform.position, Camera.main.ScreenToWorldPoint(Input.mousePosition), Color.red);
+        }
+    }
+
     public void RegisterPlayerShip(GameObject playerShip)
     {
-        playerShips=playerShip;
+        this.playerShip= playerShip;
     }
 
     public void RegisterEnemyShip(GameObject enemyShip)
@@ -37,7 +48,7 @@ public class GameManager : MonoBehaviour
 
     public void RemovePlayerShip(GameObject playerShip)
     {
-        playerShips=null;
+        this.playerShip=null;
     }
 
     public void RemoveEnemyShip(GameObject enemyShip)
@@ -47,12 +58,12 @@ public class GameManager : MonoBehaviour
 
     public void FireLaserAtTarget(Vector3 targetPosition, Room target)
     {
-        if (playerShips != null)
+        if (playerShip != null)
         {
             // Calculate the direction to the target position.
-            Vector3 direction = (targetPosition - playerShips.transform.position).normalized;
+            Vector3 direction = (targetPosition - playerShip.transform.position).normalized;
             // Instantiate the laser at the spaceship's position.
-            LaserShot laser = Instantiate(laserPrefab, playerShips.transform.position, Quaternion.identity);
+            LaserShot laser = Instantiate(laserPrefab, playerShip.transform.position, Quaternion.identity);
             
             // Rotate the laser to face the target direction.
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
@@ -61,6 +72,9 @@ public class GameManager : MonoBehaviour
 
             // Pass the room/target so it can call GM to do damage when it hits
             laser.target = target;
+
+            // Finish Action
+            IsActionSelected = false;
         }
     }
 
@@ -89,5 +103,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
+    public void Action1()
+    {
+        if (turn == TurnTypes.Player)
+        {
+            IsActionSelected = true;
+        }
+    }
 }
