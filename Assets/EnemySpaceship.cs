@@ -2,12 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemySpaceshipController : MonoBehaviour
+public class EnemySpaceship : SpaceShip
 {
-    // Start is called before the first frame update
-    void Start()
+
+    void Awake()
     {
-        GameManager.Instance.RegisterEnemyShip(gameObject);
+        GameManager.Instance.RegisterEnemyShip(this);
     }
 
     // Update is called once per frame
@@ -18,6 +18,6 @@ public class EnemySpaceshipController : MonoBehaviour
     private void OnDestroy()
     {
         // Remove this player ship from the GameManager when destroyed.
-        GameManager.Instance.RegisterEnemyShip(gameObject);
+        GameManager.Instance.RemoveEnemyShip();
     }
 }

@@ -40,5 +40,18 @@ public class KeyboardController : MonoBehaviour
             }
             
         }
+        else if (e.type == EventType.MouseDown && e.button == 0) // 0 corresponds to the left mouse button
+        {
+            Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(mousePosition, Vector2.zero);
+
+            // Perform raycast
+            if (hit.collider != null &&hit.collider.GetComponent<RoomController>() != null)
+            {
+                return;
+            }
+            GameManager.Instance.ReleaseCard();
+        }  
+        
     }
 }

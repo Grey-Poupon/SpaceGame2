@@ -42,11 +42,15 @@ public class LaserShot : MonoBehaviour
                 // If the laser is close to the target position, stop moving.
                 isMoving = false;
 
+                // Modify the z position
+                Vector3 newPosition = gameObject.transform.position;
+                newPosition.z = -1f; 
+
                 // Trigger the animation when the laser arrives.
-                Instantiate(explosion, gameObject.transform.position, Quaternion.identity);
+                Instantiate(explosion, newPosition, Quaternion.identity);
 
                 // Tell the game manager you hit
-                GameManager.Instance.RegisterAttack(target, "Laser");
+                GameManager.Instance.RegisterAttackComplete(target, "Laser");
                 
                 // Destroy the laser
                 Destroy(gameObject);
