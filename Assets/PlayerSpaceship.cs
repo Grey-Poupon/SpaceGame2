@@ -31,12 +31,19 @@ public abstract class SpaceShip: MonoBehaviour
     public float AP;
     public float defaultSpeed = 0;
     public float speed;
-    public void resetAP(){AP = defaultAP;}
-    public void resetSpeed(){speed = defaultSpeed;}
-
+    public void ResetAP(){AP = defaultAP;}
+    public void ResetSpeed(){speed = defaultSpeed;}
+    public void AdjustAP(float change){AP += change;}
+    public void AdjustSpeed(float change){speed += change;}
     protected SpaceShip()
     {
-        resetAP();
-        resetSpeed();
+        ResetAP();
+        ResetSpeed();
+    }
+
+    public Dictionary<RoomType, List<Room>> getRooms()
+    {
+        if (this is PlayerSpaceship){return GameManager.Instance.playerRooms;}
+        return GameManager.Instance.enemyRooms;
     }
 }

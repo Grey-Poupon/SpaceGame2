@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System.Linq;
- public enum TurnTypes {Player, Enemy, Resolve}
+public enum TurnTypes {Player, Enemy, Resolve}
 
 public class GameManager : MonoBehaviour
 {
@@ -18,14 +18,16 @@ public class GameManager : MonoBehaviour
 
     public Card selectedCard;
 
-    public Hand hand;
+    public Hand playerHand;
+    public Hand enemyHand;
+
     public PlayerSpaceship playerShip;
     public EnemySpaceship enemyShip;
     public Dictionary<RoomType, List<Room>> playerRooms = new Dictionary<RoomType, List<Room>>();
     public Dictionary<RoomType, List<Room>> enemyRooms = new Dictionary<RoomType, List<Room>>();
 
-    public List<RoomAction> playerTurnActions = new List<RoomAction>();
-    public List<RoomAction> enemyTurnActions = new List<RoomAction>();
+    public List<CardAction> playerTurnActions = new List<CardAction>();
+    public List<CardAction> enemyTurnActions = new List<CardAction>();
     private TextMeshProUGUI playerTurnActionsText;
     private TextMeshProUGUI enemyTurnActionsText;
     
@@ -53,7 +55,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator StartGame()
     {
         // Wait for 0.5 seconds
-        while (playerShip == null && enemyShip == null && hand == null)
+        while (playerShip == null && enemyShip == null && playerHand == null)
         {
             yield return new WaitForSeconds(0.5f);
         }
@@ -79,9 +81,13 @@ public class GameManager : MonoBehaviour
         this.enemyShip = enemyShip;
     }
 
-    public void RegisterPlayerHand(Hand hand)
+    public void RegisterPlayerHand(Hand playerHand)
     {
-        this.hand = hand;
+        this.playerHand = playerHand;
+    }
+    public void RegisterEnemyHand(Hand enemyHand)
+    {
+        this.enemyHand = enemyHand;
     }
 
     public void RegisterRoom(Room room, bool isPlayer)
@@ -94,7 +100,9 @@ public class GameManager : MonoBehaviour
             }
 
             playerRooms[room.roomType].Add(room);
-            AddRoomAction(room);
+            
+            List<Card> cards = MakeCards(room.actions);
+            AddCardsToHand(cards, isPlayer);
         }
         else
         {
@@ -104,9 +112,43 @@ public class GameManager : MonoBehaviour
             }
 
             enemyRooms[room.roomType].Add(room);
+            List<Card> cards = MakeCards(room.actions, false);
+            AddCardsToHand(cards, isPlayer);
         }
     }
     
+    public List<Card> MakeCards(List<CardAction> actions, bool makePrefabs = true)
+    {
+        List<Card> cards = new List<Card>();
+        foreach (CardAction action in actions)
+        {
+            Card card = new Card(action);
+            if (makePrefabs)
+            {
+                // Instantiate a new card prefab
+                CardController cardController = Instantiate(playerHand.cardPrefab, playerHand.parent.transform);
+                cardController.Setup(card);
+                card.Setup(cardController);
+            }
+            cards.Add(card);
+
+        }
+        if (makePrefabs)
+        {
+            // Ensure the cards are properly positioned within the layout group
+            playerHand.Organise();
+        }        
+        return cards;
+    }
+    public void AddCardsToHand(List<Card> cards, bool isPlayer)
+    {
+        foreach (Card card in cards)
+        {
+            if (isPlayer){ playerHand.AddCard(card); }
+            else         { enemyHand.AddCard(card);     }
+        }
+    }
+
     public void RemovePlayerShip()
     {
         this.playerShip=null;
@@ -153,15 +195,15 @@ public class GameManager : MonoBehaviour
         {
             turn = TurnTypes.Resolve;
         }
-        else if (turn == TurnTypes.Enemy)
-        {
-            enemyChooseActions();
-            turn = TurnTypes.Player;
-        }
         if (turn == TurnTypes.Resolve)
         {
             ResolveActions();
             turn = TurnTypes.Enemy;
+        }
+        if (turn == TurnTypes.Enemy)
+        {
+            enemyChooseActions();
+            turn = TurnTypes.Player;
         }
         UnityEngine.Debug.Log("Turn is now:" + turn.ToString());
     }
@@ -169,85 +211,79 @@ public class GameManager : MonoBehaviour
     public void ResolveActions()
     {
 
+        // Decide Who goes first
         System.Random random = new System.Random();
-
-        foreach (RoomAction action in enemyTurnActions)
+        foreach (CardAction action in enemyTurnActions)
         {
-            if (action is EngineAction)
+            foreach (SpeedEffect effect in action.getEffectsByType(typeof(SpeedEffect)))
             {
-                enemyShip.speed += 1;
+                effect.Activate(action.affectedRoom);
             }
         }
 
-        foreach (RoomAction action in playerTurnActions)
+        foreach (CardAction action in playerTurnActions)
         {
-            if (action is EngineAction)
+            foreach (SpeedEffect effect in action.getEffectsByType(typeof(SpeedEffect)))
             {
-                playerShip.speed += 1;
+                effect.Activate(action.affectedRoom);
             }
         }
         bool playerFirst = (playerShip.speed > enemyShip.speed) ? true :
                                 (enemyShip.speed > playerShip.speed) ? false :
                                    (random.Next(2) == 0) ? true : false;
 
+        playerShip.ResetSpeed();
+        enemyShip.ResetSpeed();
+
+        // Activate Each Action
         if (playerFirst)
         {
-            playOutActions(playerTurnActions);
-            playOutActions(enemyTurnActions);
+            playOutActions(playerTurnActions, playerRooms);
+            playOutActions(enemyTurnActions, enemyRooms);
         }
         else
         {
-            playOutActions(enemyTurnActions);
-            playOutActions(playerTurnActions);
+            playOutActions(enemyTurnActions, enemyRooms);
+            playOutActions(playerTurnActions, playerRooms);
         }
-        playerShip.resetAP();
-        playerShip.resetSpeed();
-        enemyShip.resetAP();
-        enemyShip.resetSpeed();
+
+        // Reset all temp stats for next turn
+        playerShip.ResetAP();
+        playerShip.ResetSpeed();
+        enemyShip.ResetAP();
+        enemyShip.ResetSpeed();
         enemyTurnActionsText.text = "";
         playerTurnActionsText.text = "";
         playerTurnActions.Clear();
         enemyTurnActions.Clear();
     }
 
-    public void playOutActions(List<RoomAction> actions)
+    public void playOutActions(List<CardAction> actions, Dictionary<RoomType, List<Room>> rooms)
     {
         List<System.Action> weaponCalls = new List<System.Action>();
 
-        foreach (RoomAction action in actions)
+
+
+        // Trigger any effects that are still affecting
+        List<Room> allRooms = rooms.Values.SelectMany(x => x).ToList();
+        foreach (Room room in allRooms)
+        {
+            foreach(CombatEffect effect in room.effectsApplied)
             {
-                UnityEngine.Debug.Log(action);
-                if (action.sourceRoom.health <= 0 || action.sourceRoom.turnsUntilReady != 0) {continue;}
-                
-                if (action.affectedStat == Stat.Health)
-                {
-                    if (action.statAdjustment > 0)
-                    {
-                        action.affectedRoom.heal(action.statAdjustment);
-                    }
-                    else
-                    {
-                        action.affectedRoom.takeDamage(Math.Abs(action.statAdjustment));
-                        weaponCalls.Add(() => FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom));
-                        // FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom);
-                    }
-                }
-                else if (action.affectedStat == Stat.Defence)
-                {
-                    if (action.statAdjustment > 0)
-                    {
-                        action.affectedRoom.increaseDefence(action.statAdjustment);
-                    }
-                    else
-                    {
-                        action.affectedRoom.decreaseDefence(Math.Abs(action.statAdjustment));
-                    }
-                }
-
-                action.activate();
+                effect.TriggerEffect();
             }
-            StartCoroutine(InvokeWeaponActionsWithDelay(weaponCalls));
+        }
 
+        // Activate actions, which will apply and trigger some more effects
+        foreach (CardAction action in actions)
+        {
+            if (action.sourceRoom.disabled || action.sourceRoom.health <= 0 || action.turnsUntilReady != 0) {continue;}
+            if (action is LaserAction){ weaponCalls.Add(() => FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom)); }
+            
+            action.Activate();
+        }
+
+        StartCoroutine(InvokeWeaponActionsWithDelay(weaponCalls));
     }
 
     public void enemyChooseActions()
@@ -255,73 +291,74 @@ public class GameManager : MonoBehaviour
         System.Random random = new System.Random();
 
         // If i have a reactor Action take it
-        if (enemyRooms.ContainsKey(RoomType.Reactor))
+        List<Card> APUps = enemyHand.GetCardsByAction(typeof(SpeedUpAction));
+        if (APUps.Count > 0)
         {
-            foreach (ReactorRoom reactorRoom in enemyRooms[RoomType.Reactor])
+            foreach (Card APCard in APUps)
             {
-                if (reactorRoom.turnsUntilReady == 0 && reactorRoom.health > 0)
+                if (APCard.CanBeUsed(enemyShip.AP))
                 {
-                    ReactorAction reactorAction = new ReactorAction();
-                    reactorAction.affectedRoom = reactorRoom;
-                    reactorAction.sourceRoom = reactorRoom;  
-                    PlayAction(reactorAction, false);
-
-                    enemyShip.AP += 1;
+                    APCard.cardAction.affectedRoom = APCard.cardAction.sourceRoom;
+                    SubmitCard(APCard, false);
                 }
             }
         }
-        while (enemyShip.AP > 2 && enemyRooms.ContainsKey(RoomType.Laser) && enemyRooms[RoomType.Laser].Any(item => item.health > 0))
+        List<Card> laserCards = enemyHand.GetCardsByAction(typeof(LaserAction));
+        while (enemyShip.AP > 2)
         {
-            foreach (LaserRoom laserRoom in enemyRooms[RoomType.Laser])
+            foreach (Card laserCard in laserCards)
             {        
-                if (laserRoom.health > 0)
+                if (laserCard.CanBeUsed(enemyShip.AP))
                 {
-                    LaserAction laserAction = new LaserAction();
                     Room target = playerRooms[RoomType.Reactor][0];
-                    if (playerRooms.ContainsKey(RoomType.Laser))
-                    {
-                        target = playerRooms[RoomType.Laser].OrderBy(obj => obj.health).First();
-                    }
-                    laserAction.affectedRoom = target;
-                    laserAction.sourceRoom = laserRoom;  
-                    PlayAction(laserAction, false);
-                    enemyShip.AP -= 1;
+                    laserCard.cardAction.affectedRoom = target;
+                    SubmitCard(laserCard, false);
+                    break;
                 }
             }
         }
         int c = 0;
+        List<Card> shieldCards = enemyHand.GetCardsByAction(typeof(FocusedShieldAction));
+        List<Card> speedUpCards = enemyHand.GetCardsByAction(typeof(SpeedUpAction));
         while (enemyShip.AP > 0)
         {
-            if (random.Next(2) == 0)
+            List<Room> weaponsRooms = enemyRooms[RoomType.Weapons].Where(obj => obj.health > 0).ToList();
+            List<Room> reactorRooms = enemyRooms[RoomType.Shield].Where(obj => obj.health > 0).ToList();
+            List<Room> shieldRooms = enemyRooms[RoomType.Reactor].Where(obj => obj.health > 0).ToList();
+            
+            if (random.Next(2) == 0 && (weaponsRooms.Count > 0 || reactorRooms.Count > 0 || shieldRooms.Count > 0))
             {
-                if (enemyRooms.ContainsKey(RoomType.Shield) && enemyRooms.ContainsKey(RoomType.Laser) && enemyRooms[RoomType.Laser].Any(item => item.health > 0) && enemyRooms[RoomType.Shield].Any(item => item.health > 0))
+                
+                foreach (Card shieldCard in shieldCards)
                 {
-                    ShieldAction shieldAction = new ShieldAction();
-                    shieldAction.affectedRoom = enemyRooms[RoomType.Laser].OrderBy(obj => obj.health).First();
-                    shieldAction.sourceRoom = enemyRooms[RoomType.Shield][0];  
-                    PlayAction(shieldAction, false);
-                    enemyShip.AP -= 1;
+                    if (shieldCard.CanBeUsed(enemyShip.AP))
+                    {
+                    Room target;
+                    if (weaponsRooms.Count > 0)      {target = weaponsRooms[0];}
+                    else if (reactorRooms.Count > 0) {target = reactorRooms[0];}
+                    else                             {target = shieldRooms[0];}                   
+                    
+                    shieldCard.cardAction.affectedRoom = target;  
+                    SubmitCard(shieldCard, false);
+                    break;
+                    }
                 }
             }
             else if (enemyRooms.ContainsKey(RoomType.Engine) && enemyRooms[RoomType.Engine].Any(item => item.health > 0))
             {
-                    EngineAction engineAction = new EngineAction();
-                    engineAction.affectedRoom = enemyRooms[RoomType.Engine][0];
-                    engineAction.sourceRoom = enemyRooms[RoomType.Engine][0];
-                    PlayAction(engineAction, false);
-                    enemyShip.AP -= 1;
+                foreach (Card speedUpCard in speedUpCards)
+                {
+                    speedUpCard.cardAction.affectedRoom = speedUpCard.cardAction.sourceRoom;
+                    SubmitCard(speedUpCard, false);
+                }
             }
             else
             {
                 c += 1;
-                if (c > 10)
-                {
-                enemyShip.AP = 0;
-                }
+                if (c > 10){break; }
             }
-
         }
-        enemyShip.resetAP();
+        enemyShip.ResetAP();
     }
 
     public void RegisterAttackComplete(Room RoomHit,string AttackType)
@@ -339,39 +376,18 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void AddRoomAction(Room room)
-    {
-        if (hand == null)
-        {
-            UnityEngine.Debug.Log("Null hand");
-            return;
-
-        }
-        hand.AddCard(
-            room.roomType.ToString(),
-            room.cooldown.ToString(),
-            room.cost.ToString(),
-            room.description.ToString(),
-            room.roomType,
-            room.targetSelf,
-            room
-        );
-
-    }
-
     public void PlayCard(Card card)
     {
         Cursor.SetCursor(customCursor, new Vector2(customCursor.width / 2, customCursor.height / 2), CursorMode.ForceSoftware);
         selectedCard = card;
-        card.gameObject.SetActive(false);
-        
+        card.cardController.gameObject.SetActive(false);
     }
 
     public void ReleaseCard()
     {
         if (selectedCard != null)
         {
-            selectedCard.gameObject.SetActive(true);
+            selectedCard.cardController.gameObject.SetActive(true);
             selectedCard = null;
             Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         }
@@ -379,102 +395,56 @@ public class GameManager : MonoBehaviour
 
     public void RoomClicked(Vector3 targetPosition, Room target)
     {
-
-        if (selectedCard.roomType == RoomType.Laser)
-        {
-            //FireLaserAtTarget(targetPosition, target);
-            LaserAction laserAction = new LaserAction();
-            laserAction.affectedRoom = target;
-            laserAction.sourceRoom = selectedCard.sourceRoom;
-            PlayAction(laserAction, true);
-            
-            
-            selectedCard.gameObject.SetActive(true);
-            selectedCard = null;
-            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-        }
-        else if (selectedCard.roomType == RoomType.Missile)
-        {
-            MissileAction missileAction = new MissileAction();
-            missileAction.affectedRoom = target;
-            missileAction.sourceRoom = selectedCard.sourceRoom;
-            PlayAction(missileAction, true);
-            
-            selectedCard.gameObject.SetActive(true);
-            selectedCard = null;
-            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-        }
-        else if (selectedCard.roomType == RoomType.CargoHold)
-        {
-            CargoHoldAction cargoHoldAction = new CargoHoldAction();
-            cargoHoldAction.affectedRoom = target;
-            cargoHoldAction.sourceRoom = selectedCard.sourceRoom;
-            PlayAction(cargoHoldAction, true);
-            
-            selectedCard.gameObject.SetActive(true);
-            selectedCard = null;
-            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-        }
-        else if (selectedCard.roomType == RoomType.Shield)
-        {
-            ShieldAction shieldAction = new ShieldAction();
-            shieldAction.affectedRoom = target;
-            shieldAction.sourceRoom = selectedCard.sourceRoom;
-            PlayAction(shieldAction, true);
-            
-            selectedCard.gameObject.SetActive(true);
-            selectedCard = null;
-            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-        }
-        else if (selectedCard.roomType == RoomType.Engine)
-        {
-            EngineAction engineAction = new EngineAction();
-            engineAction.affectedRoom = target;
-            engineAction.sourceRoom = selectedCard.sourceRoom;
-            PlayAction(engineAction, true);
-            
-            selectedCard.gameObject.SetActive(true);
-            selectedCard = null;
-            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-        }
-        else if (selectedCard.roomType == RoomType.Reactor)
-        {
-            ReactorAction reactorAction = new ReactorAction();
-            reactorAction.affectedRoom = target;
-            reactorAction.sourceRoom = selectedCard.sourceRoom;
-            PlayAction(reactorAction, true);
-            
-            selectedCard.gameObject.SetActive(true);
-            selectedCard = null;
-            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-        }       
+        selectedCard.cardAction.affectedRoom = target;
+        SubmitCard(selectedCard, true);
+        
+        selectedCard.cardController.gameObject.SetActive(true);
+        selectedCard = null;
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
     }
 
 
-    public void PlayAction(RoomAction action, bool isPlayer)
+    public void SubmitCard(Card card, bool isPlayer)
     {
+        CardAction action = card.cardAction;
+        List<CombatEffect> APEffects = action.getEffectsByType(typeof(APEffect));
         if (isPlayer)
         { 
-            if (action.affectedStat == Stat.AP && action.affectsSelf) {playerShip.AP += action.statAdjustment;}
-            playerShip.AP -= action.sourceRoom.cost;
+            foreach (CombatEffect effect in APEffects)
+            {
+                APEffect apEffect = (APEffect)effect;
+                if (effect.affectsSelf){ playerShip.AP += apEffect.change;}
+                else { enemyShip.AP += apEffect.change;}
+            }
+            
+            playerShip.AP -= action.cost;
 
             playerTurnActions.Add(action);
             if (playerTurnActionsText.text != "")
             {
                 playerTurnActionsText.text += '\n';
             }
-            playerTurnActionsText.text += action.roomName;
+            playerTurnActionsText.text += action.name;
             playerTurnActionsText.text += " -> ";
             playerTurnActionsText.text += action.affectedRoom.roomType.ToString();
         }
         else
         {
+            foreach (CombatEffect effect in APEffects)
+            {
+                APEffect apEffect = (APEffect)effect;
+                if (effect.affectsSelf){ enemyShip.AP += apEffect.change;}
+                else { playerShip.AP += apEffect.change;}
+            }
+
+            enemyShip.AP -= action.cost;
+            
             enemyTurnActions.Add(action);
             if (enemyTurnActionsText.text != "")
             {
                 enemyTurnActionsText.text += '\n';
             }
-            enemyTurnActionsText.text += action.roomName;
+            enemyTurnActionsText.text += action.name;
             enemyTurnActionsText.text += " -> ";
             enemyTurnActionsText.text += action.affectedRoom.roomType.ToString();
         }

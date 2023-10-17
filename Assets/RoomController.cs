@@ -8,14 +8,13 @@ public class RoomController : MonoBehaviour
 {
     private Room room;
     public bool isPlayer;
-
     public RoomType roomType;
     // Start is called before the first frame update
     void Start()
     {
-        isPlayer = transform.parent.GetComponent<MonoBehaviour>().GetType() == typeof(PlayerSpaceship);
+        isPlayer = transform.parent.GetComponent<MonoBehaviour>() is PlayerSpaceship;
 
-        room = createRoom(roomType);
+        if (room == null){room = createRoom(roomType);}
         GameManager.Instance.RegisterRoom(room, isPlayer);
         room.spriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -28,9 +27,10 @@ public class RoomController : MonoBehaviour
 
         room.Title.text = roomType.ToString();
         room.Attack.text = "0";
-        room.Shield.text = "0";
-        room.Health.text = room.getMaxHealth().ToString();
+        room.Shield.text = room.defence.ToString();
+        room.Health.text = room.getHealth().ToString();
         room.parent = this;
+        room.isPlayer = isPlayer;
     }
 
     // Update is called once per frame
@@ -50,58 +50,46 @@ public class RoomController : MonoBehaviour
         }
     }
 
+
     Room createRoom(RoomType roomType)
     {
-        if (roomType == RoomType.Laser)
-        {
-            return new LaserRoom();
-        }
-        else if (roomType == RoomType.Missile)
-        {
-            return new MissileRoom();
-        }
-        else if (roomType == RoomType.CargoHold)
-        {
-            return new CargoHoldRoom();
-        }
-        else if (roomType == RoomType.Shield)
-        {
-            return new ShieldRoom();
-        }
-        else if (roomType == RoomType.Engine)
-        {
-            return new EngineRoom();
-        }
-        else if (roomType == RoomType.Reactor)
-        {
-            return new ReactorRoom();
-        }
-        else
-        {
-            return new ReactorRoom();
-        }
-    }         
+        List<CardAction> weaponActions  = new List<CardAction> { new LaserAction(),         new MissileAction(),          new FirebombAction(),         new ShieldPiercerAction()       };
+        List<CardAction> shieldActions  = new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction(),    new BigBoyShieldAction(),     new SemiPermanentShieldAction() };
+        List<CardAction> engineActions  = new List<CardAction> { new SpeedUpAction(),       new BigBoySpeedUpAction(),    new EvasiveManeouvreAction(), new OverHeatAction()            };
+        List<CardAction> reactorActions = new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction(), new ChargeBatteriesAction(),  new EMPAction()                 };
+        
+        if      (roomType == RoomType.Weapons) { return new WeaponsRoom(weaponActions);  }
+        else if (roomType == RoomType.Shield)  { return new ShieldRoom(shieldActions);   }
+        else if (roomType == RoomType.Engine)  { return new EngineRoom(engineActions);   }
+        else if (roomType == RoomType.Reactor) { return new ReactorRoom(reactorActions); }
+        else                                   { return new ReactorRoom(reactorActions); }
+    }   
+
 
 }
 
 public abstract class Room
 {
+    public bool isPlayer;
     public RoomController parent;
-    public List<RoomAction> roomActions;
+    public List<CardAction> actions;
     public RoomType roomType;
     protected float maxHealth;
     public float health;
-    public float cooldown;
     public float defence = 0;
-    public float turnsUntilReady = 0;
-    public float cost;
-    public string description;
-    public bool targetSelf;
+    public bool disabled = false;
     public SpriteRenderer spriteRenderer;
     public TextMeshProUGUI Health;
     public TextMeshProUGUI Title;
     public TextMeshProUGUI Attack;
     public TextMeshProUGUI Shield;
+    public List<CombatEffect> effectsApplied = new List<CombatEffect>();
+
+    public SpaceShip getParentShip(bool invert = false)
+    {
+        if (parent.isPlayer != invert){return GameManager.Instance.playerShip;}
+        return GameManager.Instance.enemyShip;
+    }
 
     public float getHealth()
     {
@@ -181,85 +169,60 @@ public abstract class Room
         spriteRenderer.color = currentColour + (colourDifference * redComponentIncrease);
         
     }
+
+    protected void AttachRoomToAction()
+    {
+        foreach(CardAction action in this.actions)
+        {
+            action.sourceRoom = this;
+        }
+    }
 }
 
-public class LaserRoom : Room
+public class WeaponsRoom : Room
 {
-    public LaserRoom()
+    public WeaponsRoom(List<CardAction> actions)
     {
-        roomType = RoomType.Laser;
+        this.actions = actions;
+        AttachRoomToAction();
+        roomType = RoomType.Weapons;
         maxHealth = 5;
-        cooldown = 0;
-        cost = 1;
-        description = "Deal 1 Damage";
         health = maxHealth;
-        targetSelf = false;
     }
 }
-public class MissileRoom : Room
-{
-    public MissileRoom()
-    {
-        roomType = RoomType.Missile;
-        maxHealth = 2;
-        cooldown = 2;
-        cost = 1;
-        description = "Deal 1 Damage";
-        health = maxHealth;
-        targetSelf = false;
-    }
-}
-public class CargoHoldRoom : Room
-{
-    public CargoHoldRoom()
-    {
-        roomType = RoomType.CargoHold;
-        maxHealth = 3;
-        cooldown = 1;
-        cost = 1;
-        description = "Heal 1 HP";
-        health = maxHealth;
-        targetSelf = true;
-    }
-}
+
 public class ShieldRoom : Room
 {
-    public ShieldRoom()
+    public ShieldRoom(List<CardAction> actions)
     {
+        this.actions = actions;
+        AttachRoomToAction();
         roomType = RoomType.Shield;
         maxHealth = 3;
-        cooldown = 0;
-        cost = 1;
-        description = " + 1 Defence";
         health = maxHealth;
-        targetSelf = true;
     }
 }
 public class EngineRoom : Room
 {
-    public EngineRoom()
+    public EngineRoom(List<CardAction> actions)
     {
+        this.actions = actions;
+        AttachRoomToAction();
         roomType = RoomType.Engine;
         maxHealth = 3;
-        cooldown = 0;
-        cost = 1;
-        description = "+ 1 Speed";
         health = maxHealth;
-        targetSelf = true;
     }
 }
 public class ReactorRoom : Room
 {
 
-    public ReactorRoom()
+    public ReactorRoom(List<CardAction> actions)
     {
+        this.actions = actions;
+        AttachRoomToAction();
         roomType = RoomType.Reactor;
         maxHealth = 8;
-        cooldown = 3;
-        cost = 0;
-        description = "+ 1 AP";
         health = maxHealth;
-        targetSelf = true;
     }
 
     public override void onDestroy()
@@ -271,94 +234,75 @@ public class ReactorRoom : Room
 }
 
 
-// --- Room Action ---
+// public class LaserAction : CardAction
+// {
+//     public LaserAction()
+//     {
+//         affectedStat = Stat.Health;
+//         statAdjustment = -1;
+//         affectsSelf = false;
+//         roomName = "Laser";
+//     }
+// }
 
+// public class ShieldAction : CardAction
+// {
+//     public ShieldAction()
+//     {
+//         affectedStat = Stat.Defence;
+//         statAdjustment = 1;
+//         affectsSelf = true;
+//         roomName = "Shield";
+//     }
+// }
 
-public abstract class RoomAction { 
+// public class ReactorAction : CardAction
+// {
+//     public ReactorAction()
+//     {
+//         affectedStat = Stat.AP;
+//         statAdjustment = 1;
+//         affectsSelf = true;
+//         roomName = "Reactor";
+//     }
+// }
 
+// public class EngineAction : CardAction
+// {
+//     public EngineAction()
+//     {
+//         affectedStat = Stat.Speed;
+//         statAdjustment = 1;
+//         affectsSelf = true;
+//         roomName = "Engine";
+//     }
+// }
 
-    public string roomName;
-    public Room affectedRoom;
-    public Stat affectedStat;
-    public float statAdjustment;
-    public bool affectsSelf;
-    public Room sourceRoom;
+// public class CargoHoldAction : CardAction
+// {
+//     public CargoHoldAction()
+//     {
+//         affectedStat = Stat.Health;
+//         statAdjustment = 1;
+//         affectsSelf = true;
+//         roomName = "CargoHold";
+//     }
+// }
 
-    public void activate()
-    {
-        affectedRoom.turnsUntilReady = affectedRoom.cooldown;
-    }
-}
-
-public class LaserAction : RoomAction
-{
-    public LaserAction()
-    {
-        affectedStat = Stat.Health;
-        statAdjustment = -1;
-        affectsSelf = false;
-        roomName = "Laser";
-    }
-}
-
-public class ShieldAction : RoomAction
-{
-    public ShieldAction()
-    {
-        affectedStat = Stat.Defence;
-        statAdjustment = 1;
-        affectsSelf = true;
-        roomName = "Shield";
-    }
-}
-
-public class ReactorAction : RoomAction
-{
-    public ReactorAction()
-    {
-        affectedStat = Stat.AP;
-        statAdjustment = 1;
-        affectsSelf = true;
-        roomName = "Reactor";
-    }
-}
-
-public class EngineAction : RoomAction
-{
-    public EngineAction()
-    {
-        affectedStat = Stat.Speed;
-        statAdjustment = 1;
-        affectsSelf = true;
-        roomName = "Engine";
-    }
-}
-
-public class CargoHoldAction : RoomAction
-{
-    public CargoHoldAction()
-    {
-        affectedStat = Stat.Health;
-        statAdjustment = 1;
-        affectsSelf = true;
-        roomName = "CargoHold";
-    }
-}
-
-public class MissileAction : RoomAction
-{
-    public MissileAction()
-    {
-        affectedStat = Stat.Health;
-        statAdjustment = -2;
-        affectsSelf = false;
-        roomName = "Missile";
-    }
-}
+// public class MissileAction : CardAction
+// {
+//     public MissileAction()
+//     {
+//         affectedStat = Stat.Health;
+//         statAdjustment = -2;
+//         affectsSelf = false;
+//         roomName = "Missile";
+//     }
+// }
 
 public enum RoomType
 {
-    Laser,
+    Weapons,
     Missile,
     CargoHold,
     Shield,
@@ -372,5 +316,6 @@ public enum Stat
     Defence,
     Health,
     Speed,
-    AP
+    AP,
+    None
 }
