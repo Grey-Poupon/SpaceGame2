@@ -76,6 +76,7 @@ public class DamageEffect : CombatEffect
     public override void TriggerEffect()
     {
         affectedRoom.takeDamage(damage);
+        affectedRoom.updateHealthGraphics();
     }
 
 }
@@ -93,6 +94,7 @@ public class ShieldOnlyDamageEffect : CombatEffect
     {
         damage = damage > affectedRoom.defence ? affectedRoom.defence : damage;
         affectedRoom.takeDamage(damage);
+        affectedRoom.updateHealthGraphics();
     }
 
 }
@@ -119,6 +121,7 @@ public class FreeLaserEffect : CombatEffect
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
 
         affectedRoom.takeDamage(damage);
+        affectedRoom.updateHealthGraphics();
     }
 }
 public class OnFireEffect : CombatEffect
@@ -145,6 +148,7 @@ public class OnFireEffect : CombatEffect
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
 
         affectedRoom.takeDamage(damage);
+        affectedRoom.updateHealthGraphics();
     }
 }
 public class StopFireEffect : CombatEffect
@@ -213,6 +217,7 @@ public class ChargeBatteriesEffect : CombatEffect
         CardAction action = new DischargeChargeBatteriesAction();
         action.sourceRoom = affectedRoom;
         List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
+        UnityEngine.Debug.Log("adding card to player:" + affectsPlayer.ToString());
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
     }
 }

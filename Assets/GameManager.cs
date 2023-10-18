@@ -205,7 +205,7 @@ public class GameManager : MonoBehaviour
             enemyChooseActions();
             turn = TurnTypes.Player;
         }
-        UnityEngine.Debug.Log("Turn is now:" + turn.ToString());
+        //UnityEngine.Debug.Log("Turn is now:" + turn.ToString());
     }
 
     public void ResolveActions()

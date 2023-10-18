@@ -44,6 +44,11 @@ public class Hand
         return cardsByAction[actionType];
     }
 
+    public List<Card> GetCards()
+    {
+        return cards;
+    }
+
     public void AddCard(Card card)
     {
         cards.Add(card);

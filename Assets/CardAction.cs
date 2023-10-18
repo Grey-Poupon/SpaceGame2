@@ -263,10 +263,10 @@ public class EMPAction : CardAction
     public EMPAction()
     {
         this.effects = new List<CombatEffect>{new DisableRoomEffect(2, false)};
-        this.name = "Disable room NEXT turn";
+        this.name = "EMP";
         this.cooldown = 3;
         this.cost = 2;
-        this.description = "";
+        this.description = "Disable room NEXT turn";
     }
 }
 

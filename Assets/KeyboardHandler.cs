@@ -30,14 +30,14 @@ public class KeyboardController : MonoBehaviour
         {
             Control control = KeyboardControls[e.keyCode];
             
-            if (control == Control.FinishTurn)
-            {
-                GameManager.Instance.FinishTurn();
-            }
-            else if (control == Control.Action1)
-            {
-                GameManager.Instance.Action1();
-            }
+            // if (control == Control.FinishTurn)
+            // {
+            //     GameManager.Instance.FinishTurn();
+            // }
+            // else if (control == Control.Action1)
+            // {
+            //     GameManager.Instance.Action1();
+            // }
             
         }
         else if (e.type == EventType.MouseDown && e.button == 0) // 0 corresponds to the left mouse button
