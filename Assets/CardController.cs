@@ -12,10 +12,12 @@ public class Card
 
     public CardAction cardAction;
     public CardController cardController;
-
+    public int turnsUntilReady =0;
     public Card(CardAction cardAction)
     {
         this.cardAction = cardAction;
+        this.cardAction.card = this;
+        
     }
     public void UpdateText()
     {
@@ -24,6 +26,7 @@ public class Card
     public void Setup(CardController cardController)
     {
         this.cardController=cardController;
+    
     }
     public bool CanBeUsed(float AP)
     {
@@ -31,10 +34,10 @@ public class Card
     }
     public void NextTurn()
     {
-        if (cardAction.turnsUntilReady > 0)
+        if (turnsUntilReady > 0)
         {
-            cardAction.turnsUntilReady -= 1;
-            if (cardAction.turnsUntilReady == 0)
+            turnsUntilReady -= 1;
+            if (turnsUntilReady == 0)
             {
                 cardController.gameObject.SetActive(true);
             }
@@ -82,8 +85,10 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             // Update the card's position
             cardRectTransform.position = newPosition;
 
-            if (cardRectTransform.anchoredPosition.y > -450)
+            if (cardRectTransform.anchoredPosition.y > -450 && card.turnsUntilReady==0)
             {  
+                UnityEngine.Debug.Log("turnsUntilReady");
+                UnityEngine.Debug.Log(card.turnsUntilReady);
                 GameManager.Instance.PickCard(card);
                 isDragging = false;
             }

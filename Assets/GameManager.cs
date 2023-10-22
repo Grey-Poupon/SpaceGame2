@@ -406,8 +406,10 @@ public class GameManager : MonoBehaviour
     {
         selectedCard.cardAction.affectedRoom = target;
         SubmitCard(selectedCard, true);
+        if(selectedCard.cardAction.cooldown==0){
+            selectedCard.cardController.gameObject.SetActive(true);
+        }
         
-        selectedCard.cardController.gameObject.SetActive(true);
         selectedCard = null;
         Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
     }
@@ -424,7 +426,7 @@ public class GameManager : MonoBehaviour
 
     public void SubmitCard(Card card, bool isPlayer)
     {
-        CardAction action = card.cardAction;
+        CardAction action = card.cardAction.Clone();
         List<CombatEffect> APEffects = action.getEffectsByType(typeof(APEffect));
         List<CombatEffect> SpeedEffects = action.getEffectsByType(typeof(SpeedEffect));
         List<CombatEffect> DamageEffects = action.getEffectsByType(typeof(DamageEffect));
@@ -485,8 +487,8 @@ public class GameManager : MonoBehaviour
     
     public void UpdateHandStats()
     {
-        foreach(Card card in playerHand.GetCards()){if (card.cardAction.turnsUntilReady > 0 ) {card.NextTurn();}}
-        foreach(Card card in enemyHand.GetCards() ){if (card.cardAction.turnsUntilReady > 0 ) {card.NextTurn();}}
+        foreach(Card card in playerHand.GetCards()){if (card.turnsUntilReady > 0 ) {card.NextTurn();}}
+        foreach(Card card in enemyHand.GetCards() ){if (card.turnsUntilReady > 0 ) {card.NextTurn();}}
     }
 }
 
