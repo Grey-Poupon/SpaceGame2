@@ -10,16 +10,26 @@ public abstract class CombatEffect
     public void Activate(Room affectedRoom)
     {
         this.affectedRoom = affectedRoom;
+        Activate();
+
+    }
+    public void Activate()
+    {
         TriggerEffect();
         duration -= 1;
+        string name = this.affectsSelf == affectedRoom.isPlayer ? "Player: " : "Enemy: ";
+        UnityEngine.Debug.Log(name + this.GetType().ToString() + "turns left: " + duration.ToString());
+        
         if (duration < 1)
         {
+            UnityEngine.Debug.Log(name + "trying to remove");
             FinalEffect();
+            UnityEngine.Debug.Log(affectedRoom.effectsApplied.Count);
             affectedRoom.effectsApplied.Remove(this);
+            UnityEngine.Debug.Log(affectedRoom.effectsApplied.Count);
         }
 
     }
-
     public abstract void TriggerEffect();
 
     public virtual void FinalEffect()
@@ -56,7 +66,7 @@ public class GeneralShieldEffect : CombatEffect
     }
     public override void TriggerEffect()
     {
-        foreach(Room room in affectedRoom.getParentShip().getRooms().Values.SelectMany(x => x).ToList())
+        foreach(Room room in affectedRoom.getParentShip().GetRoomList())
         {
             affectedRoom.increaseDefence(increase);
         }

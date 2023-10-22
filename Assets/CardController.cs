@@ -29,6 +29,18 @@ public class Card
     {
         return cardAction.CanBeUsed(AP);
     }
+    public void NextTurn()
+    {
+        if (cardAction.turnsUntilReady > 0)
+        {
+            cardAction.turnsUntilReady -= 1;
+            if (cardAction.turnsUntilReady == 0)
+            {
+                cardController.gameObject.SetActive(true);
+            }
+        }
+        
+    }
 }
 public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
@@ -72,7 +84,7 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
             if (cardRectTransform.anchoredPosition.y > -450)
             {  
-                GameManager.Instance.PlayCard(card);
+                GameManager.Instance.PickCard(card);
                 isDragging = false;
             }
         }
@@ -107,7 +119,7 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         //     // Check if the card should disappear (you can adjust the threshold)
         //     if (cardRectTransform.anchoredPosition.y > -450)
         //     {  
-        //         GameManager.Instance.PlayCard(this);
+        //         GameManager.Instance.PickCard(this);
         //     }
         // }
     }

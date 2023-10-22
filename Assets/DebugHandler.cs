@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DebugHandler : MonoBehaviour
 {
-    uint qsize = 1;  // number of messages to keep
+    uint qsize = 15;  // number of messages to keep
     Queue myLogQueue = new Queue();
 
     void Start() {
@@ -28,7 +28,7 @@ public class DebugHandler : MonoBehaviour
     }
 
     void OnGUI() {
-        GUILayout.BeginArea(new Rect(Screen.width - 200, 0, 400, Screen.height));
+        GUILayout.BeginArea(new Rect(Screen.width - 300, 0, 400, Screen.height));
         GUILayout.Label("\n" + string.Join("\n", myLogQueue.ToArray()));
         GUILayout.EndArea();
     }

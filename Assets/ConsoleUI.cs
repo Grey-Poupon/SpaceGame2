@@ -26,7 +26,7 @@ public class ConsoleUI : MonoBehaviour
             cardNames.Add(card.cardAction.name);
             if (inputText.ToLower() == card.cardAction.name.ToLower())
             {
-                GameManager.Instance.PlayCard(card);
+                GameManager.Instance.PickCard(card);
                 break;
             }
         }
