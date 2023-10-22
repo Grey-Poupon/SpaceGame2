@@ -10,7 +10,7 @@ public abstract class CardAction{
     public string name;
     public float cooldown;
     public float cost;
-    public float turnsUntilReady = 0;
+    public float turnsUntilReady;
     public string description;
 
     public void Activate()
@@ -84,7 +84,7 @@ public class FirebombAction : CardAction
     public FirebombAction()
     {
         this.effects = new List<CombatEffect>{new OnFireEffect(1, false, 1)};
-        this.name = "Firebomb";
+        this.name = "Fire Bomb";
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
@@ -97,7 +97,7 @@ public class ShieldPiercerAction : CardAction
     public ShieldPiercerAction()
     {
         this.effects = new List<CombatEffect>{new ShieldOnlyDamageEffect(1, false, 3)};
-        this.name = "ShieldPiercer";
+        this.name = "Shield Piercer";
         this.cooldown = 0;
         this.cost = 2;
         this.description = "3 Damage Shields Only";
@@ -110,7 +110,7 @@ public class FocusedShieldAction : CardAction
     public FocusedShieldAction()
     {
         this.effects = new List<CombatEffect>{new ShieldEffect(2, true, 1)};
-        this.name = "FocusedShield";
+        this.name = "Focused Shield";
         this.cooldown = 0;
         this.cost = 1;
         this.description = "";
@@ -121,7 +121,7 @@ public class GeneralShieldAction : CardAction
     public GeneralShieldAction()
     {
         this.effects = new List<CombatEffect>{new GeneralShieldEffect(2, true, 1)};
-        this.name = "GeneralShield";
+        this.name = "General Shield";
         this.cooldown = 2;
         this.cost = 1;
         this.description = "";
@@ -132,7 +132,7 @@ public class BigBoyShieldAction : CardAction
     public BigBoyShieldAction()
     {
         this.effects = new List<CombatEffect>{new ShieldEffect(2, true, 2)};
-        this.name = "BigBoyShield";
+        this.name = "Big Boy Shield";
         this.cooldown = 2;
         this.cost = 1;
         this.description = "";
@@ -143,7 +143,7 @@ public class SemiPermanentShieldAction : CardAction
     public SemiPermanentShieldAction()
     {
         this.effects = new List<CombatEffect>{new ShieldEffect(99, true, 1)};
-        this.name = "SemiPermanentShield";
+        this.name = "Semi Permanent Shield";
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
@@ -156,7 +156,7 @@ public class SpeedUpAction : CardAction
     public SpeedUpAction()
     {
         this.effects = new List<CombatEffect>{new SpeedEffect(1, true, 1)};
-        this.name = "SpeedUp";
+        this.name = "Speed Up";
         this.cooldown = 0;
         this.cost = 1;
         this.description = "";
@@ -168,7 +168,7 @@ public class BigBoySpeedUpAction : CardAction
     public BigBoySpeedUpAction()
     {
         this.effects = new List<CombatEffect>{new SpeedEffect(1, true, 2)};
-        this.name = "BigBoySpeedUp";
+        this.name = "Big Boy Speed Up";
         this.cooldown = 2;
         this.cost = 1;
         this.description = "";
@@ -180,7 +180,7 @@ public class EvasiveManeouvreAction : CardAction
     public EvasiveManeouvreAction()
     {
         this.effects = new List<CombatEffect>{new GeneralShieldEffect(1, true, 99)};
-        this.name = "EvasiveManeouvre";
+        this.name = "Evasive Manoeuvre";
         this.cooldown = 3;
         this.cost = 3;
         this.description = "";
@@ -192,7 +192,7 @@ public class OverHeatAction : CardAction
     public OverHeatAction()
     {
         this.effects = new List<CombatEffect>{new DamageEffect(1, true, 1), new SpeedEffect(1, true, 1)};
-        this.name = "OverHeat";
+        this.name = "Over Heat";
         this.cooldown = 0;
         this.cost = 0;
         this.description = "";
@@ -205,7 +205,7 @@ public class OverdriveAction : CardAction
     public OverdriveAction()
     {
         this.effects = new List<CombatEffect>{new APEffect(1, true, 1)};
-        this.name = "Overdrive";
+        this.name = "Over Drive";
         this.cooldown = 3;
         this.cost = 0;
         this.description = "";
@@ -217,7 +217,7 @@ public class BuffEnergyWeaponAction : CardAction
     public BuffEnergyWeaponAction()
     {
         this.effects = new List<CombatEffect>{new FreeLaserEffect(99, true)};
-        this.name = "BuffEnergyWeapon";
+        this.name = "Buff Energy Weapon";
         this.cooldown = 2;
         this.cost = 3;
         this.description = "";
@@ -229,8 +229,8 @@ public class FreeLaserAction : CardAction
     {
         this.effects = new List<CombatEffect>{new DamageEffect(1, false, 1)};
         this.name = "Free Laser";
-        this.cooldown = 2;
-        this.cost = 3;
+        this.cooldown = 1;
+        this.cost = 0;
         this.description = "";
     }
 }
@@ -275,7 +275,7 @@ public class StopFireAction : CardAction
     public StopFireAction()
     {
         this.effects = new List<CombatEffect>{new StopFireEffect()};
-        this.name = "StopFire";
+        this.name = "Stop Fire";
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";

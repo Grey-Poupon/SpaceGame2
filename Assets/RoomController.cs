@@ -177,6 +177,7 @@ public abstract class Room
             action.sourceRoom = this;
         }
     }
+
 }
 
 public class WeaponsRoom : Room
