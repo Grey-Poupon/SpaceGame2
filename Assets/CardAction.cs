@@ -10,7 +10,6 @@ public abstract class CardAction{
     public string name;
     public int cooldown;
     public float cost;
-    public int turnsUntilReady=0;
     public string description;
     public Card card;
 
@@ -21,7 +20,7 @@ public abstract class CardAction{
         UnityEngine.Debug.Log("turnsUntilReady");
         UnityEngine.Debug.Log(turnsUntilReady);
         
-        
+
 
         foreach (CombatEffect effect in effects)
         {
@@ -59,13 +58,22 @@ public abstract class CardAction{
         return isReady() && cost <= AP;
     }
 
-    public abstract CardAction Clone();
-    public static void CloneFrom(CardAction clone, CardAction toClone){
-        
-        
-        
-    }
-
+    public CardAction Clone()
+    {
+        CardAction clone = (CardAction)Activator.CreateInstance(this.GetType());
+        clone.effects = this.effects;
+        clone.name = this.name;
+        clone.cooldown = this.cooldown;
+        clone.card = this.card;
+        clone.cost = this.cost;
+        clone.description = this.description;
+        clone.sourceRoom = this.sourceRoom;
+        clone.affectedRoom = this.affectedRoom;
+        clone.turnsUntilReady = this.turnsUntilReady;
+        clone.CreateEffectLookups();
+        return clone;
+    } 
+    public static void CloneFrom(CardAction clone, CardAction toClone){}
 }
 
 // +1 dmg
@@ -78,20 +86,6 @@ public class LaserAction : CardAction
         this.cooldown = 0;
         this.cost = 1;
         this.description = "";
-    }
-    public override CardAction Clone(){
-        CardAction clone = new LaserAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.card = this.card;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
     }
 }
 
@@ -106,20 +100,6 @@ public class MissileAction : CardAction
         this.cost = 1;
         this.description = "";
     }
-    public override CardAction Clone(){
-        CardAction clone = new MissileAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.card = this.card;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 
 // (add extinguish card to enemy hand +1 dmg if not spent and potential for spread)
@@ -132,20 +112,6 @@ public class FirebombAction : CardAction
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
-    }
-    public override CardAction Clone(){
-        CardAction clone = new FirebombAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.card = this.card;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
     }
 }
 
@@ -160,20 +126,6 @@ public class ShieldPiercerAction : CardAction
         this.cost = 2;
         this.description = "3 Damage Shields Only";
     }
-    public override CardAction Clone(){
-        CardAction clone = new ShieldPiercerAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.card = this.card;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 
 
@@ -187,21 +139,6 @@ public class FocusedShieldAction : CardAction
         this.cost = 1;
         this.description = "";
     }
-    public override CardAction Clone(){
-        CardAction clone = new FocusedShieldAction();
-        clone.effects = this.effects;
-        clone.card = this.card;
-        clone.name = this.name;
-        clone.card = this.card;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 public class GeneralShieldAction : CardAction
 {
@@ -212,20 +149,6 @@ public class GeneralShieldAction : CardAction
         this.cooldown = 2;
         this.cost = 1;
         this.description = "";
-    }
-    public override CardAction Clone(){
-        CardAction clone = new GeneralShieldAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.card = this.card;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
     }
 }
 public class BigBoyShieldAction : CardAction
@@ -238,20 +161,6 @@ public class BigBoyShieldAction : CardAction
         this.cost = 1;
         this.description = "";
     }
-    public override CardAction Clone(){
-        CardAction clone = new BigBoyShieldAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.card = this.card;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 public class SemiPermanentShieldAction : CardAction
 {
@@ -262,20 +171,6 @@ public class SemiPermanentShieldAction : CardAction
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
-    }
-    public override CardAction Clone(){
-        CardAction clone = new SemiPermanentShieldAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.card = this.card;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
     }
 }
 	
@@ -290,20 +185,6 @@ public class SpeedUpAction : CardAction
         this.cost = 1;
         this.description = "";
     }
-    public override CardAction Clone(){
-        CardAction clone = new SpeedUpAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.card = this.card;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 // (cooldown)
 public class BigBoySpeedUpAction : CardAction
@@ -315,20 +196,6 @@ public class BigBoySpeedUpAction : CardAction
         this.cooldown = 2;
         this.cost = 1;
         this.description = "";
-    }
-    public override CardAction Clone(){
-        CardAction clone = new BigBoySpeedUpAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.card = this.card;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
     }
 }
 // (Immunity Frames)
@@ -342,20 +209,6 @@ public class EvasiveManeouvreAction : CardAction
         this.cost = 3;
         this.description = "";
     }
-    public override CardAction Clone(){
-        CardAction clone = new EvasiveManeouvreAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.card = this.card;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 // (Dmg room for extra speed)
 public class OverHeatAction : CardAction
@@ -367,20 +220,6 @@ public class OverHeatAction : CardAction
         this.cooldown = 0;
         this.cost = 0;
         this.description = "";
-    }
-    public override CardAction Clone(){
-        CardAction clone = new OverHeatAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.card = this.card;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
     }
 }
 
@@ -395,20 +234,6 @@ public class OverdriveAction : CardAction
         this.cost = 0;
         this.description = "";
     }
-    public override CardAction Clone(){
-        CardAction clone = new OverdriveAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.card = this.card;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 // energy weapons (cooldown)
 public class BuffEnergyWeaponAction : CardAction
@@ -421,20 +246,6 @@ public class BuffEnergyWeaponAction : CardAction
         this.cost = 3;
         this.description = "";
     }
-    public override CardAction Clone(){
-        CardAction clone = new BuffEnergyWeaponAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.card = this.card;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 public class FreeLaserAction : CardAction
 {
@@ -445,20 +256,6 @@ public class FreeLaserAction : CardAction
         this.cooldown = 1;
         this.cost = 0;
         this.description = "";
-    }
-    public override CardAction Clone(){
-        CardAction clone = new FreeLaserAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.card = this.card;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
     }
 }
 // (-AP +AP card)
@@ -472,20 +269,6 @@ public class ChargeBatteriesAction : CardAction
         this.cost = 1;
         this.description = "";
     }
-    public override CardAction Clone(){
-        CardAction clone = new ChargeBatteriesAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.card = this.card;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 public class DischargeChargeBatteriesAction : CardAction
 {
@@ -496,20 +279,6 @@ public class DischargeChargeBatteriesAction : CardAction
         this.cooldown = 99;
         this.cost = 0;
         this.description = "";
-    }
-    public override CardAction Clone(){
-        CardAction clone = new DischargeChargeBatteriesAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.sourceRoom = this.sourceRoom;
-        clone.card = this.card;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
     }
 }
 // (both players skip a turn)
@@ -523,20 +292,6 @@ public class EMPAction : CardAction
         this.cost = 2;
         this.description = "Disable room NEXT turn";
     }
-    public override CardAction Clone(){
-        CardAction clone = new EMPAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.card = this.card;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
-    }
 }
 
 public class StopFireAction : CardAction
@@ -548,19 +303,5 @@ public class StopFireAction : CardAction
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
-    }
-    public override CardAction Clone(){
-        CardAction clone = new StopFireAction();
-        clone.effects = this.effects;
-        clone.name = this.name;
-        clone.cooldown = this.cooldown;
-        clone.cost = this.cost;
-        clone.description = this.description;
-        clone.card = this.card;
-        clone.sourceRoom = this.sourceRoom;
-        clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
-        clone.CreateEffectLookups();
-        return clone;
     }
 }
