@@ -279,7 +279,7 @@ public class GameManager : MonoBehaviour
         // Activate actions, which will apply and trigger some more effects
         foreach (CardAction action in actions)
         {
-            if (action.sourceRoom.disabled || action.sourceRoom.health <= 0 || action.turnsUntilReady != 0) {continue;}
+            if (action.sourceRoom.disabled || action.sourceRoom.health <= 0 || action.card.turnsUntilReady != 0) {continue;}
             if (action is LaserAction || action is FreeLaserAction){ weaponCalls.Add(() => FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom)); }
             
             action.Activate();

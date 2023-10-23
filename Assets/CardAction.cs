@@ -18,9 +18,9 @@ public abstract class CardAction{
         
         card.turnsUntilReady = cooldown;
         UnityEngine.Debug.Log("turnsUntilReady");
-        UnityEngine.Debug.Log(turnsUntilReady);
+        UnityEngine.Debug.Log(card.turnsUntilReady);
         
-
+        
 
         foreach (CombatEffect effect in effects)
         {
@@ -51,7 +51,7 @@ public abstract class CardAction{
     }
     public bool isReady()
     {
-        return turnsUntilReady == 0 && sourceRoom.health > 0;
+        return card.turnsUntilReady == 0 && sourceRoom.health > 0;
     }
     public bool CanBeUsed(float AP)
     {
@@ -69,7 +69,7 @@ public abstract class CardAction{
         clone.description = this.description;
         clone.sourceRoom = this.sourceRoom;
         clone.affectedRoom = this.affectedRoom;
-        clone.turnsUntilReady = this.turnsUntilReady;
+        clone.card.turnsUntilReady = this.card.turnsUntilReady;
         clone.CreateEffectLookups();
         return clone;
     } 
