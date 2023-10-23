@@ -7,6 +7,8 @@ public abstract class CombatEffect
     public float duration;
     public bool affectsSelf;
     public Room affectedRoom;
+    public CardAction action;
+
     public void Activate(Room affectedRoom)
     {
         this.affectedRoom = affectedRoom;
@@ -17,7 +19,7 @@ public abstract class CombatEffect
     {
         TriggerEffect();
         duration -= 1;
-        string name = this.affectsSelf == affectedRoom.isPlayer ? "Player: " : "Enemy: ";
+        string name = this.affectsSelf == this.action.sourceRoom.isPlayer ? "Player: " : "Enemy: ";
         UnityEngine.Debug.Log(name + this.GetType().ToString() + "turns left: " + duration.ToString());
         
         if (duration < 1)
@@ -50,7 +52,7 @@ public class ShieldEffect : CombatEffect
     }
     public override void TriggerEffect()
     {
-        affectedRoom.increaseDefence(increase);
+        affectedRoom.IncreaseDefence(increase);
     }
 
 }
@@ -68,7 +70,7 @@ public class GeneralShieldEffect : CombatEffect
     {
         foreach(Room room in affectedRoom.getParentShip().GetRoomList())
         {
-            affectedRoom.increaseDefence(increase);
+            affectedRoom.IncreaseDefence(increase);
         }
     }
 
@@ -124,7 +126,7 @@ public class FreeLaserEffect : CombatEffect
         //     0           1          0
         //     1           0          0 
         //     1           1          1 
-        bool affectsPlayer = this.affectsSelf == affectedRoom.isPlayer;
+        bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
         CardAction action = new FreeLaserAction();
         action.sourceRoom = affectedRoom;
         List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
@@ -151,7 +153,7 @@ public class OnFireEffect : CombatEffect
         //     0           1          0
         //     1           0          0 
         //     1           1          1 
-        bool affectsPlayer = this.affectsSelf == affectedRoom.isPlayer;
+        bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
         CardAction action = new StopFireAction();
         action.sourceRoom = affectedRoom;
         List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
@@ -223,7 +225,7 @@ public class ChargeBatteriesEffect : CombatEffect
 
     public override void TriggerEffect()
     {
-        bool affectsPlayer = this.affectsSelf == affectedRoom.isPlayer;
+        bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
         CardAction action = new DischargeChargeBatteriesAction();
         action.sourceRoom = affectedRoom;
         List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});

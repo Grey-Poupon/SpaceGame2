@@ -17,7 +17,6 @@ public class Card
     {
         this.cardAction = cardAction;
         this.cardAction.card = this;
-        
     }
     public void UpdateText()
     {
@@ -26,7 +25,6 @@ public class Card
     public void Setup(CardController cardController)
     {
         this.cardController=cardController;
-    
     }
     public bool CanBeUsed(float AP)
     {
@@ -42,7 +40,6 @@ public class Card
                 cardController.gameObject.SetActive(true);
             }
         }
-        
     }
 }
 public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
@@ -87,8 +84,6 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
             if (cardRectTransform.anchoredPosition.y > -450 && card.turnsUntilReady==0)
             {  
-                UnityEngine.Debug.Log("turnsUntilReady");
-                UnityEngine.Debug.Log(card.turnsUntilReady);
                 GameManager.Instance.PickCard(card);
                 isDragging = false;
             }

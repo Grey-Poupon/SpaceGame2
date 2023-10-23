@@ -25,10 +25,7 @@ public class RoomController : MonoBehaviour
         room.Shield = canvas.Find("Shield").GetComponent<TextMeshProUGUI>();
         room.Health = canvas.Find("Health").GetComponent<TextMeshProUGUI>();
 
-        room.Title.text = roomType.ToString();
-        room.Attack.text = "0";
-        room.Shield.text = room.defence.ToString();
-        room.Health.text = room.getHealth().ToString();
+        room.UpdateTextGraphics();
         room.parent = this;
         room.isPlayer = isPlayer;
     }
@@ -83,6 +80,7 @@ public abstract class Room
     protected float maxHealth;
     public float health;
     public float defence = 0;
+    public float incomingDamage = 0;
     public bool disabled = false;
     public SpriteRenderer spriteRenderer;
     public TextMeshProUGUI Health;
@@ -132,16 +130,22 @@ public abstract class Room
         UpdateHealthBar();
     }
 
-    public void increaseDefence(float adjustment)
+    public void IncreaseDefence(float adjustment)
     {
         defence += adjustment;
         Shield.text = defence.ToString();
     }
 
-    public void decreaseDefence(float adjustment)
+    public void DecreaseDefence(float adjustment)
     {
         defence += adjustment;
         Shield.text = defence.ToString();
+    }
+
+    public void IncreaseAttackIntent(float damage)
+    {
+        incomingDamage += damage;
+        Attack.text = incomingDamage.ToString();
     }
 
     public void heal(float healing)
@@ -183,7 +187,13 @@ public abstract class Room
             action.sourceRoom = this;
         }
     }
-
+    public void UpdateTextGraphics()
+    {
+        Title.text = roomType.ToString();
+        Attack.text = incomingDamage.ToString();
+        Shield.text = defence.ToString();
+        Health.text = getHealth().ToString();
+    }
 }
 
 public class WeaponsRoom : Room

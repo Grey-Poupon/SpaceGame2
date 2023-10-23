@@ -62,7 +62,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator StartGame()
     {
         // Wait for 0.5 seconds
-        while (playerShip == null && enemyShip == null && playerHand == null)
+        while (playerShip == null || enemyShip == null || playerHand == null)
         {
             yield return new WaitForSeconds(0.5f);
         }
@@ -209,16 +209,19 @@ public class GameManager : MonoBehaviour
         {
             ResolveActions();
             ResetTempStats();
+            ResetTurnActions();
             turn = TurnTypes.Enemy;
         }
         if (turn == TurnTypes.Enemy)
         {
             EnemyChooseActions();
-            UpdateAPGraphics(true);
-            UpdateSpeedGraphics(true);
-            UpdateAPGraphics(false);
-            UpdateSpeedGraphics(false);
+            
+
+
+
             UpdateHandStats();
+            UpdateUIText();
+            UpdateRoomText();
             turn = TurnTypes.Player;
         }
         //UnityEngine.Debug.Log("Turn is now:" + turn.ToString());
@@ -232,7 +235,7 @@ public class GameManager : MonoBehaviour
         System.Random random = new System.Random();
         // foreach (CardAction action in enemyTurnActions)
         // {
-        //     foreach (SpeedEffect effect in action.getEffectsByType(typeof(SpeedEffect)))
+        //     foreach (SpeedEffect effect in action.GetEffectsByType(typeof(SpeedEffect)))
         //     {
         //         effect.TriggerEffect();
         //     }
@@ -240,7 +243,7 @@ public class GameManager : MonoBehaviour
 
         // foreach (CardAction action in playerTurnActions)
         // {
-        //     foreach (SpeedEffect effect in action.getEffectsByType(typeof(SpeedEffect)))
+        //     foreach (SpeedEffect effect in action.GetEffectsByType(typeof(SpeedEffect)))
         //     {
         //         effect.TriggerEffect();
         //     }
@@ -262,10 +265,29 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void ShowPotentialPassiveEffects()
+    {
+        foreach (Room room in playerShip.GetRoomList())
+        {
+            foreach(CombatEffect effect in room.effectsApplied)
+            {
+                ShowPotentialEffect(effect);
+            }
+        }
+
+        foreach (Room room in enemyShip.GetRoomList())
+        {
+            foreach(CombatEffect effect in room.effectsApplied)
+            {
+                ShowPotentialEffect(effect);
+            }
+        }
+    }
+
     public void PlayOutActions(List<CardAction> actions, Dictionary<RoomType, List<Room>> rooms)
     {
         List<System.Action> weaponCalls = new List<System.Action>();
-
+        
         // Trigger any effects that are still affecting the affected
         List<Room> allRooms = rooms.Values.SelectMany(x => x).ToList();
         foreach (Room room in allRooms)
@@ -314,6 +336,7 @@ public class GameManager : MonoBehaviour
                 {
                     Room target = playerRooms[RoomType.Reactor][0];
                     laserCard.cardAction.affectedRoom = target;
+                    foreach (CombatEffect effect in laserCard.cardAction.effects) effect.affectedRoom = target;
                     SubmitCard(laserCard, false);
                     break;
                 }
@@ -338,9 +361,10 @@ public class GameManager : MonoBehaviour
                     Room target;
                     if (weaponsRooms.Count > 0)      {target = weaponsRooms[0];}
                     else if (reactorRooms.Count > 0) {target = reactorRooms[0];}
-                    else                             {target = shieldRooms[0];}                   
-                    
-                    shieldCard.cardAction.affectedRoom = target;  
+                    else                             {target = enemyShip.GetRoomList()[0];}                   
+                    shieldCard.cardAction.affectedRoom = target;
+                    foreach (CombatEffect effect in shieldCard.cardAction.effects) effect.affectedRoom = target;
+
                     SubmitCard(shieldCard, false);
                     break;
                     }
@@ -350,7 +374,7 @@ public class GameManager : MonoBehaviour
             {
                 foreach (Card speedUpCard in speedUpCards)
                 {
-                    speedUpCard.cardAction.affectedRoom = speedUpCard.cardAction.sourceRoom;
+                    speedUpCard.cardAction.affectedRoom = speedUpCard.cardAction.sourceRoom;;
                     SubmitCard(speedUpCard, false);
                 }
             }
@@ -372,14 +396,17 @@ public class GameManager : MonoBehaviour
         enemyShip.ResetAP();
         enemyShip.ResetSpeed();
         enemyShip.ResetShield();
-
+    }
+    
+    public void ResetTurnActions()
+    {
         enemyTurnActionsText.text = "";
         playerTurnActionsText.text = "";
 
         playerTurnActions.Clear();
         enemyTurnActions.Clear();
     }
-    
+ 
     public void RegisterAttackComplete(Room RoomHit,string AttackType)
     {
         if (AttackType == "Laser")
@@ -424,26 +451,43 @@ public class GameManager : MonoBehaviour
         Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
     }
 
+    public void ShowPotentialEffect(CombatEffect effect)
+    {
+        if (effect is APEffect)
+        {
+            APEffect apEffect = (APEffect)effect;
+            if (effect.affectsSelf == effect.action.sourceRoom.isPlayer){ playerShip.AdjustAP(apEffect.change);}
+            else                                                 {  enemyShip.AdjustAP(apEffect.change);}
+        }
+        else if (effect is SpeedEffect)
+        {
+            SpeedEffect speedEffect = (SpeedEffect)effect;
+            if (effect.affectsSelf == effect.action.sourceRoom.isPlayer){ playerShip.AdjustSpeed(speedEffect.change);}
+            else                                                 {  enemyShip.AdjustSpeed(speedEffect.change);}
+        }
+        else if (effect is ShieldEffect)
+        {
+            ShieldEffect shieldEffect = (ShieldEffect)effect;
+            shieldEffect.action.affectedRoom.IncreaseDefence(shieldEffect.increase);
+        }
+        else if (effect is DamageEffect)
+        {
+            DamageEffect damageEffect = (DamageEffect)effect;
+            damageEffect.action.affectedRoom.IncreaseAttackIntent(damageEffect.damage);
+        }
+    }
+
+    public void ShowPotentialEffect(CardAction action)
+    {
+        foreach (CombatEffect effect in action.effects)
+        {
+            ShowPotentialEffect(effect);
+        }
+    }
     public void SubmitCard(Card card, bool isPlayer)
     {
         CardAction action = card.cardAction.Clone();
-        List<CombatEffect> APEffects = action.getEffectsByType(typeof(APEffect));
-        List<CombatEffect> SpeedEffects = action.getEffectsByType(typeof(SpeedEffect));
-        List<CombatEffect> DamageEffects = action.getEffectsByType(typeof(DamageEffect));
-
-        foreach (CombatEffect effect in APEffects)
-        {
-            APEffect apEffect = (APEffect)effect;
-            if (effect.affectsSelf == isPlayer){ playerShip.AdjustAP(apEffect.change);}
-            else { enemyShip.AdjustAP(apEffect.change);}
-        }
-        foreach (CombatEffect effect in SpeedEffects)
-        {
-            SpeedEffect speedEffect = (SpeedEffect)effect;
-            if (effect.affectsSelf == isPlayer){ playerShip.AdjustSpeed(speedEffect.change);}
-            else { enemyShip.AdjustSpeed(speedEffect.change);}
-        }
-
+        ShowPotentialEffect(card.cardAction);
         if (isPlayer)
         { 
             playerShip.AdjustAP(-action.cost);
@@ -473,6 +517,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void UpdateUIText()
+    {
+            UpdateHandStats();
+            UpdateAPGraphics(true);
+            UpdateSpeedGraphics(true);
+            UpdateAPGraphics(false);
+            UpdateSpeedGraphics(false);
+    }
     public void UpdateSpeedGraphics(bool isPlayer)
     {
         if (isPlayer) { this.playerSpeedText.text = playerShip.speed.ToString(); }
@@ -489,6 +541,13 @@ public class GameManager : MonoBehaviour
     {
         foreach(Card card in playerHand.GetCards()){if (card.turnsUntilReady > 0 ) {card.NextTurn();}}
         foreach(Card card in enemyHand.GetCards() ){if (card.turnsUntilReady > 0 ) {card.NextTurn();}}
+    }
+
+    public void UpdateRoomText()
+    {
+        foreach(Room room in playerShip.GetRoomList()){room.UpdateTextGraphics();}
+        foreach(Room room in enemyShip.GetRoomList()){room.UpdateTextGraphics();}
+
     }
 }
 
