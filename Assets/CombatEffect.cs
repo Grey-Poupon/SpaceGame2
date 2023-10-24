@@ -27,16 +27,12 @@ public abstract class CombatEffect
     {
         TriggerEffect();
         duration -= 1;
-        string name = this.affectsSelf == this.action.sourceRoom.isPlayer ? "P: " : "E: ";
-        UnityEngine.Debug.Log(name + this.GetType().ToString() + " turns left: " + duration.ToString());
+        UnityEngine.Debug.Log(" turns left: " + duration.ToString());
         
         if (duration < 1)
         {
-            UnityEngine.Debug.Log(name + this.GetType().ToString() + " trying to remove");
             FinalEffect();
-            UnityEngine.Debug.Log("Count: " + affectedRoom.effectsApplied.Count.ToString());
             affectedRoom.effectsApplied.Remove(this);
-            UnityEngine.Debug.Log("Count: " + affectedRoom.effectsApplied.Count.ToString());
         }
 
     }
@@ -63,6 +59,11 @@ public abstract class CombatEffect
     {
         // Pass
     }
+
+    public virtual void ShowPotentialEffect()
+    {
+        // Pass
+    }
 }
 
 
@@ -79,6 +80,11 @@ public class ShieldEffect : CombatEffect
     {
         affectedRoom.IncreaseDefence(increase);
     }
+    
+    public override void ShowPotentialEffect()
+    {
+        action.affectedRoom.IncreaseDefence(increase);
+    }
     public ShieldEffect(){}
 }
 
@@ -93,9 +99,17 @@ public class GeneralShieldEffect : CombatEffect
     }
     public override void TriggerEffect()
     {
-        foreach(Room room in affectedRoom.getParentShip().GetRoomList())
+        foreach(Room room in action.sourceRoom.getParentShip().GetRoomList())
         {
-            affectedRoom.IncreaseDefence(increase);
+            room.IncreaseDefence(increase);
+        }
+    }
+    
+    public override void ShowPotentialEffect()
+    {
+        foreach(Room room in action.sourceRoom.getParentShip().GetRoomList())
+        {
+            room.IncreaseDefence(increase);
         }
     }
     public GeneralShieldEffect(){}
@@ -115,6 +129,11 @@ public class DamageEffect : CombatEffect
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
     }
+    
+    public override void ShowPotentialEffect()
+    {
+        action.affectedRoom.IncreaseAttackIntent(damage);
+    }
     public DamageEffect(){}
 }
 
@@ -132,6 +151,12 @@ public class ShieldOnlyDamageEffect : CombatEffect
         damage = damage > affectedRoom.defence ? affectedRoom.defence : damage;
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
+    }
+    
+    public override void ShowPotentialEffect()
+    {
+        damage = damage > affectedRoom.defence ? affectedRoom.defence : damage;
+        affectedRoom.IncreaseAttackIntent(damage);
     }
     public ShieldOnlyDamageEffect(){}
 }
@@ -160,6 +185,11 @@ public class FreeLaserEffect : CombatEffect
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
     }
+    
+    public override void ShowPotentialEffect()
+    {
+        // Pass
+    }
     public FreeLaserEffect(){}
 }
 public class OnFireEffect : CombatEffect
@@ -187,6 +217,11 @@ public class OnFireEffect : CombatEffect
 
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
+    }
+    
+    public override void ShowPotentialEffect()
+    {
+        // Pass
     }
     public OnFireEffect(){}
 }
@@ -218,8 +253,14 @@ public class APEffect : CombatEffect
 
     public override void TriggerEffect()
     {
-        if (affectsSelf) {affectedRoom.getParentShip().AdjustAP(change);}
-        else {affectedRoom.getParentShip(true).AdjustAP(change);}
+        if (affectsSelf == action.sourceRoom.isPlayer) {GameManager.Instance.playerShip.AdjustAP(change);}
+        else {GameManager.Instance.enemyShip.AdjustAP(change);}
+    }
+    
+    public override void ShowPotentialEffect()
+    {
+        if (affectsSelf == action.sourceRoom.isPlayer) {GameManager.Instance.playerShip.AdjustAP(change);}
+        else {GameManager.Instance.enemyShip.AdjustAP(change);}
     }
     public APEffect(){}
 }
@@ -236,8 +277,14 @@ public class SpeedEffect : CombatEffect
 
     public override void TriggerEffect()
     {
-        if (affectsSelf) {affectedRoom.getParentShip().AdjustSpeed(change);}
-        else {affectedRoom.getParentShip(true).AdjustSpeed(change);}
+        if (affectsSelf == action.sourceRoom.isPlayer) {GameManager.Instance.playerShip.AdjustSpeed(change);}
+        else {GameManager.Instance.enemyShip.AdjustSpeed(change);}
+    }
+    
+    public override void ShowPotentialEffect()
+    {
+        if (affectsSelf == action.sourceRoom.isPlayer) {GameManager.Instance.playerShip.AdjustSpeed(change);}
+        else {GameManager.Instance.enemyShip.AdjustSpeed(change);}
     }
     public SpeedEffect(){}
 }
@@ -258,8 +305,12 @@ public class ChargeBatteriesEffect : CombatEffect
         CardAction action = new DischargeChargeBatteriesAction();
         action.sourceRoom = affectedRoom;
         List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
-        UnityEngine.Debug.Log("adding card to player:" + affectsPlayer.ToString());
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
+    }
+    
+    public override void ShowPotentialEffect()
+    {
+        // Pass
     }
     public ChargeBatteriesEffect(){}
 }
@@ -285,6 +336,11 @@ public class DisableRoomEffect : CombatEffect
     public override void FinalEffect()
     {
         affectedRoom.disabled = false;
+    }
+    
+    public override void ShowPotentialEffect()
+    {
+        // Pass
     }
     public DisableRoomEffect(){}
 }

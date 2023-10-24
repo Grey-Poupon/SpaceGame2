@@ -256,7 +256,7 @@ public class BuffEnergyWeaponAction : CardAction
 {
     public BuffEnergyWeaponAction()
     {
-        this.effects = new List<CombatEffect>{new FreeLaserEffect(99, true)};
+        this.effects = new List<CombatEffect>{new FreeLaserEffect(1, true)};
         AttachToEffect();
         this.name = "Buff Energy Weapon";
         this.cooldown = 2;

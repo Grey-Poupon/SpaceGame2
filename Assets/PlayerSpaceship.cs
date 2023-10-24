@@ -53,11 +53,12 @@ public abstract class SpaceShip: MonoBehaviour
         if (GameManager.Instance != null){ GameManager.Instance.UpdateSpeedGraphics(this is PlayerSpaceship);}
     }
     
-    public void ResetShield()
+    public void ResetTempRoomStats()
     {
         foreach(Room room in GetRoomList())
         {
             room.defence = 0;
+            room.incomingDamage = 0;
         }
     }
     protected SpaceShip()

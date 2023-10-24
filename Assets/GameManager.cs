@@ -216,15 +216,12 @@ public class GameManager : MonoBehaviour
         {
             EnemyChooseActions();
             
-
-
-
+            ShowPotentialPassiveEffects();
             UpdateHandStats();
             UpdateUIText();
             UpdateRoomText();
             turn = TurnTypes.Player;
         }
-        //UnityEngine.Debug.Log("Turn is now:" + turn.ToString());
     }
 
     public void ResolveActions()
@@ -255,32 +252,17 @@ public class GameManager : MonoBehaviour
         // Activate Each Action
         if (playerFirst)
         {
+            UnityEngine.Debug.Log(" -- Player -- ");
             PlayOutActions(playerTurnActions, playerRooms);
+            UnityEngine.Debug.Log(" -- Enemy  -- ");
             PlayOutActions(enemyTurnActions, enemyRooms);
         }
         else
         {
+            UnityEngine.Debug.Log(" -- Enemy  -- ");
             PlayOutActions(enemyTurnActions, enemyRooms);
+            UnityEngine.Debug.Log(" -- Player -- ");
             PlayOutActions(playerTurnActions, playerRooms);
-        }
-    }
-
-    public void ShowPotentialPassiveEffects()
-    {
-        foreach (Room room in playerShip.GetRoomList())
-        {
-            foreach(CombatEffect effect in room.effectsApplied)
-            {
-                ShowPotentialEffect(effect);
-            }
-        }
-
-        foreach (Room room in enemyShip.GetRoomList())
-        {
-            foreach(CombatEffect effect in room.effectsApplied)
-            {
-                ShowPotentialEffect(effect);
-            }
         }
     }
 
@@ -404,11 +386,11 @@ public class GameManager : MonoBehaviour
         // Reset all temp stats for next turn
         playerShip.ResetAP();
         playerShip.ResetSpeed();
-        playerShip.ResetShield();
+        playerShip.ResetTempRoomStats();
 
         enemyShip.ResetAP();
         enemyShip.ResetSpeed();
-        enemyShip.ResetShield();
+        enemyShip.ResetTempRoomStats();
     }
     
     public void ResetTurnActions()
@@ -464,29 +446,22 @@ public class GameManager : MonoBehaviour
         Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
     }
 
-    public void ShowPotentialEffect(CombatEffect effect)
+    public void ShowPotentialPassiveEffects()
     {
-        if (effect is APEffect)
+        foreach (Room room in playerShip.GetRoomList())
         {
-            APEffect apEffect = (APEffect)effect;
-            if (effect.affectsSelf == effect.action.sourceRoom.isPlayer){ playerShip.AdjustAP(apEffect.change);}
-            else                                                        {  enemyShip.AdjustAP(apEffect.change);}
+            foreach(CombatEffect effect in room.effectsApplied)
+            {
+                effect.ShowPotentialEffect();
+            }
         }
-        else if (effect is SpeedEffect)
+
+        foreach (Room room in enemyShip.GetRoomList())
         {
-            SpeedEffect speedEffect = (SpeedEffect)effect;
-            if (effect.affectsSelf == effect.action.sourceRoom.isPlayer){ playerShip.AdjustSpeed(speedEffect.change);}
-            else                                                        {  enemyShip.AdjustSpeed(speedEffect.change);}
-        }
-        else if (effect is ShieldEffect)
-        {
-            ShieldEffect shieldEffect = (ShieldEffect)effect;
-            shieldEffect.action.affectedRoom.IncreaseDefence(shieldEffect.increase);
-        }
-        else if (effect is DamageEffect)
-        {
-            DamageEffect damageEffect = (DamageEffect)effect;
-            damageEffect.action.affectedRoom.IncreaseAttackIntent(damageEffect.damage);
+            foreach(CombatEffect effect in room.effectsApplied)
+            {
+                effect.ShowPotentialEffect();
+            }
         }
     }
 
@@ -494,9 +469,10 @@ public class GameManager : MonoBehaviour
     {
         foreach (CombatEffect effect in action.effects)
         {
-            ShowPotentialEffect(effect);
+            effect.ShowPotentialEffect();
         }
     }
+
     public void SubmitCard(Card card, bool isPlayer)
     {
         CardAction action = card.cardAction.Clone();
@@ -538,6 +514,7 @@ public class GameManager : MonoBehaviour
             UpdateAPGraphics(false);
             UpdateSpeedGraphics(false);
     }
+
     public void UpdateSpeedGraphics(bool isPlayer)
     {
         if (isPlayer) { this.playerSpeedText.text = playerShip.speed.ToString(); }
