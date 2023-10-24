@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using System.Reflection;
 public abstract class CombatEffect
 {
     public float duration;
@@ -9,28 +10,52 @@ public abstract class CombatEffect
     public Room affectedRoom;
     public CardAction action;
 
-    public void Activate(Room affectedRoom)
+    protected CombatEffect()
     {
-        this.affectedRoom = affectedRoom;
-        Activate();
+
+    }
+
+    public void ApplyEffect(Room affectedRoom)
+    {
+        CombatEffect clone = this.Clone();
+        clone.affectedRoom = affectedRoom;
+        affectedRoom.effectsApplied.Add(clone);
+        clone.Activate();
 
     }
     public void Activate()
     {
         TriggerEffect();
         duration -= 1;
-        string name = this.affectsSelf == this.action.sourceRoom.isPlayer ? "Player: " : "Enemy: ";
-        UnityEngine.Debug.Log(name + this.GetType().ToString() + "turns left: " + duration.ToString());
+        string name = this.affectsSelf == this.action.sourceRoom.isPlayer ? "P: " : "E: ";
+        UnityEngine.Debug.Log(name + this.GetType().ToString() + " turns left: " + duration.ToString());
         
         if (duration < 1)
         {
-            UnityEngine.Debug.Log(name + "trying to remove");
+            UnityEngine.Debug.Log(name + this.GetType().ToString() + " trying to remove");
             FinalEffect();
-            UnityEngine.Debug.Log(affectedRoom.effectsApplied.Count);
+            UnityEngine.Debug.Log("Count: " + affectedRoom.effectsApplied.Count.ToString());
             affectedRoom.effectsApplied.Remove(this);
-            UnityEngine.Debug.Log(affectedRoom.effectsApplied.Count);
+            UnityEngine.Debug.Log("Count: " + affectedRoom.effectsApplied.Count.ToString());
         }
 
+    }
+    public CombatEffect Clone()
+    {
+        CombatEffect clone = (CombatEffect)Activator.CreateInstance(this.GetType());
+        Type sourceType = this.GetType();
+        Type targetType = clone.GetType();
+
+        foreach (FieldInfo sourceField in sourceType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+        {
+            FieldInfo targetField = targetType.GetField(sourceField.Name);
+            if (targetField != null && targetField.FieldType == sourceField.FieldType)
+            {
+                object value = sourceField.GetValue(this);
+                targetField.SetValue(clone, value);
+            }
+        }
+        return clone;
     }
     public abstract void TriggerEffect();
 
@@ -54,7 +79,7 @@ public class ShieldEffect : CombatEffect
     {
         affectedRoom.IncreaseDefence(increase);
     }
-
+    public ShieldEffect(){}
 }
 
 public class GeneralShieldEffect : CombatEffect
@@ -73,7 +98,7 @@ public class GeneralShieldEffect : CombatEffect
             affectedRoom.IncreaseDefence(increase);
         }
     }
-
+    public GeneralShieldEffect(){}
 }
 
 public class DamageEffect : CombatEffect
@@ -90,7 +115,7 @@ public class DamageEffect : CombatEffect
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
     }
-
+    public DamageEffect(){}
 }
 
 public class ShieldOnlyDamageEffect : CombatEffect
@@ -108,7 +133,7 @@ public class ShieldOnlyDamageEffect : CombatEffect
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
     }
-
+    public ShieldOnlyDamageEffect(){}
 }
 public class FreeLaserEffect : CombatEffect
 {
@@ -135,6 +160,7 @@ public class FreeLaserEffect : CombatEffect
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
     }
+    public FreeLaserEffect(){}
 }
 public class OnFireEffect : CombatEffect
 {
@@ -162,6 +188,7 @@ public class OnFireEffect : CombatEffect
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
     }
+    public OnFireEffect(){}
 }
 public class StopFireEffect : CombatEffect
 {
@@ -194,6 +221,7 @@ public class APEffect : CombatEffect
         if (affectsSelf) {affectedRoom.getParentShip().AdjustAP(change);}
         else {affectedRoom.getParentShip(true).AdjustAP(change);}
     }
+    public APEffect(){}
 }
 
 public class SpeedEffect : CombatEffect
@@ -211,6 +239,7 @@ public class SpeedEffect : CombatEffect
         if (affectsSelf) {affectedRoom.getParentShip().AdjustSpeed(change);}
         else {affectedRoom.getParentShip(true).AdjustSpeed(change);}
     }
+    public SpeedEffect(){}
 }
 
 public class ChargeBatteriesEffect : CombatEffect
@@ -232,6 +261,7 @@ public class ChargeBatteriesEffect : CombatEffect
         UnityEngine.Debug.Log("adding card to player:" + affectsPlayer.ToString());
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
     }
+    public ChargeBatteriesEffect(){}
 }
 
 public class DisableRoomEffect : CombatEffect
@@ -256,4 +286,5 @@ public class DisableRoomEffect : CombatEffect
     {
         affectedRoom.disabled = false;
     }
+    public DisableRoomEffect(){}
 }

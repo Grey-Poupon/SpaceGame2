@@ -6,9 +6,15 @@ public class DebugHandler : MonoBehaviour
 {
     uint qsize = 15;  // number of messages to keep
     Queue myLogQueue = new Queue();
-
+    public GUIStyle customStyle; // Create a GUIStyle for custom text style
     void Start() {
         Debug.Log("Started up logging.");
+        // Initialize the custom style here (you can customize it further)
+        customStyle = new GUIStyle();
+        customStyle.fontSize = 30;
+        customStyle.wordWrap = true;
+        customStyle.normal.textColor = Color.white;
+
     }
 
     void OnEnable() {
@@ -28,8 +34,8 @@ public class DebugHandler : MonoBehaviour
     }
 
     void OnGUI() {
-        GUILayout.BeginArea(new Rect(Screen.width - 300, 0, 400, Screen.height));
-        GUILayout.Label("\n" + string.Join("\n", myLogQueue.ToArray()));
+        GUILayout.BeginArea(new Rect(Screen.width - 450, 0, 400, Screen.height));
+        GUILayout.Label("\n" + string.Join("\n", myLogQueue.ToArray()), customStyle);
         GUILayout.EndArea();
     }
 }

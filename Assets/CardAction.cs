@@ -19,7 +19,7 @@ public abstract class CardAction{
 
         foreach (CombatEffect effect in effects)
         {
-            effect.Activate(affectedRoom);
+            effect.ApplyEffect(affectedRoom);
         }
     }
 

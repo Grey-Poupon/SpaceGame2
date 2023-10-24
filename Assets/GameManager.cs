@@ -287,20 +287,33 @@ public class GameManager : MonoBehaviour
     public void PlayOutActions(List<CardAction> actions, Dictionary<RoomType, List<Room>> rooms)
     {
         List<System.Action> weaponCalls = new List<System.Action>();
-        
+        UnityEngine.Debug.Log("Activate old effects");
         // Trigger any effects that are still affecting the affected
         List<Room> allRooms = rooms.Values.SelectMany(x => x).ToList();
         foreach (Room room in allRooms)
         {
+            // Have to be careful here as effects will remove themselves from the rooms 
+            int i = 0;
+            while (i < room.effectsApplied.Count)
+            {
+                int currentCount = room.effectsApplied.Count;
+                room.effectsApplied[i].Activate();
+
+                if(room.effectsApplied.Count == currentCount)
+                {
+                    i++;
+                }
+            }
             foreach(CombatEffect effect in room.effectsApplied)
             {
                 effect.Activate();
             }
         }
-
+        UnityEngine.Debug.Log("Activate new actions");
         // Activate actions, which will apply and trigger some more effects
         foreach (CardAction action in actions)
         {
+            UnityEngine.Debug.Log("Activate: " + action.name);
             if (action.sourceRoom.disabled || action.sourceRoom.health <= 0 || action.card.turnsUntilReady != 0) {continue;}
             if (action is LaserAction || action is FreeLaserAction){ weaponCalls.Add(() => FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom)); }
             
@@ -457,13 +470,13 @@ public class GameManager : MonoBehaviour
         {
             APEffect apEffect = (APEffect)effect;
             if (effect.affectsSelf == effect.action.sourceRoom.isPlayer){ playerShip.AdjustAP(apEffect.change);}
-            else                                                 {  enemyShip.AdjustAP(apEffect.change);}
+            else                                                        {  enemyShip.AdjustAP(apEffect.change);}
         }
         else if (effect is SpeedEffect)
         {
             SpeedEffect speedEffect = (SpeedEffect)effect;
             if (effect.affectsSelf == effect.action.sourceRoom.isPlayer){ playerShip.AdjustSpeed(speedEffect.change);}
-            else                                                 {  enemyShip.AdjustSpeed(speedEffect.change);}
+            else                                                        {  enemyShip.AdjustSpeed(speedEffect.change);}
         }
         else if (effect is ShieldEffect)
         {
