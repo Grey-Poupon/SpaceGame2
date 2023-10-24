@@ -70,6 +70,14 @@ public class GameManager : MonoBehaviour
 
         // Call your non-async function here
         turn = TurnTypes.Enemy;
+        foreach(Card card in playerHand.GetCards())
+        {
+        if(card.cardAction.cooldown > 0)
+        {
+            card.cardController.gameObject.SetActive(false);
+            card.turnsUntilReady = card.cardAction.cooldown + 1;
+        }
+        }
         FinishTurn();
     }
 
@@ -508,7 +516,6 @@ public class GameManager : MonoBehaviour
 
     public void UpdateUIText()
     {
-            UpdateHandStats();
             UpdateAPGraphics(true);
             UpdateSpeedGraphics(true);
             UpdateAPGraphics(false);
