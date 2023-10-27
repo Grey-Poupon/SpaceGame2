@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour
     private TextMeshProUGUI enemySpeedText;
     private TextMeshProUGUI playerAPText;
     private TextMeshProUGUI enemyAPText;
-    
+    public bool IsSimulation;
     private void Awake()
     {
         if (Instance == null)
@@ -55,6 +55,7 @@ public class GameManager : MonoBehaviour
         this.enemySpeedText = GameObject.Find("EnemySpeedText").GetComponent<TextMeshProUGUI>();
         this.playerAPText = GameObject.Find("PlayerAPText").GetComponent<TextMeshProUGUI>();
         this.enemyAPText = GameObject.Find("EnemyAPText").GetComponent<TextMeshProUGUI>();
+        IsSimulation=false;
         StartCoroutine(StartGame());
 
     }
@@ -72,14 +73,41 @@ public class GameManager : MonoBehaviour
         turn = TurnTypes.Enemy;
         foreach(Card card in playerHand.GetCards())
         {
-        if(card.cardAction.cooldown > 0)
+            if(card.cardAction.cooldown > 0)
+            {
+                card.cardController.gameObject.SetActive(false);
+                card.turnsUntilReady = card.cardAction.cooldown + 1;
+            }
+        }
+        if (IsSimulation)
         {
-            card.cardController.gameObject.SetActive(false);
-            card.turnsUntilReady = card.cardAction.cooldown + 1;
+            int limit = 10;
+            int counter = 0;
+            while(counter < limit && playerRooms[RoomType.Reactor][0].health > 0 && enemyRooms[RoomType.Reactor][0].health > 0)
+            {
+                counter ++;
+                FinishTurn();
+                SimulatePlayerTurn();
+            }
+            UnityEngine.Debug.Log("It's the END of the SIMULATION ! THe MaTrIx ItS CoLaPsInG :%SZDSX");
         }
+        else
+        {
+            UnityEngine.Debug.Log(IsSimulation);
+            FinishTurn();
         }
-        FinishTurn();
+        
     }
+
+    public void SimulateEnemyTurn()
+    {
+        
+    }
+    public void SimulatePlayerTurn()
+    {
+        
+    }
+
 
     public void update()
     {
@@ -222,7 +250,14 @@ public class GameManager : MonoBehaviour
         }
         if (turn == TurnTypes.Enemy)
         {
-            EnemyChooseActions();
+            if (IsSimulation)
+            {
+                SimulateEnemyTurn();
+            }
+            else
+            {
+                EnemyChooseActions();
+            }
             
             ShowPotentialPassiveEffects();
             UpdateHandStats();
