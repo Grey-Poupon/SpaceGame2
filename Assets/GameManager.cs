@@ -260,16 +260,16 @@ public class GameManager : MonoBehaviour
         // Activate Each Action
         if (playerFirst)
         {
-            UnityEngine.Debug.Log(" -- Player -- ");
+            //UnityEngine.Debug.Log(" -- Player -- ");
             PlayOutActions(playerTurnActions, playerRooms);
-            UnityEngine.Debug.Log(" -- Enemy  -- ");
+            //UnityEngine.Debug.Log(" -- Enemy  -- ");
             PlayOutActions(enemyTurnActions, enemyRooms);
         }
         else
         {
-            UnityEngine.Debug.Log(" -- Enemy  -- ");
+            //UnityEngine.Debug.Log(" -- Enemy  -- ");
             PlayOutActions(enemyTurnActions, enemyRooms);
-            UnityEngine.Debug.Log(" -- Player -- ");
+            //UnityEngine.Debug.Log(" -- Player -- ");
             PlayOutActions(playerTurnActions, playerRooms);
         }
     }
@@ -277,7 +277,7 @@ public class GameManager : MonoBehaviour
     public void PlayOutActions(List<CardAction> actions, Dictionary<RoomType, List<Room>> rooms)
     {
         List<System.Action> weaponCalls = new List<System.Action>();
-        UnityEngine.Debug.Log("Activate old effects");
+        //UnityEngine.Debug.Log("Activate old effects");
         // Trigger any effects that are still affecting the affected
         List<Room> allRooms = rooms.Values.SelectMany(x => x).ToList();
         foreach (Room room in allRooms)
@@ -299,12 +299,12 @@ public class GameManager : MonoBehaviour
                 effect.Activate();
             }
         }
-        UnityEngine.Debug.Log("Activate new actions");
+        //UnityEngine.Debug.Log("Activate new actions");
         // Activate actions, which will apply and trigger some more effects
         foreach (CardAction action in actions)
         {
-            UnityEngine.Debug.Log("Activate: " + action.name);
-            if (action.sourceRoom.disabled || action.sourceRoom.health <= 0 || action.card.turnsUntilReady != 0) {continue;}
+            //UnityEngine.Debug.Log("Activate: " + action.name);
+            if (!action.IsReady()) {continue;}
             if (action is LaserAction || action is FreeLaserAction){ weaponCalls.Add(() => FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom)); }
             
             action.Activate();

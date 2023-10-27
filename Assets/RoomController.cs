@@ -43,7 +43,7 @@ public class RoomController : MonoBehaviour
         }
         else
         {
-            UnityEngine.Debug.Log("If its you turn: Play a card to do an Action, else hit enter");
+            //UnityEngine.Debug.Log("If its you turn: Play a card to do an Action, else hit enter");
         }
     }
 
@@ -82,6 +82,8 @@ public abstract class Room
     public float defence = 0;
     public float incomingDamage = 0;
     public bool disabled = false;
+    public bool destroyed = false;
+
     public SpriteRenderer spriteRenderer;
     public TextMeshProUGUI Health;
     public TextMeshProUGUI Title;
@@ -153,13 +155,28 @@ public abstract class Room
         if (health == maxHealth){return;}
 
         float newHealth = health + healing > maxHealth ? maxHealth : health + healing;
+        
+        // Actions are added back to player when room is brought back up
+        if (health <= 0 && healing > 0)
+        {
+            destroyed = false;
+            foreach(CardAction action in actions)
+            {
+                if (action.IsReady()){action.card.cardController.gameObject.SetActive(true);}
+            }
+        }
         setHealth(newHealth);
         UpdateHealthBar();
     }
 
     public virtual void onDestroy()
     {
-        UnityEngine.Debug.Log("Room Destroyed");
+        destroyed = true;
+        foreach(CardAction action in actions)
+        {
+            action.card.cardController.gameObject.SetActive(false);
+        }
+        //UnityEngine.Debug.Log("Room Destroyed");
     }
 
     void UpdateHealthBar()
@@ -245,77 +262,11 @@ public class ReactorRoom : Room
     public override void onDestroy()
     {
         base.onDestroy();
-        UnityEngine.Debug.Log("Ship gone");
+        //UnityEngine.Debug.Log("Ship gone");
     }
 
 }
 
-
-// public class LaserAction : CardAction
-// {
-//     public LaserAction()
-//     {
-//         affectedStat = Stat.Health;
-//         statAdjustment = -1;
-//         affectsSelf = false;
-//         roomName = "Laser";
-//     }
-// }
-
-// public class ShieldAction : CardAction
-// {
-//     public ShieldAction()
-//     {
-//         affectedStat = Stat.Defence;
-//         statAdjustment = 1;
-//         affectsSelf = true;
-//         roomName = "Shield";
-//     }
-// }
-
-// public class ReactorAction : CardAction
-// {
-//     public ReactorAction()
-//     {
-//         affectedStat = Stat.AP;
-//         statAdjustment = 1;
-//         affectsSelf = true;
-//         roomName = "Reactor";
-//     }
-// }
-
-// public class EngineAction : CardAction
-// {
-//     public EngineAction()
-//     {
-//         affectedStat = Stat.Speed;
-//         statAdjustment = 1;
-//         affectsSelf = true;
-//         roomName = "Engine";
-//     }
-// }
-
-// public class CargoHoldAction : CardAction
-// {
-//     public CargoHoldAction()
-//     {
-//         affectedStat = Stat.Health;
-//         statAdjustment = 1;
-//         affectsSelf = true;
-//         roomName = "CargoHold";
-//     }
-// }
-
-// public class MissileAction : CardAction
-// {
-//     public MissileAction()
-//     {
-//         affectedStat = Stat.Health;
-//         statAdjustment = -2;
-//         affectsSelf = false;
-//         roomName = "Missile";
-//     }
-// }
 
 public enum RoomType
 {

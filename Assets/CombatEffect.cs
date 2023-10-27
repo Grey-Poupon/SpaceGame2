@@ -27,7 +27,7 @@ public abstract class CombatEffect
     {
         TriggerEffect();
         duration -= 1;
-        UnityEngine.Debug.Log(" turns left: " + duration.ToString());
+        //UnityEngine.Debug.Log(" turns left: " + duration.ToString());
         
         if (duration < 1)
         {

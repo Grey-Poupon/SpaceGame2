@@ -45,7 +45,7 @@ public abstract class CardAction{
     }
     public bool IsReady()
     {
-        return card.turnsUntilReady == 0 && sourceRoom.health > 0;
+        return !sourceRoom.destroyed && !sourceRoom.disabled && card.turnsUntilReady == 0;
     }
     public bool CanBeUsed(float AP)
     {

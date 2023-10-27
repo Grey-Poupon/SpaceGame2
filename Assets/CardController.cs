@@ -13,7 +13,7 @@ public class Card
 
     public CardAction cardAction;
     public CardController cardController;
-    public int turnsUntilReady =0;
+    public int turnsUntilReady = 0;
     public Card(CardAction cardAction)
     {
         this.cardAction = cardAction;
@@ -36,7 +36,7 @@ public class Card
         if (turnsUntilReady > 0)
         {
             turnsUntilReady -= 1;
-            if (turnsUntilReady == 0)
+            if (cardAction.IsReady())
             {
                 cardController.gameObject.SetActive(true);
             }
