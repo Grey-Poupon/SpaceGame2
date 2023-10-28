@@ -88,7 +88,22 @@ public class GameManager : MonoBehaviour
             while(counter < limit && playerRooms[RoomType.Reactor][0].health > 0 && enemyRooms[RoomType.Reactor][0].health > 0)
             {
                 counter ++;
-                FinishTurn();
+                
+                ResolveActions();
+
+                ResetTempStats();
+                ResetTurnActions();
+
+                // ----  End of Round  ---
+
+                float value = playerRooms[RoomType.Reactor][0].health / playerRooms[RoomType.Reactor][0].getMaxHealth();
+
+                // ---- Start of Round ---
+
+                SimulateEnemyTurn();
+
+                UpdateHandStats();
+
                 SimulatePlayerTurn();
                 break;
             }
@@ -102,28 +117,47 @@ public class GameManager : MonoBehaviour
         
     }
 
+    public void SimulatePlayerTurn()
+    {
+        List<List<CardAction>> allCardCombinations = new List<List<CardAction>>();
+        GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, playerShip.AP, playerHand.GetCards());
+
+        // string result = "";
+        // foreach(List<CardAction> cardCombo in allCardCombinations)
+        // {
+        //     result += string.Join(" | ", cardCombo.Select(obj => !obj.needsTarget ? obj.name : obj.name + " -> " + obj.affectedRoom.roomType.ToString()));
+        //     result += "\n";
+        // }
+        // UnityEngine.Debug.Log(result);
+
+        UnityEngine.Debug.Log("Player Turns");
+        UnityEngine.Debug.Log(allCardCombinations.Count);
+    }
     public void SimulateEnemyTurn()
     {
         List<List<CardAction>> allCardCombinations = new List<List<CardAction>>();
-        GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, playerShip.AP);
+        GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, enemyShip.AP, enemyHand.GetCards());
 
-        string result = "";
-        foreach(List<CardAction> cardCombo in allCardCombinations)
-        {
-            result += string.Join(" | ", cardCombo.Select(obj => !obj.needsTarget ? obj.name : obj.name + " -> " + obj.affectedRoom.roomType.ToString()));
-            result += "\n";
-        }
-        UnityEngine.Debug.Log(result);
+        // string result = "";
+        // foreach(List<CardAction> cardCombo in allCardCombinations)
+        // {
+        //     result += string.Join(" | ", cardCombo.Select(obj => !obj.needsTarget ? obj.name : obj.name + " -> " + obj.affectedRoom.roomType.ToString()));
+        //     result += "\n";
+        // }
+        // UnityEngine.Debug.Log(result);
+        UnityEngine.Debug.Log("Enemy Turns");
         UnityEngine.Debug.Log(allCardCombinations.Count);
     }
-    public void GenerateCardCombinations(List<CardAction> currentCombination, int index, List<List<CardAction>> allCardCombinations, float APLeft)
+    
+    public void GenerateCardCombinations(List<CardAction> currentCombination, int index, List<List<CardAction>> allCardCombinations, float APLeft, List<Card> cardPool)
     {
-        if (index == playerHand.GetCards().Count)
+
+        if (index == cardPool.Count)
         {
             allCardCombinations.Add(currentCombination);
             return;
         }
-        CardAction currentAction = playerHand.GetCards()[index].cardAction;
+        CardAction currentAction = cardPool[index].cardAction;
 
         // Use the current action
         if (currentAction.CanBeUsed(APLeft))
@@ -138,22 +172,26 @@ public class GameManager : MonoBehaviour
                     cardActionWithTarget.affectedRoom = room;
                     List<CardAction> comboWithActionTarget = new List<CardAction>( currentCombination.Concat(new List<CardAction>{cardActionWithTarget}) );
                     
-                    GenerateCardCombinations(comboWithActionTarget, index + nextCard, allCardCombinations, newAP);
+                    GenerateCardCombinations(comboWithActionTarget, index + nextCard, allCardCombinations, newAP, cardPool);
+                }
+                foreach(Room room in playerShip.GetRoomList())
+                {
+                    CardAction cardActionWithTarget = currentAction.Clone();
+                    cardActionWithTarget.affectedRoom = room;
+                    List<CardAction> comboWithActionTarget = new List<CardAction>( currentCombination.Concat(new List<CardAction>{cardActionWithTarget}) );
+                    
+                    GenerateCardCombinations(comboWithActionTarget, index + nextCard, allCardCombinations, newAP, cardPool);
                 }
             }
             else
             {
                 List<CardAction> comboWithAction = new List<CardAction>( currentCombination.Concat(new List<CardAction>{currentAction}) );
-                GenerateCardCombinations(comboWithAction, index + nextCard, allCardCombinations, newAP);
+                GenerateCardCombinations(comboWithAction, index + nextCard, allCardCombinations, newAP, cardPool);
             }
         }
         // Don't use the current action
-        GenerateCardCombinations(currentCombination, index + 1, allCardCombinations, APLeft);
+        GenerateCardCombinations(currentCombination, index + 1, allCardCombinations, APLeft, cardPool);
 
-    }
-    public void SimulatePlayerTurn()
-    {
-        
     }
 
 
