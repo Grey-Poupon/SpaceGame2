@@ -57,7 +57,7 @@ public class GameManager : MonoBehaviour
         this.enemySpeedText = GameObject.Find("EnemySpeedText").GetComponent<TextMeshProUGUI>();
         this.playerAPText = GameObject.Find("PlayerAPText").GetComponent<TextMeshProUGUI>();
         this.enemyAPText = GameObject.Find("EnemyAPText").GetComponent<TextMeshProUGUI>();
-        IsSimulation=false;
+        IsSimulation=true;
         StartCoroutine(StartGame());
 
     }
@@ -107,11 +107,14 @@ public class GameManager : MonoBehaviour
         List<List<CardAction>> allCardCombinations = new List<List<CardAction>>();
         GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, playerShip.AP);
 
+        string result = "";
         foreach(List<CardAction> cardCombo in allCardCombinations)
         {
-            string result = string.Join(" | ", cardCombo.Select(obj => obj.name));
-            UnityEngine.Debug.Log(result);
+            result += string.Join(" | ", cardCombo.Select(obj => !obj.needsTarget ? obj.name : obj.name + " -> " + obj.affectedRoom.roomType.ToString()));
+            result += "\n";
         }
+        UnityEngine.Debug.Log(result);
+        UnityEngine.Debug.Log(allCardCombinations.Count);
     }
     public void GenerateCardCombinations(List<CardAction> currentCombination, int index, List<List<CardAction>> allCardCombinations, float APLeft)
     {
@@ -127,8 +130,22 @@ public class GameManager : MonoBehaviour
         {
             float newAP = APLeft - currentAction.cost;
             int nextCard = currentAction.cooldown > 0 ? 1 : 0; // If the card isn't infinite move onto the next action
-            List<CardAction> comboWithAction = new List<CardAction>( currentCombination.Concat(new List<CardAction>{currentAction}) );
-            GenerateCardCombinations(comboWithAction, index + nextCard, allCardCombinations, newAP);
+            if (currentAction.needsTarget)
+            {
+                foreach(Room room in enemyShip.GetRoomList())
+                {
+                    CardAction cardActionWithTarget = currentAction.Clone();
+                    cardActionWithTarget.affectedRoom = room;
+                    List<CardAction> comboWithActionTarget = new List<CardAction>( currentCombination.Concat(new List<CardAction>{cardActionWithTarget}) );
+                    
+                    GenerateCardCombinations(comboWithActionTarget, index + nextCard, allCardCombinations, newAP);
+                }
+            }
+            else
+            {
+                List<CardAction> comboWithAction = new List<CardAction>( currentCombination.Concat(new List<CardAction>{currentAction}) );
+                GenerateCardCombinations(comboWithAction, index + nextCard, allCardCombinations, newAP);
+            }
         }
         // Don't use the current action
         GenerateCardCombinations(currentCombination, index + 1, allCardCombinations, APLeft);
