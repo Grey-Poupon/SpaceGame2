@@ -35,6 +35,8 @@ public class GameManager : MonoBehaviour
     private TextMeshProUGUI playerAPText;
     private TextMeshProUGUI enemyAPText;
     public bool IsSimulation;
+
+    public TreeNode gameTree;
     private void Awake()
     {
         if (Instance == null)
@@ -88,6 +90,7 @@ public class GameManager : MonoBehaviour
                 counter ++;
                 FinishTurn();
                 SimulatePlayerTurn();
+                break;
             }
             UnityEngine.Debug.Log("It's the END of the SIMULATION ! THe MaTrIx ItS CoLaPsInG :%SZDSX");
         }
@@ -101,7 +104,35 @@ public class GameManager : MonoBehaviour
 
     public void SimulateEnemyTurn()
     {
-        
+        List<List<CardAction>> allCardCombinations = new List<List<CardAction>>();
+        GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, playerShip.AP);
+
+        foreach(List<CardAction> cardCombo in allCardCombinations)
+        {
+            string result = string.Join(" | ", cardCombo.Select(obj => obj.name));
+            UnityEngine.Debug.Log(result);
+        }
+    }
+    public void GenerateCardCombinations(List<CardAction> currentCombination, int index, List<List<CardAction>> allCardCombinations, float APLeft)
+    {
+        if (index == playerHand.GetCards().Count)
+        {
+            allCardCombinations.Add(currentCombination);
+            return;
+        }
+        CardAction currentAction = playerHand.GetCards()[index].cardAction;
+
+        // Use the current action
+        if (currentAction.CanBeUsed(APLeft))
+        {
+            float newAP = APLeft - currentAction.cost;
+            int nextCard = currentAction.cooldown > 0 ? 1 : 0; // If the card isn't infinite move onto the next action
+            List<CardAction> comboWithAction = new List<CardAction>( currentCombination.Concat(new List<CardAction>{currentAction}) );
+            GenerateCardCombinations(comboWithAction, index + nextCard, allCardCombinations, newAP);
+        }
+        // Don't use the current action
+        GenerateCardCombinations(currentCombination, index + 1, allCardCombinations, APLeft);
+
     }
     public void SimulatePlayerTurn()
     {
