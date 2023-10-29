@@ -119,7 +119,7 @@ public class GameManager : MonoBehaviour
 
     public void SimulatePlayerTurn()
     {
-        List<List<CardAction>> allCardCombinations = new List<List<CardAction>>();
+        Dictionary<int, List<CardAction>> allCardCombinations = new Dictionary<int, List<CardAction>>();
         GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, playerShip.AP, playerHand.GetCards());
 
         // string result = "";
@@ -131,11 +131,11 @@ public class GameManager : MonoBehaviour
         // UnityEngine.Debug.Log(result);
 
         UnityEngine.Debug.Log("Player Turns");
-        UnityEngine.Debug.Log(allCardCombinations.Count);
+        UnityEngine.Debug.Log(allCardCombinations.Values.SelectMany(x => x).ToList().Count);
     }
     public void SimulateEnemyTurn()
     {
-        List<List<CardAction>> allCardCombinations = new List<List<CardAction>>();
+        Dictionary<int, List<CardAction>> allCardCombinations = new Dictionary<int, List<CardAction>>();
         GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, enemyShip.AP, enemyHand.GetCards());
 
         // string result = "";
@@ -146,15 +146,24 @@ public class GameManager : MonoBehaviour
         // }
         // UnityEngine.Debug.Log(result);
         UnityEngine.Debug.Log("Enemy Turns");
-        UnityEngine.Debug.Log(allCardCombinations.Count);
+        UnityEngine.Debug.Log(allCardCombinations.Values.SelectMany(x => x).ToList().Count);
     }
     
-    public void GenerateCardCombinations(List<CardAction> currentCombination, int index, List<List<CardAction>> allCardCombinations, float APLeft, List<Card> cardPool)
+    public void GenerateCardCombinations(List<CardAction> currentCombination,
+    int index,
+    Dictionary<int, List<CardAction>> allCardCombinations,
+    float APLeft,
+    List<Card> cardPool)
     {
 
         if (index == cardPool.Count)
         {
-            allCardCombinations.Add(currentCombination);
+            int currentComboHash = GenerateCardCombinationHash(currentCombination);
+            if (allCardCombinations.ContainsKey(currentComboHash))
+            {
+                return;
+            }
+            allCardCombinations[currentComboHash] = currentCombination;
             return;
         }
         CardAction currentAction = cardPool[index].cardAction;
@@ -194,6 +203,23 @@ public class GameManager : MonoBehaviour
 
     }
 
+    public int GenerateCardCombinationHash(List<CardAction> cardActions)
+    {
+        // Convert the list of CardAction objects into a set of strings
+        HashSet<string> cardActionSet = new HashSet<string>(
+            cardActions.Select(ca => $"{ca.GetType().ToString()}:{ca.sourceRoom.roomType.ToString()}:{(ca.affectedRoom == null ? 1 : ca.affectedRoom.roomType.ToString())}")
+        );
+
+        // Sort the elements in the HashSet
+        var sortedCardActionSet = new SortedSet<string>(cardActionSet);
+
+        int hash = 17;
+        foreach (var item in sortedCardActionSet)
+        {
+            hash = hash * 31 + item.GetHashCode();
+        }
+        return hash;
+    }
 
     public void update()
     {
