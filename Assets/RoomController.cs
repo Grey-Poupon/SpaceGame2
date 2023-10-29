@@ -50,16 +50,16 @@ public class RoomController : MonoBehaviour
 
     Room createRoom(RoomType roomType)
     {
-        /*List<CardAction> weaponActions  = new List<CardAction> { new LaserAction(),         new MissileAction(),          new FirebombAction(),         new ShieldPiercerAction()       };
+        List<CardAction> weaponActions  = new List<CardAction> { new LaserAction(),         new MissileAction(),          new FirebombAction(),         new ShieldPiercerAction()       };
         List<CardAction> shieldActions  = new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction(),    new BigBoyShieldAction(),     new SemiPermanentShieldAction() };
         List<CardAction> engineActions  = new List<CardAction> { new SpeedUpAction(),       new BigBoySpeedUpAction(),    new EvasiveManeouvreAction(), new OverHeatAction()            };
-        List<CardAction> reactorActions = new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction(), new ChargeBatteriesAction(),  new EMPAction()                 };*/
+        List<CardAction> reactorActions = new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction(), new ChargeBatteriesAction(),  new EMPAction()                 };
 
 
-        List<CardAction> weaponActions = new List<CardAction> { new LaserAction(), new MissileAction() };
-        List<CardAction> shieldActions = new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction() };
-        List<CardAction> engineActions = new List<CardAction> { new SpeedUpAction(), new BigBoySpeedUpAction() };
-        List<CardAction> reactorActions = new List<CardAction> { new OverdriveAction(), new BuffEnergyWeaponAction() };
+        // List<CardAction> weaponActions = new List<CardAction> { new LaserAction(), new MissileAction() };
+        // List<CardAction> shieldActions = new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction() };
+        // List<CardAction> engineActions = new List<CardAction> { new SpeedUpAction(), new BigBoySpeedUpAction() };
+        // List<CardAction> reactorActions = new List<CardAction> { new OverdriveAction(), new BuffEnergyWeaponAction() };
 
         if      (roomType == RoomType.Weapons) { return new WeaponsRoom(weaponActions);  }
         else if (roomType == RoomType.Shield)  { return new ShieldRoom(shieldActions);   }
