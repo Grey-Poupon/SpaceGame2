@@ -27,7 +27,7 @@ public abstract class CombatEffect
     {
         TriggerEffect();
         duration -= 1;
-        UnityEngine.Debug.Log(" turns left: " + duration.ToString());
+        //UnityEngine.Debug.Log(" turns left: " + duration.ToString());
         
         if (duration < 1)
         {
@@ -181,9 +181,6 @@ public class FreeLaserEffect : CombatEffect
         action.sourceRoom = affectedRoom;
         List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
-
-        affectedRoom.takeDamage(damage);
-        affectedRoom.updateHealthGraphics();
     }
     
     public override void ShowPotentialEffect()
@@ -303,7 +300,7 @@ public class ChargeBatteriesEffect : CombatEffect
     {
         bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
         CardAction action = new DischargeChargeBatteriesAction();
-        action.sourceRoom = affectedRoom;
+        action.sourceRoom = this.action.sourceRoom;
         List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
     }

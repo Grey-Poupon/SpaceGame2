@@ -34,7 +34,9 @@ public class GameManager : MonoBehaviour
     private TextMeshProUGUI enemySpeedText;
     private TextMeshProUGUI playerAPText;
     private TextMeshProUGUI enemyAPText;
-    
+    public bool IsSimulation;
+
+    public TreeNode gameTree;
     private void Awake()
     {
         if (Instance == null)
@@ -55,6 +57,7 @@ public class GameManager : MonoBehaviour
         this.enemySpeedText = GameObject.Find("EnemySpeedText").GetComponent<TextMeshProUGUI>();
         this.playerAPText = GameObject.Find("PlayerAPText").GetComponent<TextMeshProUGUI>();
         this.enemyAPText = GameObject.Find("EnemyAPText").GetComponent<TextMeshProUGUI>();
+        IsSimulation=true;
         StartCoroutine(StartGame());
 
     }
@@ -72,13 +75,150 @@ public class GameManager : MonoBehaviour
         turn = TurnTypes.Enemy;
         foreach(Card card in playerHand.GetCards())
         {
-        if(card.cardAction.cooldown > 0)
+            if(card.cardAction.cooldown > 0)
+            {
+                card.cardController.gameObject.SetActive(false);
+                card.turnsUntilReady = card.cardAction.cooldown + 1;
+            }
+        }
+        if (IsSimulation)
         {
-            card.cardController.gameObject.SetActive(false);
-            card.turnsUntilReady = card.cardAction.cooldown + 1;
+            int limit = 10;
+            int counter = 0;
+            while(counter < limit && playerRooms[RoomType.Reactor][0].health > 0 && enemyRooms[RoomType.Reactor][0].health > 0)
+            {
+                counter ++;
+                
+                ResolveActions();
+
+                ResetTempStats();
+                ResetTurnActions();
+
+                // ----  End of Round  ---
+
+                float value = playerRooms[RoomType.Reactor][0].health / playerRooms[RoomType.Reactor][0].getMaxHealth();
+
+                // ---- Start of Round ---
+
+                SimulateEnemyTurn();
+
+                UpdateHandStats();
+
+                SimulatePlayerTurn();
+                break;
+            }
+            UnityEngine.Debug.Log("It's the END of the SIMULATION ! THe MaTrIx ItS CoLaPsInG :%SZDSX");
         }
+        else
+        {
+            UnityEngine.Debug.Log(IsSimulation);
+            FinishTurn();
         }
-        FinishTurn();
+        
+    }
+
+    public void SimulatePlayerTurn()
+    {
+        Dictionary<int, List<CardAction>> allCardCombinations = new Dictionary<int, List<CardAction>>();
+        GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, playerShip.AP, playerHand.GetCards());
+
+        // string result = "";
+        // foreach(List<CardAction> cardCombo in allCardCombinations)
+        // {
+        //     result += string.Join(" | ", cardCombo.Select(obj => !obj.needsTarget ? obj.name : obj.name + " -> " + obj.affectedRoom.roomType.ToString()));
+        //     result += "\n";
+        // }
+        // UnityEngine.Debug.Log(result);
+
+        UnityEngine.Debug.Log("Player Turns");
+        UnityEngine.Debug.Log(allCardCombinations.Values.SelectMany(x => x).ToList().Count);
+    }
+    public void SimulateEnemyTurn()
+    {
+        Dictionary<int, List<CardAction>> allCardCombinations = new Dictionary<int, List<CardAction>>();
+        GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, enemyShip.AP, enemyHand.GetCards());
+
+        // string result = "";
+        // foreach(List<CardAction> cardCombo in allCardCombinations)
+        // {
+        //     result += string.Join(" | ", cardCombo.Select(obj => !obj.needsTarget ? obj.name : obj.name + " -> " + obj.affectedRoom.roomType.ToString()));
+        //     result += "\n";
+        // }
+        // UnityEngine.Debug.Log(result);
+        UnityEngine.Debug.Log("Enemy Turns");
+        UnityEngine.Debug.Log(allCardCombinations.Values.SelectMany(x => x).ToList().Count);
+    }
+    
+    public void GenerateCardCombinations(List<CardAction> currentCombination,
+    int index,
+    Dictionary<int, List<CardAction>> allCardCombinations,
+    float APLeft,
+    List<Card> cardPool)
+    {
+
+        if (index == cardPool.Count)
+        {
+            int currentComboHash = GenerateCardCombinationHash(currentCombination);
+            if (allCardCombinations.ContainsKey(currentComboHash))
+            {
+                return;
+            }
+            allCardCombinations[currentComboHash] = currentCombination;
+            return;
+        }
+        CardAction currentAction = cardPool[index].cardAction;
+
+        // Use the current action
+        if (currentAction.CanBeUsed(APLeft))
+        {
+            float newAP = APLeft - currentAction.cost;
+            int nextCard = currentAction.cooldown > 0 ? 1 : 0; // If the card isn't infinite move onto the next action
+            if (currentAction.needsTarget)
+            {
+                foreach(Room room in enemyShip.GetRoomList())
+                {
+                    CardAction cardActionWithTarget = currentAction.Clone();
+                    cardActionWithTarget.affectedRoom = room;
+                    List<CardAction> comboWithActionTarget = new List<CardAction>( currentCombination.Concat(new List<CardAction>{cardActionWithTarget}) );
+                    
+                    GenerateCardCombinations(comboWithActionTarget, index + nextCard, allCardCombinations, newAP, cardPool);
+                }
+                foreach(Room room in playerShip.GetRoomList())
+                {
+                    CardAction cardActionWithTarget = currentAction.Clone();
+                    cardActionWithTarget.affectedRoom = room;
+                    List<CardAction> comboWithActionTarget = new List<CardAction>( currentCombination.Concat(new List<CardAction>{cardActionWithTarget}) );
+                    
+                    GenerateCardCombinations(comboWithActionTarget, index + nextCard, allCardCombinations, newAP, cardPool);
+                }
+            }
+            else
+            {
+                List<CardAction> comboWithAction = new List<CardAction>( currentCombination.Concat(new List<CardAction>{currentAction}) );
+                GenerateCardCombinations(comboWithAction, index + nextCard, allCardCombinations, newAP, cardPool);
+            }
+        }
+        // Don't use the current action
+        GenerateCardCombinations(currentCombination, index + 1, allCardCombinations, APLeft, cardPool);
+
+    }
+
+    public int GenerateCardCombinationHash(List<CardAction> cardActions)
+    {
+        // Convert the list of CardAction objects into a set of strings
+        HashSet<string> cardActionSet = new HashSet<string>(
+            cardActions.Select(ca => $"{ca.GetType().ToString()}:{ca.sourceRoom.roomType.ToString()}:{(ca.affectedRoom == null ? 1 : ca.affectedRoom.roomType.ToString())}")
+        );
+
+        // Sort the elements in the HashSet
+        var sortedCardActionSet = new SortedSet<string>(cardActionSet);
+
+        int hash = 17;
+        foreach (var item in sortedCardActionSet)
+        {
+            hash = hash * 31 + item.GetHashCode();
+        }
+        return hash;
     }
 
     public void update()
@@ -222,7 +362,14 @@ public class GameManager : MonoBehaviour
         }
         if (turn == TurnTypes.Enemy)
         {
-            EnemyChooseActions();
+            if (IsSimulation)
+            {
+                SimulateEnemyTurn();
+            }
+            else
+            {
+                EnemyChooseActions();
+            }
             
             ShowPotentialPassiveEffects();
             UpdateHandStats();
@@ -260,16 +407,16 @@ public class GameManager : MonoBehaviour
         // Activate Each Action
         if (playerFirst)
         {
-            UnityEngine.Debug.Log(" -- Player -- ");
+            //UnityEngine.Debug.Log(" -- Player -- ");
             PlayOutActions(playerTurnActions, playerRooms);
-            UnityEngine.Debug.Log(" -- Enemy  -- ");
+            //UnityEngine.Debug.Log(" -- Enemy  -- ");
             PlayOutActions(enemyTurnActions, enemyRooms);
         }
         else
         {
-            UnityEngine.Debug.Log(" -- Enemy  -- ");
+            //UnityEngine.Debug.Log(" -- Enemy  -- ");
             PlayOutActions(enemyTurnActions, enemyRooms);
-            UnityEngine.Debug.Log(" -- Player -- ");
+            //UnityEngine.Debug.Log(" -- Player -- ");
             PlayOutActions(playerTurnActions, playerRooms);
         }
     }
@@ -277,7 +424,7 @@ public class GameManager : MonoBehaviour
     public void PlayOutActions(List<CardAction> actions, Dictionary<RoomType, List<Room>> rooms)
     {
         List<System.Action> weaponCalls = new List<System.Action>();
-        UnityEngine.Debug.Log("Activate old effects");
+        //UnityEngine.Debug.Log("Activate old effects");
         // Trigger any effects that are still affecting the affected
         List<Room> allRooms = rooms.Values.SelectMany(x => x).ToList();
         foreach (Room room in allRooms)
@@ -299,12 +446,12 @@ public class GameManager : MonoBehaviour
                 effect.Activate();
             }
         }
-        UnityEngine.Debug.Log("Activate new actions");
+        //UnityEngine.Debug.Log("Activate new actions");
         // Activate actions, which will apply and trigger some more effects
         foreach (CardAction action in actions)
         {
-            UnityEngine.Debug.Log("Activate: " + action.name);
-            if (action.sourceRoom.disabled || action.sourceRoom.health <= 0 || action.card.turnsUntilReady != 0) {continue;}
+            //UnityEngine.Debug.Log("Activate: " + action.name);
+            if (!action.IsReady()) {continue;}
             if (action is LaserAction || action is FreeLaserAction){ weaponCalls.Add(() => FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom)); }
             
             action.Activate();

@@ -11,6 +11,7 @@ public abstract class CardAction{
     public int cooldown;
     public float cost;
     public string description;
+    public bool needsTarget;
     public Card card;
 
     public void Activate()
@@ -45,7 +46,7 @@ public abstract class CardAction{
     }
     public bool IsReady()
     {
-        return card.turnsUntilReady == 0 && sourceRoom.health > 0;
+        return !sourceRoom.destroyed && !sourceRoom.disabled && card.turnsUntilReady == 0;
     }
     public bool CanBeUsed(float AP)
     {
@@ -90,6 +91,7 @@ public class LaserAction : CardAction
         this.cooldown = 0;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = true;
     }
 }
 
@@ -104,6 +106,7 @@ public class MissileAction : CardAction
         this.cooldown = 3;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = true;
     }
 }
 
@@ -118,6 +121,7 @@ public class FirebombAction : CardAction
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = true;
     }
 }
 
@@ -132,6 +136,7 @@ public class ShieldPiercerAction : CardAction
         this.cooldown = 0;
         this.cost = 2;
         this.description = "3 Damage Shields Only";
+        this.needsTarget = true;
     }
 }
 
@@ -146,6 +151,7 @@ public class FocusedShieldAction : CardAction
         this.cooldown = 0;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = true;
     }
 }
 public class GeneralShieldAction : CardAction
@@ -158,6 +164,7 @@ public class GeneralShieldAction : CardAction
         this.cooldown = 2;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = false;
     }
 }
 public class BigBoyShieldAction : CardAction
@@ -170,6 +177,7 @@ public class BigBoyShieldAction : CardAction
         this.cooldown = 2;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = true;
     }
 }
 public class SemiPermanentShieldAction : CardAction
@@ -182,6 +190,7 @@ public class SemiPermanentShieldAction : CardAction
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = true;
     }
 }
 	
@@ -196,6 +205,7 @@ public class SpeedUpAction : CardAction
         this.cooldown = 0;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = false;
     }
 }
 // (cooldown)
@@ -209,6 +219,7 @@ public class BigBoySpeedUpAction : CardAction
         this.cooldown = 2;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = false;
     }
 }
 // (Immunity Frames)
@@ -222,6 +233,7 @@ public class EvasiveManeouvreAction : CardAction
         this.cooldown = 3;
         this.cost = 3;
         this.description = "";
+        this.needsTarget = false;
     }
 }
 // (Dmg room for extra speed)
@@ -235,6 +247,7 @@ public class OverHeatAction : CardAction
         this.cooldown = 0;
         this.cost = 0;
         this.description = "";
+        this.needsTarget = true;
     }
 }
 
@@ -249,6 +262,7 @@ public class OverdriveAction : CardAction
         this.cooldown = 3;
         this.cost = 0;
         this.description = "";
+        this.needsTarget = false;
     }
 }
 // energy weapons (cooldown)
@@ -262,6 +276,7 @@ public class BuffEnergyWeaponAction : CardAction
         this.cooldown = 2;
         this.cost = 3;
         this.description = "";
+        this.needsTarget = false;
     }
 }
 public class FreeLaserAction : CardAction
@@ -274,6 +289,7 @@ public class FreeLaserAction : CardAction
         this.cooldown = 1;
         this.cost = 0;
         this.description = "";
+        this.needsTarget = true;
     }
 }
 // (-AP +AP card)
@@ -287,6 +303,7 @@ public class ChargeBatteriesAction : CardAction
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = false;
     }
 }
 public class DischargeChargeBatteriesAction : CardAction
@@ -299,6 +316,7 @@ public class DischargeChargeBatteriesAction : CardAction
         this.cooldown = 99;
         this.cost = 0;
         this.description = "";
+        this.needsTarget = false;
     }
 }
 // (both players skip a turn)
@@ -312,6 +330,7 @@ public class EMPAction : CardAction
         this.cooldown = 3;
         this.cost = 2;
         this.description = "Disable room NEXT turn";
+        this.needsTarget = true;
     }
 }
 
@@ -325,5 +344,6 @@ public class StopFireAction : CardAction
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
+        this.needsTarget = true;
     }
 }
