@@ -57,7 +57,7 @@ public class GameManager : MonoBehaviour
         this.enemySpeedText = GameObject.Find("EnemySpeedText").GetComponent<TextMeshProUGUI>();
         this.playerAPText = GameObject.Find("PlayerAPText").GetComponent<TextMeshProUGUI>();
         this.enemyAPText = GameObject.Find("EnemyAPText").GetComponent<TextMeshProUGUI>();
-        IsSimulation=true;
+        IsSimulation=false;
         StartCoroutine(StartGame());
 
     }
@@ -149,11 +149,7 @@ public class GameManager : MonoBehaviour
         UnityEngine.Debug.Log(allCardCombinations.Values.SelectMany(x => x).ToList().Count);
     }
     
-    public void GenerateCardCombinations(List<CardAction> currentCombination,
-    int index,
-    Dictionary<int, List<CardAction>> allCardCombinations,
-    float APLeft,
-    List<Card> cardPool)
+    public void GenerateCardCombinations(List<CardAction> currentCombination, int index, Dictionary<int, List<CardAction>> allCardCombinations, float APLeft, List<Card> cardPool)
     {
 
         if (index == cardPool.Count)

@@ -174,7 +174,10 @@ public abstract class Room
         destroyed = true;
         foreach(CardAction action in actions)
         {
-            action.card.cardController.gameObject.SetActive(false);
+            if (action.card.cardController != null)
+            {
+                action.card.cardController.gameObject.SetActive(false);
+            }
         }
         //UnityEngine.Debug.Log("Room Destroyed");
     }
