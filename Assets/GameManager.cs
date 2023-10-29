@@ -461,7 +461,7 @@ public class GameManager : MonoBehaviour
         System.Random random = new System.Random();
 
         // If i have a reactor Action take it
-        List<Card> APUps = enemyHand.GetCardsByAction(typeof(SpeedUpAction));
+        List<Card> APUps = enemyHand.GetCardsByAction(typeof(OverdriveAction));
         if (APUps.Count > 0)
         {
             foreach (Card APCard in APUps)

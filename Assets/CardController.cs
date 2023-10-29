@@ -38,7 +38,7 @@ public class Card
             turnsUntilReady -= 1;
             if (cardAction.IsReady())
             {
-                cardController.gameObject.SetActive(true);
+                if (cardController) cardController.gameObject.SetActive(true);
             }
         }
     }
