@@ -31,6 +31,10 @@ public class Card
     {
         return cardAction.CanBeUsed(AP);
     }
+    public bool IsReady()
+    {
+        return cardAction.IsReady();
+    }
     public void NextTurn()
     {
         if (turnsUntilReady > 0)

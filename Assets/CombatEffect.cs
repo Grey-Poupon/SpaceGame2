@@ -160,6 +160,7 @@ public class ShieldOnlyDamageEffect : CombatEffect
     }
     public ShieldOnlyDamageEffect(){}
 }
+
 public class FreeLaserEffect : CombatEffect
 {
     public float damage;
@@ -189,6 +190,7 @@ public class FreeLaserEffect : CombatEffect
     }
     public FreeLaserEffect(){}
 }
+
 public class OnFireEffect : CombatEffect
 {
     public float damage;
@@ -222,6 +224,7 @@ public class OnFireEffect : CombatEffect
     }
     public OnFireEffect(){}
 }
+
 public class StopFireEffect : CombatEffect
 {
     public StopFireEffect()
@@ -238,6 +241,7 @@ public class StopFireEffect : CombatEffect
         }
     }
 }
+
 public class APEffect : CombatEffect
 {
     public float change;

@@ -458,11 +458,15 @@ public class GameManager : MonoBehaviour
 
     public void EnemyChooseActions()
     {
+        EnemyAllOutAttack();
+    }
+    public void EnemyOldStyle()
+    {
         System.Random random = new System.Random();
 
         // If i have a reactor Action take it
         List<Card> APUps = enemyHand.GetCardsByAction(typeof(OverdriveAction));
-        if (APUps.Count > 0)
+        if (APUps.Count > 0 && APUps.Count > 0)
         {
             foreach (Card APCard in APUps)
             {
@@ -474,7 +478,7 @@ public class GameManager : MonoBehaviour
             }
         }
         List<Card> laserCards = enemyHand.GetCardsByAction(typeof(LaserAction));
-        while (enemyShip.AP > 2)
+        while (enemyShip.AP > 2 && laserCards.Count > 0)
         {
             foreach (Card laserCard in laserCards)
             {        
@@ -491,11 +495,11 @@ public class GameManager : MonoBehaviour
         int c = 0;
         List<Card> shieldCards = enemyHand.GetCardsByAction(typeof(FocusedShieldAction));
         List<Card> speedUpCards = enemyHand.GetCardsByAction(typeof(SpeedUpAction));
-        while (enemyShip.AP > 0)
+        while (enemyShip.AP > 0 && (shieldCards.Count + speedUpCards.Count) > 0)
         {
             List<Room> weaponsRooms = enemyRooms[RoomType.Weapons].Where(obj => obj.health > 0).ToList();
             List<Room> reactorRooms = enemyRooms[RoomType.Shield].Where(obj => obj.health > 0).ToList();
-            List<Room> shieldRooms = enemyRooms[RoomType.Reactor].Where(obj => obj.health > 0).ToList();
+            List<Room> shieldRooms  = enemyRooms[RoomType.Reactor].Where(obj => obj.health > 0).ToList();
             
             if (random.Next(2) == 0 && (weaponsRooms.Count > 0 || reactorRooms.Count > 0 || shieldRooms.Count > 0))
             {
@@ -528,6 +532,26 @@ public class GameManager : MonoBehaviour
             {
                 c += 1;
                 if (c > 10){break; }
+            }
+        }
+    }
+
+    public void EnemyAllOutAttack()
+    {
+        List<Card> laserCards = enemyHand.GetCardsByAction(typeof(LaserAction)).Where(obj => obj.IsReady()).ToList();
+        if (laserCards.Count > 0)
+        {
+            Card laser = laserCards[0];
+            while (laser.CanBeUsed(enemyShip.AP))
+            {
+                List<Room> targets = playerRooms[RoomType.Weapons].Where(obj => obj.health > 0).ToList();
+                if (targets.Count == 0){break;}
+
+                Room target = targets[0];
+                laser.cardAction.affectedRoom = target;
+                foreach (CombatEffect effect in laser.cardAction.effects) effect.affectedRoom = target;
+
+                SubmitCard(laser, false);
             }
         }
     }
