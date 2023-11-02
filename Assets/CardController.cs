@@ -32,6 +32,10 @@ public class Card
     {
         return cardAction.CanBeUsed(AP);
     }
+    public bool IsReady()
+    {
+        return cardAction.IsReady();
+    }
     public void NextTurn()
     {
         if (turnsUntilReady > 0)
@@ -39,7 +43,7 @@ public class Card
             turnsUntilReady -= 1;
             if (cardAction.IsReady()&&cardController!=null)
             {
-                cardController.gameObject.SetActive(true);
+                if (cardController) cardController.gameObject.SetActive(true);
             }
         }
     }
