@@ -24,6 +24,11 @@ public abstract class CardAction{
         }
     }
 
+    public void SetAffectedRoom(Room target){
+            affectedRoom = target;
+            foreach (CombatEffect effect in effects) effect.affectedRoom = target;
+    }
+
     public List<CombatEffect> GetEffectsByType(Type type)
     {
         if (this.effectsByType == null){CreateEffectLookups();}
@@ -55,6 +60,7 @@ public abstract class CardAction{
 
     public CardAction Clone()
     {
+        
         CardAction clone = (CardAction)Activator.CreateInstance(this.GetType());
         clone.effects = this.effects;
         clone.name = this.name;
@@ -64,6 +70,7 @@ public abstract class CardAction{
         clone.description = this.description;
         clone.sourceRoom = this.sourceRoom;
         clone.affectedRoom = this.affectedRoom;
+        clone.needsTarget = this.needsTarget;
         clone.card.turnsUntilReady = this.card.turnsUntilReady;
         clone.CreateEffectLookups();
         clone.AttachToEffect();

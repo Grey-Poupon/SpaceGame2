@@ -6,6 +6,8 @@ public enum Control {
     FinishTurn,
     Action1,
     None,
+    Undo,
+    Reset,
 }
 
 public class KeyboardController : MonoBehaviour
@@ -14,7 +16,7 @@ public class KeyboardController : MonoBehaviour
     public Dictionary<KeyCode, Control> KeyboardControls = new Dictionary<KeyCode, Control>
     {
         { KeyCode.Return, Control.FinishTurn },
-        { KeyCode.Alpha1, Control.Action1 }
+        { KeyCode.Alpha1, Control.Action1 },{KeyCode.Backspace, Control.Undo},{KeyCode.R,Control.Reset}
     };
     // Start is called before the first frame update
     void Start()
@@ -37,6 +39,12 @@ public class KeyboardController : MonoBehaviour
             else if (control == Control.Action1)
             {
                 GameManager.Instance.Action1();
+            }
+            else if(control == Control.Reset){
+                GameManager.Instance.RestartTurn();
+            }
+            else if(control == Control.Undo){
+                GameManager.Instance.UndoAction();
             }
             
         }

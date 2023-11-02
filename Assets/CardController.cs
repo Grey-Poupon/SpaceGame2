@@ -14,6 +14,7 @@ public class Card
     public CardAction cardAction;
     public CardController cardController;
     public int turnsUntilReady = 0;
+    
     public Card(CardAction cardAction)
     {
         this.cardAction = cardAction;
@@ -36,7 +37,7 @@ public class Card
         if (turnsUntilReady > 0)
         {
             turnsUntilReady -= 1;
-            if (cardAction.IsReady())
+            if (cardAction.IsReady()&&cardController!=null)
             {
                 cardController.gameObject.SetActive(true);
             }
@@ -45,7 +46,7 @@ public class Card
 }
 public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-    public float disappearDistance = 100;
+    public float disappearDistance = -450;
     public Card card;
     private Canvas canvas;
     private RectTransform cardRectTransform;
@@ -72,8 +73,10 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
     }
     private void Update()
     {
+        
         if (isDragging)
         {
+            
             // Calculate the new position of the card based on the mouse position
             Vector3 newPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition) + offset;
 
@@ -83,9 +86,17 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             // Update the card's position
             cardRectTransform.position = newPosition;
 
-            if (cardRectTransform.anchoredPosition.y > -450 && card.turnsUntilReady==0)
+            if (cardRectTransform.anchoredPosition.y > disappearDistance && card.turnsUntilReady==0)
             {  
-                GameManager.Instance.PickCard(card);
+                if(card.CanBeUsed(GameManager.Instance.playerShip.AP)){
+                    GameManager.Instance.PickCard(card);
+                }
+                else{
+                    // if they can't play card reset
+                    card.cardController.gameObject.SetActive(false);
+                    card.cardController.gameObject.SetActive(true);
+                }
+                
                 isDragging = false;
             }
         }
@@ -96,6 +107,7 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
     public void OnPointerDown(PointerEventData eventData)
     {
+        
         if (isDragging)
         {
             isDragging = false;
@@ -103,9 +115,10 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             return;
         }
         
-        isDragging = GameManager.Instance.turn == TurnTypes.Player && GameManager.Instance.playerShip.AP > 0;
+        isDragging = GameManager.Instance.turn == TurnTypes.Player;
         if (isDragging)
         {
+            
             offset = cardRectTransform.position - Camera.main.ScreenToWorldPoint(Input.mousePosition);
         }
     }

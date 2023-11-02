@@ -176,10 +176,10 @@ public class FreeLaserEffect : CombatEffect
         //     0           1          0
         //     1           0          0 
         //     1           1          1 
-        bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
+        bool affectsPlayer = this.action.sourceRoom.isPlayer;
         CardAction action = new FreeLaserAction();
-        action.sourceRoom = affectedRoom;
-        List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
+        action.sourceRoom = affectedRoom.getParentShip().GetRooms()[RoomType.Weapons][0];
+        List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
     }
     

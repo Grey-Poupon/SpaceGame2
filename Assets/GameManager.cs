@@ -57,7 +57,7 @@ public class GameManager : MonoBehaviour
         this.enemySpeedText = GameObject.Find("EnemySpeedText").GetComponent<TextMeshProUGUI>();
         this.playerAPText = GameObject.Find("PlayerAPText").GetComponent<TextMeshProUGUI>();
         this.enemyAPText = GameObject.Find("EnemyAPText").GetComponent<TextMeshProUGUI>();
-        IsSimulation=true;
+        IsSimulation=false;
         StartCoroutine(StartGame());
 
     }
@@ -302,7 +302,7 @@ public class GameManager : MonoBehaviour
         foreach (Card card in cards)
         {
             if (isPlayer){ playerHand.AddCard(card); }
-            else         { enemyHand.AddCard(card);     }
+            else         { enemyHand.AddCard(card);  }
         }
     }
 
@@ -316,14 +316,25 @@ public class GameManager : MonoBehaviour
         this.enemyShip = null;
     }
 
-    public void FireLaserAtTarget(Vector3 targetPosition, Room target)
+    public void FireLaserAtTarget(CardAction action)
     {
+        Vector3 origin;
+        Vector3 targetPosition = action.affectedRoom.parent.transform.position;
+        Room target = action.affectedRoom;
+        if(action.sourceRoom.isPlayer){
+            origin = playerShip.transform.position;
+        }
+        else{
+            origin = enemyShip.transform.position;
+        }
+
         if (playerShip != null)
         {
+            
             // Calculate the direction to the target position.
-            Vector3 direction = (targetPosition - playerShip.transform.position).normalized;
+            Vector3 direction = (targetPosition - origin).normalized;
             // Instantiate the laser at the spaceship's position.
-            LaserShot laser = Instantiate(laserPrefab, playerShip.transform.position, Quaternion.identity);
+            LaserShot laser = Instantiate(laserPrefab, origin, Quaternion.identity);
             
             // Rotate the laser to face the target direction.
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
@@ -362,15 +373,8 @@ public class GameManager : MonoBehaviour
         }
         if (turn == TurnTypes.Enemy)
         {
-            if (IsSimulation)
-            {
-                SimulateEnemyTurn();
-            }
-            else
-            {
-                EnemyChooseActions();
-            }
             
+            EnemyChooseActions1();
             ShowPotentialPassiveEffects();
             UpdateHandStats();
             UpdateUIText();
@@ -452,7 +456,7 @@ public class GameManager : MonoBehaviour
         {
             //UnityEngine.Debug.Log("Activate: " + action.name);
             if (!action.IsReady()) {continue;}
-            if (action is LaserAction || action is FreeLaserAction){ weaponCalls.Add(() => FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom)); }
+            if (action is LaserAction || action is FreeLaserAction){ weaponCalls.Add(() => FireLaserAtTarget(action)); }
             
             action.Activate();
         }
@@ -465,7 +469,7 @@ public class GameManager : MonoBehaviour
         System.Random random = new System.Random();
 
         // If i have a reactor Action take it
-        List<Card> APUps = enemyHand.GetCardsByAction(typeof(SpeedUpAction));
+        List<Card> APUps = enemyHand.GetCardsByAction(typeof(OverdriveAction));
         if (APUps.Count > 0)
         {
             foreach (Card APCard in APUps)
@@ -535,6 +539,38 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+    public void EnemyChooseActions1()
+    {
+        System.Random random = new System.Random();
+        List<Card> cards = new List<Card>(enemyHand.GetCards());
+
+        while(enemyShip.AP>0){
+            int index = random.Next(cards.Count);
+            Card card = cards[index];
+            if(card.CanBeUsed(enemyShip.AP)){
+                if(card.cardAction.needsTarget){
+                    if(card.cardAction is LaserAction || card.cardAction is MissileAction || card.cardAction is FreeLaserAction){
+                        List<Room> playerRooms = playerShip.GetRoomList();
+                        int roomindex = random.Next(playerRooms.Count);
+                        card.cardAction.SetAffectedRoom(playerRooms[roomindex]);
+                    }
+                    else{
+                        card.cardAction.SetAffectedRoom(card.cardAction.sourceRoom);
+                    }
+                }
+                else{
+                    card.cardAction.SetAffectedRoom(card.cardAction.sourceRoom);
+                }
+                
+                SubmitCard(card,false);
+                if(card.cardAction.cooldown>0){
+                    cards.Remove(card);
+                }
+            }
+        }
+
+    
+    }
 
     public void ResetTempStats()
     {
@@ -577,6 +613,9 @@ public class GameManager : MonoBehaviour
         Cursor.SetCursor(customCursor, new Vector2(customCursor.width / 2, customCursor.height / 2), CursorMode.ForceSoftware);
         selectedCard = card;
         card.cardController.gameObject.SetActive(false);
+        if(!card.cardAction.needsTarget){
+            RoomClicked(Vector3.zero,card.cardAction.sourceRoom);
+        }
     }
 
     public void RoomClicked(Vector3 targetPosition, Room target)
@@ -627,6 +666,51 @@ public class GameManager : MonoBehaviour
             effect.ShowPotentialEffect();
         }
     }
+
+
+    public void RestartTurn(){
+        // need a way to reset GUI on rooms as current method will not remove shield no. , perhaps the showPotentialEffect looks through submitted actions?
+        playerShip.AdjustAP(playerShip.defaultAP-playerShip.AP);
+        foreach(CardAction action in playerTurnActions){
+            if(action.cooldown>0){
+                action.card.cardController.gameObject.SetActive(true);
+            }
+            
+            foreach(CombatEffect effect in action.effects){
+                if(effect is DamageEffect){ // need to enumerate all effects that implement attack intent
+                    DamageEffect dmgEffect = effect as DamageEffect;
+                    action.affectedRoom.IncreaseAttackIntent(-dmgEffect.damage);
+                }
+            }
+        }
+        playerTurnActions.Clear();
+        playerTurnActionsText.text="";
+    }
+    public void UndoAction(){
+        // need a way to reset GUI on rooms as current method will not remove  shield no. , perhaps the showPotentialEffect looks through submitted actions?
+        
+        if(playerTurnActions.Count>0){
+            CardAction lastAction = playerTurnActions[playerTurnActions.Count -1];
+            playerShip.AdjustAP(lastAction.cost);
+            if(playerTurnActions.Count==1){
+                playerTurnActionsText.text="";
+            }
+            else{
+                playerTurnActionsText.text=playerTurnActionsText.text.Substring(0,playerTurnActionsText.text.Length-1-lastAction.name.Length -" -> ".Length -lastAction.affectedRoom.roomType.ToString().Length);
+            }
+            if(lastAction.cooldown>0){
+                lastAction.card.cardController.gameObject.SetActive(true);
+            }
+            foreach(CombatEffect effect in lastAction.effects){
+                if(effect is DamageEffect){ // need to enumerate all effects that implement attack intent
+                    DamageEffect dmgEffect = effect as DamageEffect;
+                    lastAction.affectedRoom.IncreaseAttackIntent(-dmgEffect.damage);
+                }
+            }
+            playerTurnActions.Remove(lastAction);
+        }
+    }
+
 
     public void SubmitCard(Card card, bool isPlayer)
     {
@@ -683,8 +767,10 @@ public class GameManager : MonoBehaviour
     
     public void UpdateHandStats()
     {
-        foreach(Card card in playerHand.GetCards()){if (card.turnsUntilReady > 0 ) {card.NextTurn();}}
-        foreach(Card card in enemyHand.GetCards() ){if (card.turnsUntilReady > 0 ) {card.NextTurn();}}
+        foreach(Card card in playerHand.GetCards())
+        {if (card.turnsUntilReady > 0 ) {card.NextTurn();}}
+        foreach(Card card in enemyHand.GetCards() )
+        {if (card.turnsUntilReady > 0 ) {card.NextTurn();}}
     }
 
     public void UpdateRoomText()
