@@ -61,7 +61,7 @@ public abstract class CombatEffect
     }
     public virtual void FirstEffect()
     {
-        TriggerEffect();
+        //TriggerEffect();
     }
     public virtual void ShowPotentialEffect()
     {

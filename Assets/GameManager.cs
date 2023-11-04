@@ -435,11 +435,28 @@ public class GameManager : MonoBehaviour
         {
             // Have to be careful here as effects will remove themselves from the rooms 
             // To Do there is a big where if a effect remove another effect shit will get wild
-            for(int i = room.effectsApplied.Count - 1; i >= 0; i--)
+                
+            if (room.effectsApplied.Count > 0)
             {
-                room.effectsApplied[i].Activate();
+                List<CombatEffect> effectsCopy = room.effectsApplied.Select(obj => obj).ToList();
+                UnityEngine.Debug.Log(room.roomType.ToString() + " | " + effectsCopy.Count.ToString());
+                foreach(CombatEffect effect in effectsCopy)
+                {
+                    UnityEngine.Debug.Log(effect.GetType().ToString() );
+                    if (room.effectsApplied.Contains(effect))
+                    {
+                        UnityEngine.Debug.Log(" : " + room.effectsApplied.Count.ToString() );
+                        effect.Activate();
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.Log("Removed");
+                    }
+                }
+                UnityEngine.Debug.Log("----------------------");
             }
         }
+        
 
         // Activate actions, which will apply and trigger some more effects
         foreach (CardAction action in actions)
