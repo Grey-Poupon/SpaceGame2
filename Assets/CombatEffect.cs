@@ -318,20 +318,15 @@ public class ChargeBatteriesEffect : CombatEffect
 
 public class DisableRoomEffect : CombatEffect
 {
-    public float startDuration;
     public DisableRoomEffect(float duration, bool affectsSelf)
     {
         this.affectsSelf = affectsSelf;
         this.duration = duration;
-        this.startDuration = duration;
     }
 
     public override void TriggerEffect()
     {  
-        if (duration < startDuration)
-        {
-            affectedRoom.disabled = true;
-        }
+        affectedRoom.disabled = true;
     }
 
     public override void FinalEffect()

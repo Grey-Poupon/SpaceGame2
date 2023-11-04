@@ -467,7 +467,7 @@ public class GameManager : MonoBehaviour
 
     public void EnemyChooseActions()
     {
-        EnemyChooseActions1();
+        EnemyAIEMPOrFiftyFifty();
     }
     public void EnemyAIOldStyle()
     {
@@ -600,7 +600,6 @@ public class GameManager : MonoBehaviour
     }
     public void EnemyAISemiPermanentShieldShip()
     {
-        
         List<Card> SPShield = enemyHand.GetCardsByAction(typeof(SemiPermanentShieldAction)).Where(obj => !obj.cardAction.sourceRoom.destroyed && !obj.cardAction.sourceRoom.disabled).ToList();
         if (SPShield.Count > 0)
         {
@@ -621,9 +620,56 @@ public class GameManager : MonoBehaviour
 
         }
     }
+    public void EnemyAIEMP()
+    {
+        List<Card> emps = enemyHand.GetCardsByAction(typeof(EMPAction)).Where(obj => !obj.cardAction.sourceRoom.destroyed && !obj.cardAction.sourceRoom.disabled).ToList();
+        if (emps.Count > 0)
+        {
+            Card emp = emps[0];
+            emp.turnsUntilReady = 0;
+            bool targetFound = false;
+
+            foreach (Room target in playerRooms[RoomType.Weapons].Where(obj => !obj.destroyed && !obj.disabled).ToList())
+            {
+                emp.cardAction.affectedRoom = target;
+                foreach (CombatEffect effect in emp.cardAction.effects) effect.affectedRoom = target;
+                SubmitCard(emp, false);
+                targetFound=true;
+                break;
+            }
+            if (!targetFound)
+            {
+            foreach (Room target in playerShip.GetRoomList().Where(obj => !obj.destroyed && !obj.disabled).ToList())
+            {
+                emp.cardAction.affectedRoom = target;
+                foreach (CombatEffect effect in emp.cardAction.effects) effect.affectedRoom = target;
+                SubmitCard(emp, false);
+                targetFound=true;
+                break;
+            }
+            }
+
+        }
+    }
     public void EnemyAIFiftyFifty()
     {
         if(turnCounter % 2 == 0)
+        {
+            EnemyAIAllOutAttack();
+        }
+        else
+        {
+            EnemyAISemiPermanentShieldShip();
+        }
+    }
+    public void EnemyAIEMPOrFiftyFifty()
+    {
+        if(turnCounter % 3 == 0)
+        {
+            EnemyAIEMP();
+            EnemyChooseActions1();
+        }
+        else if(turnCounter % 3 == 1)
         {
             EnemyAIAllOutAttack();
         }
