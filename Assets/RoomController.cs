@@ -14,7 +14,7 @@ public class RoomController : MonoBehaviour
     {
         isPlayer = transform.parent.GetComponent<MonoBehaviour>() is PlayerSpaceship;
 
-        if (room == null){room = createRoom(roomType);}
+        if (room == null){room = createRoom(roomType, !isPlayer);}
         GameManager.Instance.RegisterRoom(room, isPlayer);
         room.spriteRenderer = GetComponent<SpriteRenderer>();
 
@@ -48,18 +48,26 @@ public class RoomController : MonoBehaviour
     }
 
 
-    Room createRoom(RoomType roomType)
+    Room createRoom(RoomType roomType, bool getEveryRoom=false)
     {
-        /*List<CardAction> weaponActions  = new List<CardAction> { new LaserAction(),         new MissileAction(),          new FirebombAction(),         new ShieldPiercerAction()       };
-        List<CardAction> shieldActions  = new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction(),    new BigBoyShieldAction(),     new SemiPermanentShieldAction() };
-        List<CardAction> engineActions  = new List<CardAction> { new SpeedUpAction(),       new BigBoySpeedUpAction(),    new EvasiveManeouvreAction(), new OverHeatAction()            };
-        List<CardAction> reactorActions = new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction(), new ChargeBatteriesAction(),  new EMPAction()                 };*/
-
-
-        List<CardAction> weaponActions = new List<CardAction> { new LaserAction(), new MissileAction() };
-        List<CardAction> shieldActions = new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction() };
-        List<CardAction> engineActions = new List<CardAction> { new SpeedUpAction(), new BigBoySpeedUpAction() };
-        List<CardAction> reactorActions = new List<CardAction> { new OverdriveAction(), new BuffEnergyWeaponAction() };
+        List<CardAction> weaponActions = new List<CardAction>();
+        List<CardAction> shieldActions = new List<CardAction>();
+        List<CardAction> engineActions = new List<CardAction>();
+        List<CardAction> reactorActions = new List<CardAction>();
+        if (getEveryRoom)
+        {
+           weaponActions.AddRange( new List<CardAction> { new LaserAction(),         new MissileAction(),          new FirebombAction(),         new ShieldPiercerAction()       });
+           shieldActions.AddRange( new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction(),    new BigBoyShieldAction(),     new SemiPermanentShieldAction() });
+           engineActions.AddRange( new List<CardAction> { new SpeedUpAction(),       new BigBoySpeedUpAction(),    new EvasiveManeouvreAction(), new OverHeatAction()            });
+           reactorActions.AddRange(new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction(), new ChargeBatteriesAction(),  new EMPAction()                 });
+        }
+        else
+        {
+           weaponActions.AddRange( new List<CardAction> { new LaserAction(),         new MissileAction() });
+           shieldActions.AddRange( new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction() });
+           engineActions.AddRange( new List<CardAction> { new SpeedUpAction(),       new BigBoySpeedUpAction() });
+           reactorActions.AddRange(new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction() });
+        }
 
         if      (roomType == RoomType.Weapons) { return new WeaponsRoom(weaponActions);  }
         else if (roomType == RoomType.Shield)  { return new ShieldRoom(shieldActions);   }
@@ -113,13 +121,19 @@ public abstract class Room
     }
     public void takeDamage(float damage)
     {
-        if (defence >= damage)
+        if (defence > 0)
         {
-            defence -= damage;
-            return;
+            for(int i = effectsApplied.Count-1; i >= 0; i--)
+            {
+                if (effectsApplied[i] is ShieldEffect)
+                {
+                    effectsApplied.RemoveAt(i);
+                    defence--;
+                }
+                if (defence == 0){break;}
+            }
         }
 
-        damage = damage - defence;
         health = health < damage ? 0 : health - damage;
     }
     public void updateHealthGraphics()

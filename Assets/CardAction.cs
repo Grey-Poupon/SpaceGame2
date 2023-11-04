@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 public abstract class CardAction{ 
 
@@ -57,7 +58,7 @@ public abstract class CardAction{
     public CardAction Clone()
     {
         CardAction clone = (CardAction)Activator.CreateInstance(this.GetType());
-        clone.effects = this.effects;
+        clone.effects = this.effects.Select(eff => eff.Clone()).ToList();
         clone.name = this.name;
         clone.cooldown = this.cooldown;
         clone.card = this.card;

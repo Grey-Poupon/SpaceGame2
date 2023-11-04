@@ -35,6 +35,7 @@ public class GameManager : MonoBehaviour
     private TextMeshProUGUI playerAPText;
     private TextMeshProUGUI enemyAPText;
     public bool IsSimulation;
+    public int turnCounter = 0;
 
     public TreeNode gameTree;
     private void Awake()
@@ -358,20 +359,14 @@ public class GameManager : MonoBehaviour
         }
         if (turn == TurnTypes.Enemy)
         {
-            if (IsSimulation)
-            {
-                SimulateEnemyTurn();
-            }
-            else
-            {
-                EnemyChooseActions();
-            }
-            
+
+            EnemyChooseActions();            
             ShowPotentialPassiveEffects();
             UpdateHandStats();
             UpdateUIText();
             UpdateRoomText();
             turn = TurnTypes.Player;
+            turnCounter ++;
         }
     }
 
@@ -399,6 +394,8 @@ public class GameManager : MonoBehaviour
         bool playerFirst = (playerShip.speed > enemyShip.speed) ? true :
                                 (enemyShip.speed > playerShip.speed) ? false :
                                    (random.Next(2) == 0) ? true : false;
+        if (playerFirst){UnityEngine.Debug.Log("Player First");}
+        else{UnityEngine.Debug.Log("Enemy First");}
 
         // Activate Each Action
         if (playerFirst)
@@ -420,12 +417,13 @@ public class GameManager : MonoBehaviour
     public void PlayOutActions(List<CardAction> actions, Dictionary<RoomType, List<Room>> rooms)
     {
         List<System.Action> weaponCalls = new List<System.Action>();
-        //UnityEngine.Debug.Log("Activate old effects");
+
         // Trigger any effects that are still affecting the affected
         List<Room> allRooms = rooms.Values.SelectMany(x => x).ToList();
         foreach (Room room in allRooms)
         {
             // Have to be careful here as effects will remove themselves from the rooms 
+            // To Do there is a big where if a effect remove another effect shit will get wild
             int i = 0;
             while (i < room.effectsApplied.Count)
             {
@@ -442,13 +440,13 @@ public class GameManager : MonoBehaviour
                 effect.Activate();
             }
         }
-        //UnityEngine.Debug.Log("Activate new actions");
+
         // Activate actions, which will apply and trigger some more effects
         foreach (CardAction action in actions)
         {
-            //UnityEngine.Debug.Log("Activate: " + action.name);
+
             if (!action.IsReady()) {continue;}
-            if (action is LaserAction || action is FreeLaserAction){ weaponCalls.Add(() => FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom)); }
+            if (action is LaserAction || action is FreeLaserAction || action is MissileAction){ weaponCalls.Add(() => FireLaserAtTarget(action.affectedRoom.parent.transform.position, action.affectedRoom)); }
             
             action.Activate();
         }
@@ -458,9 +456,9 @@ public class GameManager : MonoBehaviour
 
     public void EnemyChooseActions()
     {
-        EnemyAllOutAttack();
+        EnemyAIAllOutAttack();
     }
-    public void EnemyOldStyle()
+    public void EnemyAIOldStyle()
     {
         System.Random random = new System.Random();
 
@@ -536,7 +534,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void EnemyAllOutAttack()
+    public void EnemyAIAllOutAttack()
     {
         List<Card> laserCards = enemyHand.GetCardsByAction(typeof(LaserAction)).Where(obj => obj.IsReady()).ToList();
         if (laserCards.Count > 0)
@@ -555,7 +553,41 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+    public void EnemyAISemiPermanentShieldShip()
+    {
+        
+        List<Card> SPShield = enemyHand.GetCardsByAction(typeof(SemiPermanentShieldAction)).Where(obj => !obj.cardAction.sourceRoom.destroyed && !obj.cardAction.sourceRoom.disabled).ToList();
+        if (SPShield.Count > 0)
+        {
+            Card shield = SPShield[0];
+            shield.cardAction.cooldown = 0;
+            shield.cardAction.cost = 0;
 
+            foreach (Room target in enemyShip.GetRoomList())
+            {
+                shield.cardAction.affectedRoom = target;
+                foreach (CombatEffect effect in shield.cardAction.effects) effect.affectedRoom = target;
+
+                SubmitCard(shield, false);
+                SubmitCard(shield, false);
+                SubmitCard(shield, false);
+                SubmitCard(shield, false);
+            }
+
+        }
+    }
+    public void EnemyAIFiftyFifty()
+    {
+        if(turnCounter % 2 == 0)
+        {
+            EnemyAIAllOutAttack();
+        }
+        else
+        {
+            EnemyAISemiPermanentShieldShip();
+        }
+    }
+    
     public void ResetTempStats()
     {
         // Reset all temp stats for next turn
