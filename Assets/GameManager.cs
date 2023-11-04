@@ -411,16 +411,12 @@ public class GameManager : MonoBehaviour
         // Activate Each Action
         if (playerFirst)
         {
-            //UnityEngine.Debug.Log(" -- Player -- ");
             PlayOutActions(playerTurnActions, playerRooms);
-            //UnityEngine.Debug.Log(" -- Enemy  -- ");
             PlayOutActions(enemyTurnActions, enemyRooms);
         }
         else
         {
-            //UnityEngine.Debug.Log(" -- Enemy  -- ");
             PlayOutActions(enemyTurnActions, enemyRooms);
-            //UnityEngine.Debug.Log(" -- Player -- ");
             PlayOutActions(playerTurnActions, playerRooms);
         }
     }
@@ -611,7 +607,6 @@ public class GameManager : MonoBehaviour
                 shield.cardAction.affectedRoom = target;
                 foreach (CombatEffect effect in shield.cardAction.effects) effect.affectedRoom = target;
 
-                SubmitCard(shield, false);
                 SubmitCard(shield, false);
                 SubmitCard(shield, false);
                 SubmitCard(shield, false);
