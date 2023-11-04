@@ -435,20 +435,9 @@ public class GameManager : MonoBehaviour
         {
             // Have to be careful here as effects will remove themselves from the rooms 
             // To Do there is a big where if a effect remove another effect shit will get wild
-            int i = 0;
-            while (i < room.effectsApplied.Count)
+            for(int i = room.effectsApplied.Count - 1; i >= 0; i--)
             {
-                int currentCount = room.effectsApplied.Count;
                 room.effectsApplied[i].Activate();
-
-                if(room.effectsApplied.Count == currentCount)
-                {
-                    i++;
-                }
-            }
-            foreach(CombatEffect effect in room.effectsApplied)
-            {
-                effect.Activate();
             }
         }
 

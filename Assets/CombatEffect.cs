@@ -20,7 +20,7 @@ public abstract class CombatEffect
         CombatEffect clone = this.Clone();
         clone.affectedRoom = affectedRoom;
         affectedRoom.effectsApplied.Add(clone);
-        clone.Activate();
+        clone.FirstEffect();
 
     }
     public void Activate()
@@ -59,7 +59,10 @@ public abstract class CombatEffect
     {
         // Pass
     }
-
+    public virtual void FirstEffect()
+    {
+        TriggerEffect();
+    }
     public virtual void ShowPotentialEffect()
     {
         // Pass
@@ -323,15 +326,27 @@ public class DisableRoomEffect : CombatEffect
         this.affectsSelf = affectsSelf;
         this.duration = duration;
     }
-
     public override void TriggerEffect()
+    {
+        // pass
+    }
+
+    public override void FirstEffect()
     {  
         affectedRoom.disabled = true;
+        foreach (CardAction action in affectedRoom.actions)
+        {
+            if (action.card.cardController) action.card.cardController.gameObject.SetActive(false);
+        }
     }
 
     public override void FinalEffect()
     {
         affectedRoom.disabled = false;
+        foreach (CardAction action in affectedRoom.actions)
+        {
+            if (action.card.cardController) action.card.cardController.gameObject.SetActive(true);
+        }
     }
     
     public override void ShowPotentialEffect()
