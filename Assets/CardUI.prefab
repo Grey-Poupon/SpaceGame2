@@ -733,7 +733,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 506b7c26eccb8fb40996d4cebfdff269, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  disappearDistance: 100
+  disappearDistance: -450
 --- !u!1 &7096022166548882041
 GameObject:
   m_ObjectHideFlags: 0

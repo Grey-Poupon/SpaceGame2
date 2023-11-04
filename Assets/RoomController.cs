@@ -186,14 +186,14 @@ public abstract class Room
     public virtual void onDestroy()
     {
         destroyed = true;
-        foreach(CardAction action in actions)
-        {
-            if (action.card.cardController != null)
+
+        if (isPlayer){
+            foreach(CardAction action in actions)
             {
                 action.card.cardController.gameObject.SetActive(false);
             }
-        }
-        //UnityEngine.Debug.Log("Room Destroyed");
+        }        //UnityEngine.Debug.Log("Room Destroyed");
+
     }
 
     void UpdateHealthBar()
