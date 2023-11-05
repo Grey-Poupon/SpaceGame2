@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Collections.Specialized;
 using System;
 using System.Diagnostics;
@@ -11,12 +12,10 @@ public enum TurnTypes {Player, Enemy, Resolve}
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
-    public LaserShot laserPrefab;
     public TurnTypes turn = TurnTypes.Enemy;
     public Texture2D customCursor;
 
     public Card selectedCard;
-
     public Hand playerHand;
     public Hand enemyHand;
 
@@ -36,7 +35,7 @@ public class GameManager : MonoBehaviour
     private TextMeshProUGUI enemyAPText;
     public bool IsSimulation;
     public int turnCounter = 0;
-
+    public PrefabHolder prefabHolder;
     public TreeNode gameTree;
     private void Awake()
     {
@@ -66,11 +65,11 @@ public class GameManager : MonoBehaviour
     private IEnumerator StartGame()
     {
         // Wait for 0.5 seconds
-        while (playerShip == null || enemyShip == null || playerHand == null)
+        while (playerShip == null || playerHand == null)
         {
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.1f);
         }
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.1f);
 
         // Call your non-async function here
         turn = TurnTypes.Enemy;
@@ -112,10 +111,65 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            UnityEngine.Debug.Log(IsSimulation);
+            BuildAShip();
             FinishTurn();
         }
         
+    }
+    public void BuildAShip()
+    {
+        float xBound = 3;
+        float yBound = 1;
+        float xPos = 0;
+        float yPos = 0;
+        List<(float, float)> directions = new List<(float, float)>(){(1, 0), (0, 1), (-1, 0), (0, -1)};
+        HashSet<(float, float)> roomLocations = new HashSet<(float, float)>();
+        List<RoomType> RoomTypes = RoomType.GetValues(typeof(RoomType)).Cast<RoomType>().ToList();
+
+        // Create a new Ship
+        EnemySpaceship newShip = Instantiate(prefabHolder.enemySpaceshipPrefab, new Vector3(2, 2, 0), Quaternion.identity);        
+        
+        // Setup first Room
+        RoomController rootRoom = Instantiate(prefabHolder.roomPrefab, newShip.transform);
+        rootRoom.transform.localPosition = new Vector3(xPos, yPos, 0);
+        rootRoom.name = "RootRoom";
+        rootRoom.Setup(RoomType.Reactor);
+        RoomTypes.Remove(RoomType.Reactor);
+
+        roomLocations.Add((xPos, yPos));
+        
+        while (RoomTypes.Count > 0)
+        {
+            // Define all valid locations I.E. not overlapping
+            List<(float, float)> validLocations = directions
+                                                .Select(direction => (xPos + direction.Item1, yPos + direction.Item2))
+                                                .Where(position => !roomLocations.Contains(position) && Math.Abs(position.Item1) <= xBound && Math.Abs(position.Item2) <= yBound)
+                                                .ToList();
+
+            // If there are not valid locations we fucked up
+            if (validLocations.Count == 0)
+            {
+                UnityEngine.Debug.Log("Yeah, the ship factory got caught in a dead end, so write better code, NOW!");
+                break;
+            }
+
+            // Choose a random valid location and move the pointers to this so
+            // we can generate from here next loop
+            int idx = UnityEngine.Random.Range(0, validLocations.Count);            
+            xPos = validLocations[idx].Item1;
+            yPos = validLocations[idx].Item2;
+
+            // Make the room
+            RoomController roomController = Instantiate(prefabHolder.roomPrefab, newShip.transform);
+            roomController.transform.localPosition = new Vector3(xPos, yPos, 0);
+            roomLocations.Add((xPos, yPos));
+            
+            // Choose a random room type from the remaining options
+            idx = UnityEngine.Random.Range(0, RoomTypes.Count);
+            roomController.Setup(RoomTypes[idx]);
+            roomController.name = RoomTypes[idx].ToString() + " Room";
+            RoomTypes.RemoveAt(idx);
+        }
     }
 
     public void SimulatePlayerTurn()
@@ -279,7 +333,7 @@ public class GameManager : MonoBehaviour
             if (makePrefabs)
             {
                 // Instantiate a new card prefab & set its parent as the playerHand
-                CardController cardController = Instantiate(playerHand.cardPrefab, playerHand.parent.transform);
+                CardController cardController = Instantiate(prefabHolder.cardPrefab, playerHand.parent.transform);
                 cardController.Setup(card);
                 card.Setup(cardController);
             }
@@ -331,7 +385,7 @@ public class GameManager : MonoBehaviour
             // Calculate the direction to the target position.
             Vector3 direction = (targetPosition - origin).normalized;
             // Instantiate the laser at the spaceship's position.
-            LaserShot laser = Instantiate(laserPrefab, origin, Quaternion.identity);
+            LaserShot laser = Instantiate(prefabHolder.laserPrefab, origin, Quaternion.identity);
             
             // Rotate the laser to face the target direction.
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
@@ -611,7 +665,6 @@ public class GameManager : MonoBehaviour
                 SubmitCard(shield, false);
                 SubmitCard(shield, false);
             }
-
         }
     }
     public void EnemyAIEMP()

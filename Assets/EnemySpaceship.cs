@@ -15,9 +15,6 @@ public class EnemySpaceship : SpaceShip
     {
         
     }
-    private void OnDestroy()
-    {
-        // Remove this player ship from the GameManager when destroyed.
-        //GameManager.Instance.RemoveEnemyShip();
-    }
 }
+
+

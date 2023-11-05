@@ -6,6 +6,7 @@ using TMPro;
 
 public class RoomController : MonoBehaviour
 {
+    public static RoomController RoomPrefab;
     private Room room;
     public bool isPlayer;
     public RoomType roomType;
@@ -13,7 +14,12 @@ public class RoomController : MonoBehaviour
     void Start()
     {
         isPlayer = transform.parent.GetComponent<MonoBehaviour>() is PlayerSpaceship;
+        if (isPlayer) Setup(roomType);
+    }
 
+    public void Setup(RoomType roomType)
+    {
+        this.roomType = roomType;
         if (room == null){room = createRoom(roomType, !isPlayer);}
         GameManager.Instance.RegisterRoom(room, isPlayer);
         room.spriteRenderer = GetComponent<SpriteRenderer>();
@@ -25,6 +31,7 @@ public class RoomController : MonoBehaviour
         room.Shield = canvas.Find("Shield").GetComponent<TextMeshProUGUI>();
         room.Health = canvas.Find("Health").GetComponent<TextMeshProUGUI>();
 
+        room.roomType = roomType;
         room.UpdateTextGraphics();
         room.parent = this;
         room.isPlayer = isPlayer;

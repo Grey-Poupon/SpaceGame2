@@ -7,13 +7,10 @@ using System;
 
 public class HandController : MonoBehaviour
 {
-    public CardController cardPrefab; // Reference to your card prefab
     private HorizontalLayoutGroup layoutGroup;
-
     private void Awake()
     {
         Hand playerHand = new Hand();
-        playerHand.cardPrefab = cardPrefab;
         playerHand.layoutGroup = layoutGroup;
         playerHand.parent = this;
 
@@ -31,7 +28,6 @@ public class Hand
 {
         private List<Card> cards = new List<Card>();
         private Dictionary<Type, List<Card>> cardsByAction = new Dictionary<Type, List<Card>>();
-        public CardController cardPrefab;
         public HorizontalLayoutGroup layoutGroup;
         public HandController parent;
 
