@@ -477,8 +477,9 @@ public class GameManager : MonoBehaviour
 
     public void PlayOutActions(List<CardAction> actions, Dictionary<RoomType, List<Room>> rooms)
     {
+        bool verbose = true;
         List<System.Action> weaponCalls = new List<System.Action>();
-
+        string explanation = "";
         // Trigger any effects that are still affecting the affected
         List<Room> allRooms = rooms.Values.SelectMany(x => x).ToList();
         foreach (Room room in allRooms)
@@ -488,10 +489,11 @@ public class GameManager : MonoBehaviour
                 
             if (room.effectsApplied.Count > 0)
             {
+                explanation += "\nThe " +( room.isPlayer ? "Players " : "Enemys ") + room.roomType.ToString() + "Room is affected by: ";
                 List<CombatEffect> effectsCopy = room.effectsApplied.Select(obj => obj).ToList();
                 foreach(CombatEffect effect in effectsCopy)
                 {
-                    UnityEngine.Debug.Log(effect.GetType().ToString() );
+                    explanation += string.Join(" | ", room.effectsApplied.Select(obj => obj.GetType().ToString()).ToList());
                     if (room.effectsApplied.Contains(effect))
                     {
                         effect.Activate();
@@ -499,18 +501,22 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-        
+        explanation += "\n";
 
         // Activate actions, which will apply and trigger some more effects
         foreach (CardAction action in actions)
         {
 
-            if (!action.IsReady()) {continue;}
+            if (!action.IsReady())
+            {
+                explanation += "\n" + action.name + " Was not played because: Disabled " + action.sourceRoom.disabled + " Destroyed " + action.sourceRoom.destroyed + (action.card.turnsUntilReady!=0 ? "Action Not Ready" : "Action Ready") ;
+                continue;
+            }
             if (action is LaserAction || action is FreeLaserAction || action is MissileAction){ weaponCalls.Add(() => FireLaserAtTarget(action)); }
-            
+            explanation += "\n" + action.name + " Was played";
             action.Activate();
         }
-
+        if (verbose) UnityEngine.Debug.Log(explanation);
         StartCoroutine(InvokeWeaponActionsWithDelay(weaponCalls));
     }
 

@@ -27,7 +27,6 @@ public abstract class CombatEffect
     {
         TriggerEffect();
         duration -= 1;
-        //UnityEngine.Debug.Log(" turns left: " + duration.ToString());
         
         if (duration < 1)
         {
@@ -61,7 +60,7 @@ public abstract class CombatEffect
     }
     public virtual void FirstEffect()
     {
-        //TriggerEffect();
+        Activate();
     }
     public virtual void ShowPotentialEffect()
     {
@@ -132,7 +131,6 @@ public class DamageEffect : CombatEffect
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
     }
-    
     public override void ShowPotentialEffect()
     {
         action.affectedRoom.IncreaseAttackIntent(damage);

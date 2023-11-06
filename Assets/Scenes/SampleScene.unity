@@ -1744,6 +1744,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 502203986743741335, guid: 479ba7cfef559e84dac847b2f5c4e503, type: 3}
+      propertyPath: AP
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 3463511908800435886, guid: 479ba7cfef559e84dac847b2f5c4e503, type: 3}
       propertyPath: isPlayer
       value: 0
@@ -1969,7 +1973,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5230227865364374019, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: roomType
-      value: 4
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8853126111785798934, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: m_Pivot.x
@@ -2070,7 +2074,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5230227865364374019, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: roomType
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8853126111785798934, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: m_Pivot.x
@@ -2171,7 +2175,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5230227865364374019, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: roomType
-      value: 5
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8853126111785798934, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: m_Pivot.x
