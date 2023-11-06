@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DebugHandler : MonoBehaviour
 {
-    uint qsize = 15;  // number of messages to keep
+    uint qsize = 5;  // number of messages to keep
     Queue myLogQueue = new Queue();
     public GUIStyle customStyle; // Create a GUIStyle for custom text style
     void Start() {

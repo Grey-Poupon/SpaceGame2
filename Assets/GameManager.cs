@@ -489,11 +489,10 @@ public class GameManager : MonoBehaviour
                 
             if (room.effectsApplied.Count > 0)
             {
-                explanation += "\nThe " +( room.isPlayer ? "Players " : "Enemys ") + room.roomType.ToString() + "Room is affected by: ";
                 List<CombatEffect> effectsCopy = room.effectsApplied.Select(obj => obj).ToList();
+                explanation += "\nThe " +( room.isPlayer ? "Players " : "Enemys ") + room.roomType.ToString() + "Room is affected by: " + string.Join(" | ", room.effectsApplied.Select(obj => obj.GetType().ToString()).ToList());
                 foreach(CombatEffect effect in effectsCopy)
                 {
-                    explanation += string.Join(" | ", room.effectsApplied.Select(obj => obj.GetType().ToString()).ToList());
                     if (room.effectsApplied.Contains(effect))
                     {
                         effect.Activate();
