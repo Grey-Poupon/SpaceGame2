@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using System.Collections.Specialized;
 using System;
 using System.Diagnostics;
@@ -926,6 +925,7 @@ public class GameManager : MonoBehaviour
     
     public void UpdateHandStats()
     {
+        //UnityEngine.Debug.Log(string.Join(" & ", playerHand.GetCards().Select(obj=>obj.cardAction.name + ":"+obj.turnsUntilReady.ToString()).ToList()));
         foreach(Card card in playerHand.GetCards())
         {if (card.turnsUntilReady > 0 ) {card.NextTurn();}}
         foreach(Card card in enemyHand.GetCards() )
