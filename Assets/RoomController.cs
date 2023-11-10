@@ -50,33 +50,46 @@ public class RoomController : MonoBehaviour
 
     Room createRoom(RoomType roomType, bool getEveryRoom=false)
     {
-        List<CardAction> weaponActions = new List<CardAction>();
-        List<CardAction> shieldActions = new List<CardAction>();
-        List<CardAction> engineActions = new List<CardAction>();
-        List<CardAction> reactorActions = new List<CardAction>();
-        List<CardAction> missileActions = new List<CardAction>();
+        List<CardAction> laserActions            = new List<CardAction>();    
+        List<CardAction> shieldActions           = new List<CardAction>();     
+        List<CardAction> engineActions           = new List<CardAction>();     
+        List<CardAction> reactorActions          = new List<CardAction>();
+        List<CardAction> missileActions          = new List<CardAction>();      
+        List<CardAction> firebombActions         = new List<CardAction>();       
+        List<CardAction> shieldPiercerActions    = new List<CardAction>();            
+        List<CardAction> evasiveManeouvreActions = new List<CardAction>();               
+        List<CardAction> batteryActions          = new List<CardAction>();      
+        List<CardAction> EMPActions              = new List<CardAction>();  
+
+        laserActions           .AddRange(new List<CardAction> { new LaserAction()});
+        shieldActions          .AddRange(new List<CardAction> { new FocusedShieldAction()});
+        engineActions          .AddRange(new List<CardAction> { new SpeedUpAction()});
+        reactorActions         .AddRange(new List<CardAction> { new OverdriveAction()});
+
+        missileActions         .AddRange(new List<CardAction> {new MissileAction()});
+        firebombActions        .AddRange(new List<CardAction> {new FirebombAction()});
+        shieldPiercerActions   .AddRange(new List<CardAction> {new ShieldPiercerAction()});
+        evasiveManeouvreActions.AddRange(new List<CardAction> {new EvasiveManeouvreAction()});
+        batteryActions         .AddRange(new List<CardAction> {new ChargeBatteriesAction()});
+        EMPActions             .AddRange(new List<CardAction> {new EMPAction()});
+        
         if (getEveryRoom)
         {
-           weaponActions.AddRange( new List<CardAction> { new LaserAction(),         new FirebombAction(),         new ShieldPiercerAction()       });
-           missileActions.AddRange( new List<CardAction>{ new MissileAction()});
-           shieldActions.AddRange( new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction(),    new BigBoyShieldAction(),     new SemiPermanentShieldAction() });
-           engineActions.AddRange( new List<CardAction> { new SpeedUpAction(),       new BigBoySpeedUpAction(),    new EvasiveManeouvreAction(), new OverHeatAction()            });
-           reactorActions.AddRange(new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction(), new ChargeBatteriesAction(),  new EMPAction()                 });
+            laserActions   .AddRange(new List<CardAction> {new BuffEnergyWeaponAction()});
+            shieldActions  .AddRange(new List<CardAction> {new GeneralShieldAction(), new BigBoyShieldAction(), new SemiPermanentShieldAction()});
+            engineActions  .AddRange(new List<CardAction> {new BigBoySpeedUpAction(), new OverHeatAction()});
         }
-        else
-        {
-           weaponActions.AddRange( new List<CardAction> { new LaserAction()});
-           missileActions.AddRange( new List<CardAction>{ new MissileAction()});
-           shieldActions.AddRange( new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction() });
-           engineActions.AddRange( new List<CardAction> { new SpeedUpAction(),       new BigBoySpeedUpAction() });
-           reactorActions.AddRange(new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction() });
-        }
-
-        if      (roomType == RoomType.Weapons) { return new Room(weaponActions,  RoomType.Weapons,  5);}
-        else if (roomType == RoomType.Shield)  { return new Room(shieldActions,  RoomType.Shield,   3);}
-        else if (roomType == RoomType.Engine)  { return new Room(engineActions,  RoomType.Engine,   3);}
-        else if (roomType == RoomType.Reactor) { return new Room(reactorActions, RoomType.Reactor,  8);}
-        else if (roomType == RoomType.Missile) { return new Room(missileActions, RoomType.Missile,  3);}
+        
+        if      (roomType == RoomType.Laser)            {return new Room(laserActions,            roomType, 5);}
+        else if (roomType == RoomType.Shield)           {return new Room(shieldActions,           roomType, 3);}
+        else if (roomType == RoomType.Engine)           {return new Room(engineActions,           roomType, 5);}
+        else if (roomType == RoomType.Reactor)          {return new Room(reactorActions,          roomType, 8);}
+        else if (roomType == RoomType.Missile)          {return new Room(missileActions,          roomType, 3);}
+        else if (roomType == RoomType.Firebomb)         {return new Room(firebombActions,         roomType, 3);}
+        else if (roomType == RoomType.ShieldPiercer)    {return new Room(shieldPiercerActions,    roomType, 3);}
+        else if (roomType == RoomType.EvasiveManeouvre) {return new Room(evasiveManeouvreActions, roomType, 3);}
+        else if (roomType == RoomType.Battery)          {return new Room(batteryActions,          roomType, 3);}
+        else if (roomType == RoomType.EMP)              {return new Room(EMPActions,              roomType, 3);}
         else return new Room(new List<CardAction>(), RoomType.Reactor,  0);
     }
 }
@@ -236,11 +249,16 @@ public class Room
 
 public enum RoomType
 {
-    Weapons,
+    Laser,
+    Missile,
+    Firebomb,
+    ShieldPiercer,
     Shield,
     Engine,
-    Reactor,
-    Missile
+    EvasiveManeouvre,
+    Battery,
+    EMP,
+    Reactor
 }
 
 public enum Stat

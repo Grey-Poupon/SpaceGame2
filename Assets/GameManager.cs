@@ -121,10 +121,15 @@ public class GameManager : MonoBehaviour
         float yBound = 1;
         float xPos = 0;
         float yPos = 0;
+        int numRooms = 5;
+
         List<(float, float)> directions = new List<(float, float)>(){(1, 0), (0, 1), (-1, 0), (0, -1)};
         HashSet<(float, float)> roomLocations = new HashSet<(float, float)>();
-        List<RoomType> RoomTypes = RoomType.GetValues(typeof(RoomType)).Cast<RoomType>().ToList();
-
+        List<RoomType> roomTypes = RoomType.GetValues(typeof(RoomType))
+            .Cast<RoomType>()
+            .OrderBy(e => UnityEngine.Random.value)
+            .Take(numRooms)
+            .ToList();
         // Create a new Ship
         EnemySpaceship newShip = Instantiate(prefabHolder.enemySpaceshipPrefab, new Vector3(2, 2, 0), Quaternion.identity);        
         
@@ -133,11 +138,10 @@ public class GameManager : MonoBehaviour
         rootRoom.transform.localPosition = new Vector3(xPos, yPos, 0);
         rootRoom.name = "RootRoom";
         rootRoom.Setup(RoomType.Reactor);
-        RoomTypes.Remove(RoomType.Reactor);
 
         roomLocations.Add((xPos, yPos));
         
-        while (RoomTypes.Count > 0)
+        while (roomTypes.Count > 0)
         {
             // Define all valid locations I.E. not overlapping
             List<(float, float)> validLocations = directions
@@ -164,10 +168,10 @@ public class GameManager : MonoBehaviour
             roomLocations.Add((xPos, yPos));
             
             // Choose a random room type from the remaining options
-            idx = UnityEngine.Random.Range(0, RoomTypes.Count);
-            roomController.Setup(RoomTypes[idx]);
-            roomController.name = RoomTypes[idx].ToString() + " Room";
-            RoomTypes.RemoveAt(idx);
+            idx = UnityEngine.Random.Range(0, roomTypes.Count);
+            roomController.Setup(roomTypes[idx]);
+            roomController.name = roomTypes[idx].ToString() + " Room";
+            roomTypes.RemoveAt(idx);
         }
     }
 
@@ -510,8 +514,12 @@ public class GameManager : MonoBehaviour
                 explanation += "\n" + action.name + " Was not played because: Disabled " + action.sourceRoom.disabled + " Destroyed " + action.sourceRoom.destroyed + (action.card.turnsUntilReady!=0 ? "Action Not Ready" : "Action Ready") ;
                 continue;
             }
-            if (action is LaserAction || action is FreeLaserAction || action is MissileAction){ weaponCalls.Add(() => FireLaserAtTarget(action)); }
             explanation += "\n" + action.name + " Was played";
+            if (action is LaserAction || action is FreeLaserAction || action is MissileAction){ weaponCalls.Add(() => FireLaserAtTarget(action)); }
+            if (action.effects.Where(obj => obj is DamageEffect).ToList().Count > 0)
+            {
+                explanation += " on a room with " + action.affectedRoom.defence.ToString() + " defence";
+            }
             action.Activate();
         }
         if (verbose) UnityEngine.Debug.Log(explanation);
@@ -520,7 +528,7 @@ public class GameManager : MonoBehaviour
 
     public void EnemyChooseActions()
     {
-        EnemyAIEMPOrFiftyFifty();
+        EnemyChooseRandomActions();
     }
     public void EnemyAIOldStyle()
     {
@@ -561,7 +569,7 @@ public class GameManager : MonoBehaviour
         List<Card> speedUpCards = enemyHand.GetCardsByAction(typeof(SpeedUpAction));
         while (enemyShip.AP > 0 && (shieldCards.Count + speedUpCards.Count) > 0)
         {
-            List<Room> weaponsRooms = enemyRooms[RoomType.Weapons].Where(obj => obj.health > 0).ToList();
+            List<Room> weaponsRooms = enemyRooms[RoomType.Laser].Where(obj => obj.health > 0).ToList();
             List<Room> reactorRooms = enemyRooms[RoomType.Shield].Where(obj => obj.health > 0).ToList();
             List<Room> shieldRooms  = enemyRooms[RoomType.Reactor].Where(obj => obj.health > 0).ToList();
             
@@ -599,7 +607,7 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-    public void EnemyChooseActions1()
+    public void EnemyChooseRandomActions()
     {
         System.Random random = new System.Random();
         List<Card> cards = new List<Card>(enemyHand.GetCards());
@@ -608,17 +616,14 @@ public class GameManager : MonoBehaviour
             int index = random.Next(cards.Count);
             Card card = cards[index];
             if(card.CanBeUsed(enemyShip.AP)){
-                if(card.cardAction.needsTarget){
-                    if(card.cardAction is LaserAction || card.cardAction is MissileAction || card.cardAction is FreeLaserAction){
-                        List<Room> playerRooms = playerShip.GetRoomList();
-                        int roomindex = random.Next(playerRooms.Count);
-                        card.cardAction.SetAffectedRoom(playerRooms[roomindex]);
-                    }
-                    else{
-                        card.cardAction.SetAffectedRoom(card.cardAction.sourceRoom);
-                    }
+                if(card.cardAction.needsTarget && card.cardAction is LaserAction || card.cardAction is MissileAction || card.cardAction is FreeLaserAction || card.cardAction is ShieldPiercerAction || card.cardAction is FirebombAction || card.cardAction is EMPAction)
+                {
+                    List<Room> playerRooms = playerShip.GetRoomList();
+                    int roomindex = random.Next(playerRooms.Count);
+                    card.cardAction.SetAffectedRoom(playerRooms[roomindex]);
                 }
-                else{
+                else
+                {
                     card.cardAction.SetAffectedRoom(card.cardAction.sourceRoom);
                 }
                 
@@ -638,9 +643,9 @@ public class GameManager : MonoBehaviour
         if (laserCards.Count > 0)
         {
             Card laser = laserCards[0];
-            while (laser.CanBeUsed(enemyShip.AP))
+            while (laser.CanBeUsed(enemyShip.AP - 1))
             {
-                List<Room> targets = playerRooms[RoomType.Weapons].Where(obj => obj.health > 0).ToList();
+                List<Room> targets = playerRooms[RoomType.Laser].Where(obj => obj.health > 0).ToList();
                 if (targets.Count == 0){break;}
 
                 Room target = targets[0];
@@ -680,7 +685,7 @@ public class GameManager : MonoBehaviour
             emp.turnsUntilReady = 0;
             bool targetFound = false;
 
-            foreach (Room target in playerRooms[RoomType.Weapons].Where(obj => !obj.destroyed && !obj.disabled).ToList())
+            foreach (Room target in playerRooms[RoomType.Laser].Where(obj => !obj.destroyed && !obj.disabled).ToList())
             {
                 emp.cardAction.affectedRoom = target;
                 foreach (CombatEffect effect in emp.cardAction.effects) effect.affectedRoom = target;
@@ -718,7 +723,7 @@ public class GameManager : MonoBehaviour
         if(turnCounter % 3 == 0)
         {
             EnemyAIEMP();
-            EnemyChooseActions1();
+            EnemyChooseRandomActions();
         }
         else if(turnCounter % 3 == 1)
         {
