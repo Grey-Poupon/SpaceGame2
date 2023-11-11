@@ -71,7 +71,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
 
         // Call your non-async function here
-        turn = TurnTypes.Enemy;
+        turn = TurnTypes.Resolve;
         foreach(Card card in playerHand.GetCards())
         {
             if(card.cardAction.cooldown > 0)
@@ -115,14 +115,25 @@ public class GameManager : MonoBehaviour
         }
         
     }
+
     public void BuildAShip()
     {
+        void addRoom(RoomType roomType, float xPos, float yPos, Transform parent)
+        {
+            // Setup Basic Rooms
+            RoomController rootRoom = Instantiate(prefabHolder.roomPrefab, parent);
+            rootRoom.transform.localPosition = new Vector3(xPos, yPos, 0);
+            rootRoom.name = roomType.ToString() + " Room";
+            rootRoom.Setup(roomType);
+        }
         float xBound = 3;
         float yBound = 1;
         float xPos = 0;
         float yPos = 0;
         int numRooms = 5;
 
+        // The number of rooms is kinda random because the basic rooms may not be in the 5 rooms defined here
+        // so it could be anywhere from 5 to 9 rooms
         List<(float, float)> directions = new List<(float, float)>(){(1, 0), (0, 1), (-1, 0), (0, -1)};
         HashSet<(float, float)> roomLocations = new HashSet<(float, float)>();
         List<RoomType> roomTypes = RoomType.GetValues(typeof(RoomType))
@@ -133,13 +144,22 @@ public class GameManager : MonoBehaviour
         // Create a new Ship
         EnemySpaceship newShip = Instantiate(prefabHolder.enemySpaceshipPrefab, new Vector3(2, 2, 0), Quaternion.identity);        
         
-        // Setup first Room
-        RoomController rootRoom = Instantiate(prefabHolder.roomPrefab, newShip.transform);
-        rootRoom.transform.localPosition = new Vector3(xPos, yPos, 0);
-        rootRoom.name = "RootRoom";
-        rootRoom.Setup(RoomType.Reactor);
-
+        // Setup Basic Rooms
+        addRoom(RoomType.Reactor, xPos, yPos, newShip.transform);
+        roomTypes.Remove(RoomType.Reactor);
         roomLocations.Add((xPos, yPos));
+        
+        addRoom(RoomType.Laser, xPos + 1, yPos, newShip.transform);
+        roomTypes.Remove(RoomType.Laser);
+        roomLocations.Add((xPos + 1, yPos));
+        
+        addRoom(RoomType.Engine, xPos, yPos + 1, newShip.transform);
+        roomTypes.Remove(RoomType.Engine);
+        roomLocations.Add((xPos, yPos + 1));
+
+        addRoom(RoomType.Shield, xPos + 2, yPos, newShip.transform);
+        roomTypes.Remove(RoomType.Shield);
+        roomLocations.Add((xPos + 2, yPos));
         
         while (roomTypes.Count > 0)
         {
@@ -162,15 +182,12 @@ public class GameManager : MonoBehaviour
             xPos = validLocations[idx].Item1;
             yPos = validLocations[idx].Item2;
 
-            // Make the room
-            RoomController roomController = Instantiate(prefabHolder.roomPrefab, newShip.transform);
-            roomController.transform.localPosition = new Vector3(xPos, yPos, 0);
-            roomLocations.Add((xPos, yPos));
-            
             // Choose a random room type from the remaining options
             idx = UnityEngine.Random.Range(0, roomTypes.Count);
-            roomController.Setup(roomTypes[idx]);
-            roomController.name = roomTypes[idx].ToString() + " Room";
+            
+            // Make the room
+            addRoom(roomTypes[idx], xPos, yPos, newShip.transform);
+            roomLocations.Add((xPos, yPos));
             roomTypes.RemoveAt(idx);
         }
     }
@@ -191,6 +208,7 @@ public class GameManager : MonoBehaviour
         UnityEngine.Debug.Log("Player Turns");
         UnityEngine.Debug.Log(allCardCombinations.Values.SelectMany(x => x).ToList().Count);
     }
+
     public void SimulateEnemyTurn()
     {
         Dictionary<int, List<CardAction>> allCardCombinations = new Dictionary<int, List<CardAction>>();
@@ -528,8 +546,9 @@ public class GameManager : MonoBehaviour
 
     public void EnemyChooseActions()
     {
-        EnemyChooseRandomActions();
+        EnemyAIAttackOrRandom();
     }
+
     public void EnemyAIOldStyle()
     {
         System.Random random = new System.Random();
@@ -607,6 +626,7 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
     public void EnemyChooseRandomActions()
     {
         System.Random random = new System.Random();
@@ -643,7 +663,7 @@ public class GameManager : MonoBehaviour
         if (laserCards.Count > 0)
         {
             Card laser = laserCards[0];
-            while (laser.CanBeUsed(enemyShip.AP - 1))
+            while (laser.CanBeUsed(enemyShip.AP))
             {
                 List<Room> targets = playerRooms[RoomType.Laser].Where(obj => obj.health > 0).ToList();
                 if (targets.Count == 0){break;}
@@ -656,6 +676,7 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
     public void EnemyAISemiPermanentShieldShip()
     {
         List<Card> SPShield = enemyHand.GetCardsByAction(typeof(SemiPermanentShieldAction)).Where(obj => !obj.cardAction.sourceRoom.destroyed && !obj.cardAction.sourceRoom.disabled).ToList();
@@ -676,6 +697,7 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
     public void EnemyAIEMP()
     {
         List<Card> emps = enemyHand.GetCardsByAction(typeof(EMPAction)).Where(obj => !obj.cardAction.sourceRoom.destroyed && !obj.cardAction.sourceRoom.disabled).ToList();
@@ -707,7 +729,8 @@ public class GameManager : MonoBehaviour
 
         }
     }
-    public void EnemyAIFiftyFifty()
+
+    public void EnemyAIAttackDefend()
     {
         if(turnCounter % 2 == 0)
         {
@@ -718,6 +741,19 @@ public class GameManager : MonoBehaviour
             EnemyAISemiPermanentShieldShip();
         }
     }
+
+    public void EnemyAIAttackOrRandom()
+    {
+        if(turnCounter % 2 == 0)
+        {
+            EnemyAIAllOutAttack();
+        }
+        else
+        {
+            EnemyChooseRandomActions();
+        }
+    }
+
     public void EnemyAIEMPOrFiftyFifty()
     {
         if(turnCounter % 3 == 0)
@@ -830,7 +866,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
     public void RestartTurn(){
         // need a way to reset GUI on rooms as current method will not remove shield no. , perhaps the showPotentialEffect looks through submitted actions?
         playerShip.AdjustAP(playerShip.defaultAP-playerShip.AP);
@@ -849,6 +884,7 @@ public class GameManager : MonoBehaviour
         playerTurnActions.Clear();
         playerTurnActionsText.text="";
     }
+
     public void UndoAction(){
         // need a way to reset GUI on rooms as current method will not remove  shield no. , perhaps the showPotentialEffect looks through submitted actions?
         
@@ -873,7 +909,6 @@ public class GameManager : MonoBehaviour
             playerTurnActions.Remove(lastAction);
         }
     }
-
 
     public void SubmitCard(Card card, bool isPlayer)
     {

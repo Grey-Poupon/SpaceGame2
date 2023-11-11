@@ -1973,7 +1973,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5230227865364374019, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: roomType
-      value: 2
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 8853126111785798934, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: m_Pivot.x
@@ -2074,7 +2074,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5230227865364374019, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: roomType
-      value: 1
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8853126111785798934, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: m_Pivot.x
@@ -2175,7 +2175,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5230227865364374019, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: roomType
-      value: 3
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 8853126111785798934, guid: 2e4add5515bf61e45bad59d9f7ce7873, type: 3}
       propertyPath: m_Pivot.x
