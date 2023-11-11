@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Linq;
 
 public class PlayerSpaceship : SpaceShip
@@ -21,6 +22,7 @@ public class PlayerSpaceship : SpaceShip
 
     private void OnDestroy()
     {
+        SceneManager.LoadScene("SampleScene");
         // Remove this player ship from the GameManager when destroyed.
         //GameManager.Instance.RemovePlayerShip();
     }
@@ -59,6 +61,7 @@ public abstract class SpaceShip: MonoBehaviour
         {
             room.defence = 0;
             room.incomingDamage = 0;
+            room.UpdateHealthBar();
         }
     }
     protected SpaceShip()

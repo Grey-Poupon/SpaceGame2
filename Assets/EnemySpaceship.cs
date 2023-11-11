@@ -5,9 +5,12 @@ using UnityEngine;
 public class EnemySpaceship : SpaceShip
 {
 
+    public GameObject enemyShipPrefab;
     void Awake()
     {
+        ResetTempRoomStats();
         GameManager.Instance.RegisterEnemyShip(this);
+
     }
 
     // Update is called once per frame
@@ -15,9 +18,18 @@ public class EnemySpaceship : SpaceShip
     {
         
     }
-    private void OnDestroy()
+    public void onDestroy()
     {
+        if(this.gameObject.activeInHierarchy){
+            GameManager.Instance.enemyRooms.Clear();
+            GameObject newEnemy = Instantiate(enemyShipPrefab,this.GetComponent<Transform>().position,this.GetComponent<Transform>().rotation);
+            GameManager.Instance.RegisterEnemyShip(newEnemy.GetComponent<EnemySpaceship>());
+            this.gameObject.SetActive(false);
+            
         // Remove this player ship from the GameManager when destroyed.
-        //GameManager.Instance.RemoveEnemyShip();
+        //Destroy(this.gameObject);
+        }
+        
+        
     }
 }

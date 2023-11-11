@@ -196,7 +196,7 @@ public abstract class Room
 
     }
 
-    void UpdateHealthBar()
+    public void UpdateHealthBar()
     {
         if (getHealth() == 0)
         {
@@ -278,8 +278,16 @@ public class ReactorRoom : Room
 
     public override void onDestroy()
     {
+
         base.onDestroy();
-        //UnityEngine.Debug.Log("Ship gone");
+
+        if(isPlayer){
+
+        }
+        else{
+           // GameManager.Instance.enemyShip.onDestroy();
+        }
+        UnityEngine.Debug.Log("Ship gone");
     }
 
 }

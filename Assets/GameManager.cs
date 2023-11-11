@@ -367,6 +367,9 @@ public class GameManager : MonoBehaviour
             ResetTempStats();
             ResetTurnActions();
             turn = TurnTypes.Enemy;
+            if(enemyRooms[RoomType.Reactor][0].health<=0){
+                enemyShip.onDestroy();
+            }
         }
         if (turn == TurnTypes.Enemy)
         {
@@ -545,7 +548,7 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-    public void EnemyChooseActions1()
+    public void EnemyChooseActionsRandom()
     {
         System.Random random = new System.Random();
         List<Card> cards = new List<Card>(enemyHand.GetCards());
@@ -666,7 +669,7 @@ public class GameManager : MonoBehaviour
         if(turnCounter % 3 == 0)
         {
             EnemyAIEMP();
-            EnemyChooseActions1();
+            EnemyChooseActionsRandom();
         }
         else if(turnCounter % 3 == 1)
         {
