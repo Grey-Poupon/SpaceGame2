@@ -4,8 +4,10 @@ MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences:
-  - laserPrefab: {fileID: -4835875760688866906, guid: 63a2bc48e01a6d34d886bcd05fa379b2, type: 3}
-  - hand: {instanceID: 0}
+  - customCursor: {instanceID: 0}
+  - playerShip: {instanceID: 0}
+  - enemyShip: {instanceID: 0}
+  - prefabHolder: {fileID: 7844012429974346726, guid: 0e149a05afca5c04d8c69525512fcc8e, type: 3}
   executionOrder: -1
   icon: {instanceID: 0}
   userData: 

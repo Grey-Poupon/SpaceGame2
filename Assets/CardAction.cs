@@ -16,6 +16,9 @@ public abstract class CardAction{
     public bool needsTarget;
     public Card card;
 
+
+
+
     public void Activate()
     {
         card.turnsUntilReady = cooldown;       
@@ -124,7 +127,7 @@ public class FirebombAction : CardAction
 {
     public FirebombAction()
     {
-        this.effects = new List<CombatEffect>{new OnFireEffect(1, false, 1)};
+        this.effects = new List<CombatEffect>{new OnFireEffect(100, false, 1)};
         AttachToEffect();
         this.name = "Fire Bomb";
         this.cooldown = 1;
@@ -350,7 +353,7 @@ public class StopFireAction : CardAction
         this.effects = new List<CombatEffect>{new StopFireEffect()};
         AttachToEffect();
         this.name = "Stop Fire";
-        this.cooldown = 1;
+        this.cooldown = 100;
         this.cost = 1;
         this.description = "";
         this.needsTarget = true;

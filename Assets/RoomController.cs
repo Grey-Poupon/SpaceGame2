@@ -6,14 +6,19 @@ using TMPro;
 
 public class RoomController : MonoBehaviour
 {
+    public static RoomController RoomPrefab;
     private Room room;
     public bool isPlayer;
+
+    
     public RoomType roomType;
-    // Start is called before the first frame update
     void Start()
     {
         isPlayer = transform.parent.GetComponent<MonoBehaviour>() is PlayerSpaceship;
-
+        if (isPlayer) Setup(roomType);
+    }
+    public void Setup(RoomType roomType)
+    {
         if (room == null){room = createRoom(roomType, !isPlayer);}
         GameManager.Instance.RegisterRoom(room, isPlayer);
         room.spriteRenderer = GetComponent<SpriteRenderer>();
@@ -29,8 +34,6 @@ public class RoomController : MonoBehaviour
         room.parent = this;
         room.isPlayer = isPlayer;
     }
-
-    // Update is called once per frame
     void Update()
     {
         
@@ -47,39 +50,53 @@ public class RoomController : MonoBehaviour
         }
     }
 
-
     Room createRoom(RoomType roomType, bool getEveryRoom=false)
     {
-        List<CardAction> weaponActions = new List<CardAction>();
-        List<CardAction> shieldActions = new List<CardAction>();
-        List<CardAction> engineActions = new List<CardAction>();
-        List<CardAction> reactorActions = new List<CardAction>();
+        List<CardAction> laserActions            = new List<CardAction>();    
+        List<CardAction> shieldActions           = new List<CardAction>();     
+        List<CardAction> engineActions           = new List<CardAction>();     
+        List<CardAction> reactorActions          = new List<CardAction>();
+        List<CardAction> missileActions          = new List<CardAction>();      
+        List<CardAction> firebombActions         = new List<CardAction>();       
+        List<CardAction> shieldPiercerActions    = new List<CardAction>();            
+        List<CardAction> evasiveManeouvreActions = new List<CardAction>();               
+        List<CardAction> batteryActions          = new List<CardAction>();      
+        List<CardAction> EMPActions              = new List<CardAction>();  
+
+        laserActions           .AddRange(new List<CardAction> { new LaserAction()});
+        shieldActions          .AddRange(new List<CardAction> { new FocusedShieldAction()});
+        engineActions          .AddRange(new List<CardAction> { new SpeedUpAction()});
+        reactorActions         .AddRange(new List<CardAction> { new OverdriveAction()});
+
+        missileActions         .AddRange(new List<CardAction> {new MissileAction()});
+        firebombActions        .AddRange(new List<CardAction> {new FirebombAction()});
+        shieldPiercerActions   .AddRange(new List<CardAction> {new ShieldPiercerAction()});
+        evasiveManeouvreActions.AddRange(new List<CardAction> {new EvasiveManeouvreAction()});
+        batteryActions         .AddRange(new List<CardAction> {new ChargeBatteriesAction()});
+        EMPActions             .AddRange(new List<CardAction> {new EMPAction()});
+        
         if (getEveryRoom)
         {
-           weaponActions.AddRange( new List<CardAction> { new LaserAction(),         new MissileAction(),          new FirebombAction(),         new ShieldPiercerAction()       });
-           shieldActions.AddRange( new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction(),    new BigBoyShieldAction(),     new SemiPermanentShieldAction() });
-           engineActions.AddRange( new List<CardAction> { new SpeedUpAction(),       new BigBoySpeedUpAction(),    new EvasiveManeouvreAction(), new OverHeatAction()            });
-           reactorActions.AddRange(new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction(), new ChargeBatteriesAction(),  new EMPAction()                 });
+            laserActions   .AddRange(new List<CardAction> {new BuffEnergyWeaponAction()});
+            shieldActions  .AddRange(new List<CardAction> {new GeneralShieldAction(), new BigBoyShieldAction(), new SemiPermanentShieldAction()});
+            engineActions  .AddRange(new List<CardAction> {new BigBoySpeedUpAction(), new OverHeatAction()});
         }
-        else
-        {
-           weaponActions.AddRange( new List<CardAction> { new LaserAction(),         new MissileAction() });
-           shieldActions.AddRange( new List<CardAction> { new FocusedShieldAction(), new GeneralShieldAction() });
-           engineActions.AddRange( new List<CardAction> { new SpeedUpAction(),       new BigBoySpeedUpAction() });
-           reactorActions.AddRange(new List<CardAction> { new OverdriveAction(),     new BuffEnergyWeaponAction() });
-        }
-
-        if      (roomType == RoomType.Weapons) { return new WeaponsRoom(weaponActions);  }
-        else if (roomType == RoomType.Shield)  { return new ShieldRoom(shieldActions);   }
-        else if (roomType == RoomType.Engine)  { return new EngineRoom(engineActions);   }
-        else if (roomType == RoomType.Reactor) { return new ReactorRoom(reactorActions); }
-        else                                   { return new ReactorRoom(reactorActions); }
-    }   
-
-
+        
+        if      (roomType == RoomType.Laser)            {return new Room(laserActions,            roomType, 5);}
+        else if (roomType == RoomType.Shield)           {return new Room(shieldActions,           roomType, 3);}
+        else if (roomType == RoomType.Engine)           {return new Room(engineActions,           roomType, 5);}
+        else if (roomType == RoomType.Reactor)          {return new Room(reactorActions,          roomType, 8);}
+        else if (roomType == RoomType.Missile)          {return new Room(missileActions,          roomType, 3);}
+        else if (roomType == RoomType.Firebomb)         {return new Room(firebombActions,         roomType, 3);}
+        else if (roomType == RoomType.ShieldPiercer)    {return new Room(shieldPiercerActions,    roomType, 3);}
+        else if (roomType == RoomType.EvasiveManeouvre) {return new Room(evasiveManeouvreActions, roomType, 3);}
+        else if (roomType == RoomType.Battery)          {return new Room(batteryActions,          roomType, 3);}
+        else if (roomType == RoomType.EMP)              {return new Room(EMPActions,              roomType, 3);}
+        else return new Room(new List<CardAction>(), RoomType.Reactor,  0);
+    }
 }
 
-public abstract class Room
+public class Room
 {
     public bool isPlayer;
     public RoomController parent;
@@ -104,7 +121,6 @@ public abstract class Room
         if (parent.isPlayer != invert){return GameManager.Instance.playerShip;}
         return GameManager.Instance.enemyShip;
     }
-
     public float getHealth()
     {
         return health;
@@ -113,7 +129,6 @@ public abstract class Room
     {
         return maxHealth;
     }
- 
     public void setHealth(float newHealth)
     {
         health = newHealth;
@@ -127,10 +142,12 @@ public abstract class Room
             {
                 if (effectsApplied[i] is ShieldEffect)
                 {
+                    ShieldEffect effect = (ShieldEffect) effectsApplied[i];
+                    defence -= effect.increase;
+                    damage -= effect.increase;
                     effectsApplied.RemoveAt(i);
-                    defence--;
                 }
-                if (defence == 0){break;}
+                if (defence == 0 || damage == 0){break;}
             }
         }
 
@@ -145,25 +162,21 @@ public abstract class Room
         }
         UpdateHealthBar();
     }
-
     public void IncreaseDefence(float adjustment)
     {
         defence += adjustment;
         Shield.text = defence.ToString();
     }
-
     public void DecreaseDefence(float adjustment)
     {
         defence += adjustment;
         Shield.text = defence.ToString();
     }
-
     public void IncreaseAttackIntent(float damage)
     {
         incomingDamage += damage;
         Attack.text = incomingDamage.ToString();
     }
-
     public void heal(float healing)
     {
         if (health == maxHealth){return;}
@@ -182,7 +195,6 @@ public abstract class Room
         setHealth(newHealth);
         UpdateHealthBar();
     }
-
     public virtual void onDestroy()
     {
         destroyed = true;
@@ -203,17 +215,26 @@ public abstract class Room
             spriteRenderer.color = new Color(0.0f, 0.0f, 0.0f); // Black
             return;
         }
+        
+
+        // check if room is on fire, if so make room orange
+        foreach (CombatEffect ce in effectsApplied){
+            if(ce is OnFireEffect){
+                spriteRenderer.color = new Color(1f, 0.9f, 0.0f); // Orange
+                return;
+            }
+        }
         // Increase the red component of the room
         Color targetColour = new Color(1.0f, 0.0f, 0.0f); // Red
+        Color defaultColour = new Color(1.0f,1.0f,1.0f);//White
         Color currentColour = spriteRenderer.color;
-        Color colourDifference = targetColour - currentColour;
+        Color colourDifference = targetColour - defaultColour;
 
         float redComponentIncrease = 1f - (getHealth() / getMaxHealth());
 
-        spriteRenderer.color = currentColour + (colourDifference * redComponentIncrease);
+        spriteRenderer.color = defaultColour + (colourDifference * redComponentIncrease);
         
     }
-
     protected void AttachRoomToAction()
     {
         foreach(CardAction action in this.actions)
@@ -226,80 +247,30 @@ public abstract class Room
         Title.text = roomType.ToString();
         Attack.text = incomingDamage.ToString();
         Shield.text = defence.ToString();
-        Health.text = getHealth().ToString();
+        Health.text = health.ToString();
     }
-}
-
-public class WeaponsRoom : Room
-{
-    public WeaponsRoom(List<CardAction> actions)
+    public Room(List<CardAction> actions, RoomType type, float maxHealth)
     {
         this.actions = actions;
         AttachRoomToAction();
-        roomType = RoomType.Weapons;
-        maxHealth = 5;
-        health = maxHealth;
-    }
-}
-
-public class ShieldRoom : Room
-{
-    public ShieldRoom(List<CardAction> actions)
-    {
-        this.actions = actions;
-        AttachRoomToAction();
-        roomType = RoomType.Shield;
-        maxHealth = 3;
-        health = maxHealth;
-    }
-}
-public class EngineRoom : Room
-{
-    public EngineRoom(List<CardAction> actions)
-    {
-        this.actions = actions;
-        AttachRoomToAction();
-        roomType = RoomType.Engine;
-        maxHealth = 3;
-        health = maxHealth;
-    }
-}
-public class ReactorRoom : Room
-{
-
-    public ReactorRoom(List<CardAction> actions)
-    {
-        this.actions = actions;
-        AttachRoomToAction();
-        roomType = RoomType.Reactor;
-        maxHealth = 8;
-        health = maxHealth;
-    }
-
-    public override void onDestroy()
-    {
-
-        base.onDestroy();
-
-        if(isPlayer){
-
-        }
-        else{
-           // GameManager.Instance.enemyShip.onDestroy();
-        }
-        UnityEngine.Debug.Log("Ship gone");
+        this.roomType = type;
+        this.maxHealth = maxHealth;
+        this.health = maxHealth;
     }
 
 }
-
 
 public enum RoomType
 {
-    Weapons,
+    Laser,
     Missile,
-    CargoHold,
+    Firebomb,
+    ShieldPiercer,
     Shield,
     Engine,
+    EvasiveManeouvre,
+    Battery,
+    EMP,
     Reactor
 }
 

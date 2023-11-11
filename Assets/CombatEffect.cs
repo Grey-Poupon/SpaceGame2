@@ -27,7 +27,6 @@ public abstract class CombatEffect
     {
         TriggerEffect();
         duration -= 1;
-        //UnityEngine.Debug.Log(" turns left: " + duration.ToString());
         
         if (duration < 1)
         {
@@ -61,7 +60,7 @@ public abstract class CombatEffect
     }
     public virtual void FirstEffect()
     {
-        //TriggerEffect();
+        Activate();
     }
     public virtual void ShowPotentialEffect()
     {
@@ -132,7 +131,6 @@ public class DamageEffect : CombatEffect
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
     }
-    
     public override void ShowPotentialEffect()
     {
         action.affectedRoom.IncreaseAttackIntent(damage);
@@ -182,7 +180,7 @@ public class FreeLaserEffect : CombatEffect
         //     1           1          1 
         bool affectsPlayer = this.action.sourceRoom.isPlayer;
         CardAction action = new FreeLaserAction();
-        action.sourceRoom = affectedRoom.getParentShip().GetRooms()[RoomType.Weapons][0];
+        action.sourceRoom = affectedRoom.getParentShip().GetRooms()[RoomType.Laser][0];
         List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
     }
@@ -197,10 +195,12 @@ public class FreeLaserEffect : CombatEffect
 public class OnFireEffect : CombatEffect
 {
     public float damage;
+    public float startDuration;
     public OnFireEffect(float duration, bool affectsSelf, float damage)
     {
         this.affectsSelf = affectsSelf;
         this.duration = duration;
+        this.startDuration = duration;
         this.damage = damage;
     }
 
@@ -211,14 +211,16 @@ public class OnFireEffect : CombatEffect
         //     0           1          0
         //     1           0          0 
         //     1           1          1 
-        bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
-        CardAction action = new StopFireAction();
-        action.sourceRoom = affectedRoom;
-        List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
-        GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
-
+        if(duration==startDuration){
+            bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
+            CardAction action = new StopFireAction();
+            action.sourceRoom = affectedRoom;
+            List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
+            GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
+        }   
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
+        affectedRoom.UpdateTextGraphics();
     }
     
     public override void ShowPotentialEffect()

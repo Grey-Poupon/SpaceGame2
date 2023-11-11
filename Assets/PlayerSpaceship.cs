@@ -66,8 +66,7 @@ public abstract class SpaceShip: MonoBehaviour
     }
     protected SpaceShip()
     {
-        ResetAP();
-        ResetSpeed();
+
     }
 
     public Dictionary<RoomType, List<Room>> GetRooms()

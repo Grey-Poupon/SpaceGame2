@@ -41,7 +41,7 @@ public class Card
         if (turnsUntilReady > 0)
         {
             turnsUntilReady -= 1;
-            if (cardAction.IsReady()&&cardController!=null)
+            if (turnsUntilReady<1)
             {
                 if (cardController) cardController.gameObject.SetActive(true);
             }
@@ -96,6 +96,7 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
                     GameManager.Instance.PickCard(card);
                 }
                 else{
+                    UnityEngine.Debug.Log(card.cardAction.name + " Was not played because: Disabled: " + card.cardAction.sourceRoom.disabled + "| Destroyed: " + card.cardAction.sourceRoom.destroyed + (card.turnsUntilReady!=0 ? "| Action: Not Ready" : "| Action: Ready") + "| Enough AP: " + (card.cardAction.cost <= GameManager.Instance.playerShip.AP).ToString());
                     // if they can't play card reset
                     card.cardController.gameObject.SetActive(false);
                     card.cardController.gameObject.SetActive(true);
@@ -118,11 +119,9 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             LayoutRebuilder.MarkLayoutForRebuild(GetComponentInParent<RectTransform>());
             return;
         }
-        
         isDragging = GameManager.Instance.turn == TurnTypes.Player;
         if (isDragging)
         {
-            
             offset = cardRectTransform.position - Camera.main.ScreenToWorldPoint(Input.mousePosition);
         }
     }

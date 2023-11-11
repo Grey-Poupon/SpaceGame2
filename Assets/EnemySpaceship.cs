@@ -21,9 +21,10 @@ public class EnemySpaceship : SpaceShip
     public void onDestroy()
     {
         if(this.gameObject.activeInHierarchy){
-            GameManager.Instance.enemyRooms.Clear();
-            GameObject newEnemy = Instantiate(enemyShipPrefab,this.GetComponent<Transform>().position,this.GetComponent<Transform>().rotation);
-            GameManager.Instance.RegisterEnemyShip(newEnemy.GetComponent<EnemySpaceship>());
+            
+            //GameObject newEnemy = Instantiate(enemyShipPrefab,this.GetComponent<Transform>().position,this.GetComponent<Transform>().rotation);
+            //GameManager.Instance.RegisterEnemyShip(newEnemy.GetComponent<EnemySpaceship>());
+            GameManager.Instance.BuildAShip();
             this.gameObject.SetActive(false);
             
         // Remove this player ship from the GameManager when destroyed.
