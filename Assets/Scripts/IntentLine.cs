@@ -92,8 +92,8 @@ public class IntentLine : MonoBehaviour
         float ttt = tt * t;
 
         Vector3 p = uuu * p0;
-        p += 3 * uu * t * (p0 + Vector3.up * height);
-        p += 3 * u * tt * (p1 + Vector3.up * height);
+        p += 3 * uu * t * (p0 + Vector3.up * height * 0.1f);
+        p += 3 * u * tt * (p1 + Vector3.up * height * 0.1f);
         p += ttt * p1;
 
         return p;

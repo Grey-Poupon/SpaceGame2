@@ -136,7 +136,10 @@ public class DamageEffect : CombatEffect
         action.affectedRoom.IncreaseAttackIntent(damage);
         if (!affectsSelf)
         {
-            GameManager.Instance.DrawIntentLine(action.sourceRoom.parent.transform.position, affectedRoom.parent.transform.position, 0.4f);   
+            GameManager.Instance.DrawIntentLine(
+                action.sourceRoom.parent.transform.position,
+                affectedRoom.parent.transform.position,
+                0.4f);   
         }
     }
     public DamageEffect(){}

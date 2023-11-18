@@ -148,7 +148,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 812b5c63f9bbd0849adf82692088b710, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startPoint: {fileID: 0}
-  endPoint: {fileID: 0}
+  startPoint: {x: 0, y: 0, z: 0}
+  endPoint: {x: 0, y: 0, z: 0}
   curveSegmentCount: 50
   curveHeight: 5
+  animationDuration: 1

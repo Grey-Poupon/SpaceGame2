@@ -121,12 +121,18 @@ public class GameManager : MonoBehaviour
 
     public void DrawIntentLine(Vector3 startPoint, Vector3 endPoint, float fuzziness=0)
     {
-        var fuzzyStartOffset = new Vector3(UnityEngine.Random.Range(-fuzziness, fuzziness), UnityEngine.Random.Range(-fuzziness, fuzziness), -1);
-        var fuzzyEndOffset   = new Vector3(UnityEngine.Random.Range(-fuzziness, fuzziness), UnityEngine.Random.Range(-fuzziness, fuzziness), -1);
+        float getFuzzy(float fuzziness, float steps=2)
+        {
+            float point = UnityEngine.Random.Range(-fuzziness/2f, fuzziness/2f);
+            //float value = Mathf.Round(point * steps) / steps;
+            return point;
+        }
+
+        var fuzzyOffset = new Vector3(getFuzzy(fuzziness), getFuzzy(fuzziness), -1);
         
         IntentLine intentLine = Instantiate(prefabHolder.intentLine);
-        intentLine.DrawCurvedLine(startPoint + fuzzyStartOffset,
-                                  endPoint   + fuzzyEndOffset);
+        intentLine.DrawCurvedLine(startPoint + fuzzyOffset,
+                                  endPoint   + fuzzyOffset);
         
         activeIntentLines.Add(intentLine);
     }
