@@ -816,6 +816,7 @@ public class GameManager : MonoBehaviour
         enemyShip.ResetAP();
         enemyShip.ResetSpeed();
         enemyShip.ResetTempRoomStats();
+        foreach (IntentLine intentLine in activeIntentLines) Destroy(intentLine.gameObject);
     }
     
     public void ResetTurnActions()
@@ -902,6 +903,7 @@ public class GameManager : MonoBehaviour
     {
         foreach (CombatEffect effect in action.effects)
         {
+
             effect.ShowPotentialEffect();
         }
     }
