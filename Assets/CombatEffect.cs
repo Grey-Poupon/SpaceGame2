@@ -215,7 +215,7 @@ public class OnFireEffect : CombatEffect
             bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
             CardAction action = new StopFireAction();
             action.sourceRoom = affectedRoom;
-            List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
+            List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
             GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
         }   
         affectedRoom.takeDamage(damage);
@@ -310,7 +310,7 @@ public class ChargeBatteriesEffect : CombatEffect
         bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
         CardAction action = new DischargeChargeBatteriesAction();
         action.sourceRoom = this.action.sourceRoom;
-        List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
+        List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
         GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
     }
     
