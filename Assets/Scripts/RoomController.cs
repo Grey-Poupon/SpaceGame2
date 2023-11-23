@@ -7,6 +7,7 @@ using TMPro;
 public class RoomController : MonoBehaviour
 {
     public static RoomController RoomPrefab;
+    public GameObject OnFireIcon;
     private Room room;
     public bool isPlayer;
 
@@ -15,6 +16,7 @@ public class RoomController : MonoBehaviour
     void Start()
     {
         isPlayer = transform.parent.GetComponent<MonoBehaviour>() is PlayerSpaceship;
+        OnFireIcon = transform.Find("OnFireIcon").gameObject;
         if (isPlayer) Setup(roomType);
     }
     public void Setup(RoomType roomType)
@@ -207,7 +209,10 @@ public class Room
         }        //UnityEngine.Debug.Log("Room Destroyed");
 
     }
-
+    public void SetOnFireIcon(bool active)
+    {
+        parent.OnFireIcon.SetActive(active);
+    }
     public void UpdateHealthBar()
     {
         if (getHealth() == 0)

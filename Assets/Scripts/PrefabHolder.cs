@@ -6,5 +6,6 @@ public class PrefabHolder : MonoBehaviour
     public LaserShot laserPrefab;
     public CardController cardPrefab;
     public EnemySpaceship enemySpaceshipPrefab;
+    public IntentLine intentLine;
 
 }

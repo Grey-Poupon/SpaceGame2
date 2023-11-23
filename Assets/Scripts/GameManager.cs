@@ -36,10 +36,9 @@ public class GameManager : MonoBehaviour
     private TextMeshProUGUI enemyAPText;
     public bool IsSimulation;
     public int turnCounter = 0;
-
-    
     public PrefabHolder prefabHolder;
     public TreeNode gameTree;
+    public List<IntentLine> activeIntentLines = new List<IntentLine>();
     private void Awake()
     {
         if (Instance == null)
@@ -118,6 +117,24 @@ public class GameManager : MonoBehaviour
             FinishTurn();
         }
         
+    }
+
+    public void DrawIntentLine(Vector3 startPoint, Vector3 endPoint, float fuzziness=0)
+    {
+        float getFuzzy(float fuzziness, float steps=2)
+        {
+            float point = UnityEngine.Random.Range(-fuzziness/2f, fuzziness/2f);
+            //float value = Mathf.Round(point * steps) / steps;
+            return point;
+        }
+
+        var fuzzyOffset = new Vector3(getFuzzy(fuzziness), getFuzzy(fuzziness), -1);
+        
+        IntentLine intentLine = Instantiate(prefabHolder.intentLine);
+        intentLine.DrawCurvedLine(startPoint + fuzzyOffset,
+                                  endPoint   + fuzzyOffset);
+        
+        activeIntentLines.Add(intentLine);
     }
 
     public void BuildAShip()
@@ -558,8 +575,6 @@ public class GameManager : MonoBehaviour
         
         
     }
-
-
   
     public void EnemyChooseActions()
     {
@@ -801,6 +816,7 @@ public class GameManager : MonoBehaviour
         enemyShip.ResetAP();
         enemyShip.ResetSpeed();
         enemyShip.ResetTempRoomStats();
+        foreach (IntentLine intentLine in activeIntentLines) Destroy(intentLine.gameObject);
     }
     
     public void ResetTurnActions()
@@ -887,6 +903,7 @@ public class GameManager : MonoBehaviour
     {
         foreach (CombatEffect effect in action.effects)
         {
+
             effect.ShowPotentialEffect();
         }
     }

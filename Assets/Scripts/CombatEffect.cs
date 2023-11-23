@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 public abstract class CombatEffect
 {
     public float duration;
@@ -30,7 +31,7 @@ public abstract class CombatEffect
         
         if (duration < 1)
         {
-            FinalEffect();
+            LastEffect();
             affectedRoom.effectsApplied.Remove(this);
         }
 
@@ -54,7 +55,7 @@ public abstract class CombatEffect
     }
     public abstract void TriggerEffect();
 
-    public virtual void FinalEffect()
+    public virtual void LastEffect()
     {
         // Pass
     }
@@ -134,6 +135,13 @@ public class DamageEffect : CombatEffect
     public override void ShowPotentialEffect()
     {
         action.affectedRoom.IncreaseAttackIntent(damage);
+        // if (!affectsSelf)
+        // {
+        //     GameManager.Instance.DrawIntentLine(
+        //         action.sourceRoom.parent.transform.position,
+        //         action.affectedRoom.parent.transform.position,
+        //         0.4f);   
+        // }
     }
     public DamageEffect(){}
 }
@@ -204,13 +212,15 @@ public class OnFireEffect : CombatEffect
         this.damage = damage;
     }
 
-    public override void TriggerEffect()
+    public override void TriggerEffect(){}
+    public override void FirstEffect()
     {
         // AffectsSelf isPlayer AffectsPlayer
         //     0           0          1
         //     0           1          0
         //     1           0          0 
         //     1           1          1 
+<<<<<<< HEAD:Assets/CombatEffect.cs
         if(duration==startDuration){
             bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
             CardAction action = new StopFireAction();
@@ -218,11 +228,25 @@ public class OnFireEffect : CombatEffect
             List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
             GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
         }   
+=======
+        bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
+        CardAction action = new StopFireAction();
+        action.sourceRoom = affectedRoom;
+        List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
+        GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
+
+>>>>>>> d16e59cb7c64fcb28993ae50c1fd24540f570693:Assets/Scripts/CombatEffect.cs
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
         affectedRoom.UpdateTextGraphics();
+        affectedRoom.SetOnFireIcon(true);
     }
     
+    public override void LastEffect()
+    {
+        affectedRoom.SetOnFireIcon(false);
+    }
+
     public override void ShowPotentialEffect()
     {
         // Pass
@@ -243,6 +267,7 @@ public class StopFireEffect : CombatEffect
         if (onFireEffect != null)
         {
             affectedRoom.effectsApplied.Remove(onFireEffect);
+            affectedRoom.SetOnFireIcon(false);
         }
     }
 }
@@ -342,7 +367,7 @@ public class DisableRoomEffect : CombatEffect
         }
     }
 
-    public override void FinalEffect()
+    public override void LastEffect()
     {
         affectedRoom.disabled = false;
         foreach (CardAction action in affectedRoom.actions)

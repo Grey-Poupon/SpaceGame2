@@ -48,3 +48,4 @@ MonoBehaviour:
   laserPrefab: {fileID: -4835875760688866906, guid: 63a2bc48e01a6d34d886bcd05fa379b2, type: 3}
   cardPrefab: {fileID: 8005968517823585062, guid: 4538fd0a545b8814fbac91ce317397e6, type: 3}
   enemySpaceshipPrefab: {fileID: 2598262044978550927, guid: 5dc9c9004cf39404c8adc0692134d926, type: 3}
+  intentLine: {fileID: -6245241404246918751, guid: f9a43004681a1a04aac6f90489186ca7, type: 3}
