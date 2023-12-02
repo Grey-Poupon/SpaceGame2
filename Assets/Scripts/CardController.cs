@@ -20,6 +20,14 @@ public class Card
         this.cardAction = cardAction;
         this.cardAction.card = this;
     }
+
+
+    public Card Clone(){
+        CardAction c_cardAction = cardAction.Clone();
+        Card c_card = new Card(c_cardAction);
+        c_card.turnsUntilReady = this.turnsUntilReady;
+        return c_card;
+    }
     public void UpdateText()
     {
         this.cardController.UpdateText(cardAction);

@@ -113,8 +113,10 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            
             BuildAShip();
             FinishTurn();
+            
         }
         
     }
@@ -235,9 +237,10 @@ public class GameManager : MonoBehaviour
 
     public void SimulateEnemyTurn()
     {
+        long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         Dictionary<int, List<CardAction>> allCardCombinations = new Dictionary<int, List<CardAction>>();
         GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, enemyShip.AP, enemyHand.GetCards());
-
+        long p_milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond -milliseconds;
         // string result = "";
         // foreach(List<CardAction> cardCombo in allCardCombinations)
         // {
@@ -245,12 +248,15 @@ public class GameManager : MonoBehaviour
         //     result += "\n";
         // }
         // UnityEngine.Debug.Log(result);
+        UnityEngine.Debug.Log("Time to compute:"+p_milliseconds.ToString());
         UnityEngine.Debug.Log("Enemy Turns");
         UnityEngine.Debug.Log(allCardCombinations.Values.SelectMany(x => x).ToList().Count);
     }
     
     public void GenerateCardCombinations(List<CardAction> currentCombination, int index, Dictionary<int, List<CardAction>> allCardCombinations, float APLeft, List<Card> cardPool)
     {
+
+        
 
         if (index == cardPool.Count)
         {
@@ -540,7 +546,7 @@ public class GameManager : MonoBehaviour
             if (room.effectsApplied.Count > 0)
             {
                 List<CombatEffect> effectsCopy = room.effectsApplied.Select(obj => obj).ToList();
-                explanation += "\nThe " +( room.isPlayer ? "Players " : "Enemys ") + room.roomType.ToString() + "Room is affected by: " + string.Join(" | ", room.effectsApplied.Select(obj => obj.GetType().ToString()).ToList());
+                if (verbose) explanation += "\nThe " +( room.isPlayer ? "Players " : "Enemys ") + room.roomType.ToString() + "Room is affected by: " + string.Join(" | ", room.effectsApplied.Select(obj => obj.GetType().ToString()).ToList());
                 foreach(CombatEffect effect in effectsCopy)
                 {
                     if (room.effectsApplied.Contains(effect))
@@ -558,14 +564,14 @@ public class GameManager : MonoBehaviour
 
             if (!action.IsReady())
             {
-                explanation += "\n" + action.name + " Was not played because: Disabled " + action.sourceRoom.disabled + " Destroyed " + action.sourceRoom.destroyed + (action.card.turnsUntilReady!=0 ? "Action Not Ready" : "Action Ready") ;
+               if (verbose) explanation += "\n" + action.name + " Was not played because: Disabled " + action.sourceRoom.disabled + " Destroyed " + action.sourceRoom.destroyed + (action.card.turnsUntilReady!=0 ? "Action Not Ready" : "Action Ready") ;
                 continue;
             }
             explanation += "\n" + action.name + " Was played";
             if (action is LaserAction || action is FreeLaserAction || action is MissileAction){ weaponCalls.Add(() => FireLaserAtTarget(action)); }
             if (action.effects.Where(obj => obj is DamageEffect).ToList().Count > 0)
             {
-                explanation += " on a room with " + action.affectedRoom.defence.ToString() + " defence";
+                if (verbose) explanation += " on a room with " + action.affectedRoom.defence.ToString() + " defence";
             }
             action.Activate();
         }

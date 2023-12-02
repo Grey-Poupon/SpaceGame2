@@ -39,6 +39,16 @@ public class Hand
     {
         return cardsByAction[actionType];
     }
+
+    public Hand Clone(){
+        Hand c_hand = new Hand();
+        List<Card> cards = GetCards();
+        foreach(Card card in cards){
+            c_hand.AddCard(card.Clone());
+        }
+        return c_hand;
+    }
+
     public void Clear(){
         cards.Clear();
         cardsByAction.Clear();

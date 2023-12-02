@@ -118,6 +118,27 @@ public class Room
     public TextMeshProUGUI Shield;
     public List<CombatEffect> effectsApplied = new List<CombatEffect>();
 
+
+
+    public Room Clone(){
+        List<CardAction> actions = new List<CardAction>();
+        foreach(CardAction action in this.actions){
+            actions.Add(action.Clone());
+        }
+        Room c_room = new Room(actions,roomType,maxHealth);
+        c_room.defence = this.defence;
+        c_room.incomingDamage = this.incomingDamage;
+        c_room.disabled = this.disabled;
+        c_room.destroyed = this.destroyed;
+        c_room.health = this.health;
+        List<CombatEffect> c_effectsApplied = new List<CombatEffect>();
+        foreach(CombatEffect effect in effectsApplied){
+            c_effectsApplied.Add(effect.Clone());
+        }
+        c_room.effectsApplied = c_effectsApplied;
+        return c_room;
+    }
+
     public SpaceShip getParentShip(bool invert = false)
     {
         if (parent.isPlayer != invert){return GameManager.Instance.playerShip;}
@@ -134,7 +155,9 @@ public class Room
     public void setHealth(float newHealth)
     {
         health = newHealth;
-        Health.text = newHealth.ToString();
+        if(Health!=null){
+            Health.text = newHealth.ToString();
+        }
     }
     public void takeDamage(float damage)
     {
@@ -157,6 +180,9 @@ public class Room
     }
     public void updateHealthGraphics()
     {
+        if(Health==null){
+            return;
+        }
         Health.text = health.ToString();
         if (health==0)
         {
@@ -167,17 +193,24 @@ public class Room
     public void IncreaseDefence(float adjustment)
     {
         defence += adjustment;
-        Shield.text = defence.ToString();
+        
+        
     }
     public void DecreaseDefence(float adjustment)
     {
         defence += adjustment;
-        Shield.text = defence.ToString();
+        if(Shield!=null){
+            Shield.text = defence.ToString();
+        }
+        
     }
     public void IncreaseAttackIntent(float damage)
     {
         incomingDamage += damage;
-        Attack.text = incomingDamage.ToString();
+        if(Attack!=null){
+            Attack.text = incomingDamage.ToString();    
+        }
+        
     }
     public void heal(float healing)
     {
@@ -215,6 +248,10 @@ public class Room
     }
     public void UpdateHealthBar()
     {
+        if(Health==null){
+            return;
+        }
+
         if (getHealth() == 0)
         {
             spriteRenderer.color = new Color(0.0f, 0.0f, 0.0f); // Black
@@ -249,6 +286,9 @@ public class Room
     }
     public void UpdateTextGraphics()
     {
+        if(Title==null){
+            return;
+        }
         Title.text = roomType.ToString();
         Attack.text = incomingDamage.ToString();
         Shield.text = defence.ToString();
