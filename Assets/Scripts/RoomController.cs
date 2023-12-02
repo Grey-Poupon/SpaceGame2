@@ -133,7 +133,11 @@ public class Room
         c_room.health = this.health;
         List<CombatEffect> c_effectsApplied = new List<CombatEffect>();
         foreach(CombatEffect effect in effectsApplied){
-            c_effectsApplied.Add(effect.Clone());
+            CombatEffect clonedEffect = effect.Clone();
+            CardAction clonedAction = clonedEffect.action.Clone();
+            clonedEffect.action = clonedAction;
+            clonedAction.affectedRoom = c_room;
+            c_effectsApplied.Add(clonedEffect);
         }
         c_room.effectsApplied = c_effectsApplied;
         return c_room;

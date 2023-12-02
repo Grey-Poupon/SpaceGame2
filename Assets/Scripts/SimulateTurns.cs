@@ -275,8 +275,6 @@ public List<Move> GetUntriedMoves(List<Move> legalMoves){
             untriedMoves.Add(move);
         }
     }
-
-
     return untriedMoves;
 }
 
@@ -362,7 +360,7 @@ public class ISMCTS{
         }
         Node best = rootnode.childNodes[0];
         foreach(Node child in rootnode.childNodes){
-            if(best.visits<child.visits){
+            if((float)best.wins/(float)best.visits<(float)child.wins/(float)child.visits){
                 best = child;
             }
         }
