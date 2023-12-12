@@ -36,10 +36,6 @@ public class KeyboardController : MonoBehaviour
             {
                 GameManager.Instance.FinishTurn();
             }
-            else if (control == Control.Action1)
-            {
-                GameManager.Instance.Action1();
-            }
             else if(control == Control.Reset){
                 GameManager.Instance.RestartTurn();
             }

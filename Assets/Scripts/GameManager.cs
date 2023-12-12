@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using System.Collections.Specialized;
 using System;
 using System.Diagnostics;
@@ -8,9 +9,12 @@ using TMPro;
 using System.Linq;
 public enum TurnTypes {Player, Enemy, Resolve}
 
-public class GameManager : MonoBehaviour
+
+public class GameManager
 {
     public static GameManager Instance;
+    public GameManagerController gameManagerController;
+
     public TurnTypes turn = TurnTypes.Enemy;
     public Texture2D customCursor;
 
@@ -27,44 +31,12 @@ public class GameManager : MonoBehaviour
 
     public List<CardAction> playerTurnActions = new List<CardAction>();
     public List<CardAction> enemyTurnActions = new List<CardAction>();
-    private TextMeshProUGUI playerTurnActionsText;
-    private TextMeshProUGUI enemyTurnActionsText;
-
-    private TextMeshProUGUI playerSpeedText;
-    private TextMeshProUGUI enemySpeedText;
-    private TextMeshProUGUI playerAPText;
-    private TextMeshProUGUI enemyAPText;
     public bool IsSimulation;
     public int turnCounter = 0;
-    public PrefabHolder prefabHolder;
-    public TreeNode gameTree;
     public List<IntentLine> activeIntentLines = new List<IntentLine>();
-    private void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
 
-    private void Start()
-    {
-        playerTurnActionsText = GameObject.Find("PlayerActionList").GetComponent<TextMeshProUGUI>();
-        enemyTurnActionsText = GameObject.Find("EnemyActionList").GetComponent<TextMeshProUGUI>();
-        this.playerSpeedText = GameObject.Find("PlayerSpeedText").GetComponent<TextMeshProUGUI>();
-        this.enemySpeedText = GameObject.Find("EnemySpeedText").GetComponent<TextMeshProUGUI>();
-        this.playerAPText = GameObject.Find("PlayerAPText").GetComponent<TextMeshProUGUI>();
-        this.enemyAPText = GameObject.Find("EnemyAPText").GetComponent<TextMeshProUGUI>();
-        IsSimulation=false;
-        StartCoroutine(StartGame());
 
-    }
-
-    private IEnumerator StartGame()
+    public IEnumerator StartGame()
     {
         // Wait for 0.5 seconds
         while (playerShip == null || playerHand == null)
@@ -130,7 +102,7 @@ public class GameManager : MonoBehaviour
 
         var fuzzyOffset = new Vector3(getFuzzy(fuzziness), getFuzzy(fuzziness), -1);
         
-        IntentLine intentLine = Instantiate(prefabHolder.intentLine);
+        IntentLine intentLine = (IntentLine) gameManagerController._Instantiate(gameManagerController.prefabHolder.intentLine);
         intentLine.DrawCurvedLine(startPoint + fuzzyOffset,
                                   endPoint   + fuzzyOffset);
         
@@ -145,7 +117,7 @@ public class GameManager : MonoBehaviour
         void addRoom(RoomType roomType, float xPos, float yPos, Transform parent)
         {
             // Setup Basic Rooms
-            RoomController rootRoom = Instantiate(prefabHolder.roomPrefab, parent);
+            RoomController rootRoom = (RoomController) gameManagerController._Instantiate(gameManagerController.prefabHolder.roomPrefab, parent);
             rootRoom.transform.localPosition = new Vector3(xPos, yPos, 0);
             rootRoom.name = roomType.ToString() + " Room";
             rootRoom.Setup(roomType);
@@ -166,7 +138,7 @@ public class GameManager : MonoBehaviour
             .Take(numRooms)
             .ToList();
         // Create a new Ship
-        EnemySpaceship newShip = Instantiate(prefabHolder.enemySpaceshipPrefab, new Vector3(2, 2, 0), Quaternion.identity);        
+        EnemySpaceship newShip = (EnemySpaceship) gameManagerController._Instantiate(gameManagerController.prefabHolder.enemySpaceshipPrefab, new Vector3(2, 2, 0), Quaternion.identity);        
         
         // Setup Basic Rooms
         addRoom(RoomType.Reactor, xPos, yPos, newShip.transform);
@@ -377,8 +349,14 @@ public class GameManager : MonoBehaviour
             Card card = new Card(action);
             if (makePrefabs)
             {
-                // Instantiate a new card prefab & set its parent as the playerHand
-                CardController cardController = Instantiate(prefabHolder.cardPrefab, playerHand.parent.transform);
+                // _Instantiate a new card prefab & set its parent as the playerHand
+                UnityEngine.Debug.Log(gameManagerController != null);
+                UnityEngine.Debug.Log(gameManagerController.prefabHolder != null);
+                UnityEngine.Debug.Log(gameManagerController.prefabHolder.cardPrefab != null);
+                UnityEngine.Debug.Log(playerHand != null);
+                UnityEngine.Debug.Log(playerHand.parent != null);
+                UnityEngine.Debug.Log(playerHand.parent.transform != null);
+                CardController cardController = (CardController) gameManagerController._Instantiate(gameManagerController.prefabHolder.cardPrefab, playerHand.parent.transform);
                 cardController.Setup(card);
                 card.Setup(cardController);
             }
@@ -430,7 +408,7 @@ public class GameManager : MonoBehaviour
             // Calculate the direction to the target position.
             Vector3 direction = (targetPosition - origin).normalized;
             // Instantiate the laser at the spaceship's position.
-            LaserShot laser = Instantiate(prefabHolder.laserPrefab, origin, Quaternion.identity);
+            LaserShot laser = (LaserShot) gameManagerController._Instantiate(gameManagerController.prefabHolder.laserPrefab, origin, Quaternion.identity);
             
             // Rotate the laser to face the target direction.
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
@@ -478,7 +456,7 @@ public class GameManager : MonoBehaviour
             EnemyChooseActions();            
             ShowPotentialPassiveEffects();
             UpdateHandStats();
-            UpdateUIText();
+            gameManagerController.UpdateUIText();
             UpdateRoomText();
             turn = TurnTypes.Player;
             turnCounter ++;
@@ -571,7 +549,7 @@ public class GameManager : MonoBehaviour
         }
         if (verbose) UnityEngine.Debug.Log(explanation);
         
-        StartCoroutine(InvokeWeaponActionsWithDelay(weaponCalls));
+        gameManagerController._StartCoroutine(InvokeWeaponActionsWithDelay(weaponCalls));
         
         
     }
@@ -816,13 +794,12 @@ public class GameManager : MonoBehaviour
         enemyShip.ResetAP();
         enemyShip.ResetSpeed();
         enemyShip.ResetTempRoomStats();
-        foreach (IntentLine intentLine in activeIntentLines) Destroy(intentLine.gameObject);
+        gameManagerController.ClearIntentLines();
     }
     
     public void ResetTurnActions()
     {
-        enemyTurnActionsText.text = "";
-        playerTurnActionsText.text = "";
+        gameManagerController.ClearTurnText();
 
         playerTurnActions.Clear();
         enemyTurnActions.Clear();
@@ -833,13 +810,6 @@ public class GameManager : MonoBehaviour
         if (AttackType == "Laser")
         {
             RoomHit.updateHealthGraphics();
-        }
-    }
-
-    public void Action1()
-    {
-        if (turn == TurnTypes.Player)
-        {
         }
     }
 
@@ -924,7 +894,7 @@ public class GameManager : MonoBehaviour
             }
         }
         playerTurnActions.Clear();
-        playerTurnActionsText.text="";
+        gameManagerController.playerTurnActionsText.text="";
     }
 
     public void UndoAction(){
@@ -934,10 +904,10 @@ public class GameManager : MonoBehaviour
             CardAction lastAction = playerTurnActions[playerTurnActions.Count -1];
             playerShip.AdjustAP(lastAction.cost);
             if(playerTurnActions.Count==1){
-                playerTurnActionsText.text="";
+                gameManagerController.playerTurnActionsText.text="";
             }
             else{
-                playerTurnActionsText.text=playerTurnActionsText.text.Substring(0,playerTurnActionsText.text.Length-1-lastAction.name.Length -" -> ".Length -lastAction.affectedRoom.roomType.ToString().Length);
+                gameManagerController.UndoTurnText(lastAction);
             }
             if(lastAction.cooldown>0){
                 lastAction.card.cardController.gameObject.SetActive(true);
@@ -961,13 +931,7 @@ public class GameManager : MonoBehaviour
             playerShip.AdjustAP(-action.cost);
 
             playerTurnActions.Add(action);
-            if (playerTurnActionsText.text != "")
-            {
-                playerTurnActionsText.text += '\n';
-            }
-            playerTurnActionsText.text += action.name;
-            playerTurnActionsText.text += " -> ";
-            playerTurnActionsText.text += action.affectedRoom.roomType.ToString();
+            gameManagerController.AddActionToTurnText(action, true);
         }
         else
         {
@@ -975,35 +939,11 @@ public class GameManager : MonoBehaviour
             enemyShip.AdjustAP(-action.cost);
             
             enemyTurnActions.Add(action);
-            if (enemyTurnActionsText.text != "")
-            {
-                enemyTurnActionsText.text += '\n';
-            }
-            enemyTurnActionsText.text += action.name;
-            enemyTurnActionsText.text += " -> ";
-            enemyTurnActionsText.text += action.affectedRoom.roomType.ToString();
+            gameManagerController.AddActionToTurnText(action, false);
         }
     }
 
-    public void UpdateUIText()
-    {
-            UpdateAPGraphics(true);
-            UpdateSpeedGraphics(true);
-            UpdateAPGraphics(false);
-            UpdateSpeedGraphics(false);
-    }
 
-    public void UpdateSpeedGraphics(bool isPlayer)
-    {
-        if (isPlayer) { this.playerSpeedText.text = playerShip.speed.ToString(); }
-        else          { this.enemySpeedText.text  = enemyShip.speed.ToString(); }
-    }
-
-    public void UpdateAPGraphics(bool isPlayer)
-    {
-        if (isPlayer) { this.playerAPText.text = playerShip.AP.ToString(); }
-        else          { this.enemyAPText.text  = enemyShip.AP.ToString(); }
-    }
     
     public void UpdateHandStats()
     {

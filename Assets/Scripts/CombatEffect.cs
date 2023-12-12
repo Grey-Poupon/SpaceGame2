@@ -135,13 +135,13 @@ public class DamageEffect : CombatEffect
     public override void ShowPotentialEffect()
     {
         action.affectedRoom.IncreaseAttackIntent(damage);
-        // if (!affectsSelf)
-        // {
-        //     GameManager.Instance.DrawIntentLine(
-        //         action.sourceRoom.parent.transform.position,
-        //         action.affectedRoom.parent.transform.position,
-        //         0.4f);   
-        // }
+        if (!affectsSelf)
+        {
+            GameManager.Instance.DrawIntentLine(
+                action.sourceRoom.parent.transform.position,
+                action.affectedRoom.parent.transform.position,
+                0.4f);   
+        }
     }
     public DamageEffect(){}
 }

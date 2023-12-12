@@ -37,22 +37,22 @@ public abstract class SpaceShip: MonoBehaviour
     public void ResetAP()
     {
         AP = defaultAP;
-        if (GameManager.Instance != null){ GameManager.Instance.UpdateAPGraphics(this is PlayerSpaceship);}
+        if (GameManager.Instance != null){ GameManager.Instance.gameManagerController.UpdateAPGraphics(this is PlayerSpaceship);}
     }
     public void ResetSpeed()
     {
         speed = defaultSpeed;
-        if (GameManager.Instance != null){ GameManager.Instance.UpdateSpeedGraphics(this is PlayerSpaceship);}
+        if (GameManager.Instance != null){ GameManager.Instance.gameManagerController.UpdateSpeedGraphics(this is PlayerSpaceship);}
     }
     public void AdjustAP(float change)
     {
         AP += change;
-        if (GameManager.Instance != null){ GameManager.Instance.UpdateAPGraphics(this is PlayerSpaceship);}
+        if (GameManager.Instance != null){ GameManager.Instance.gameManagerController.UpdateAPGraphics(this is PlayerSpaceship);}
     }
     public void AdjustSpeed(float change)
     {
         speed += change;
-        if (GameManager.Instance != null){ GameManager.Instance.UpdateSpeedGraphics(this is PlayerSpaceship);}
+        if (GameManager.Instance != null){ GameManager.Instance.gameManagerController.UpdateSpeedGraphics(this is PlayerSpaceship);}
     }
     
     public void ResetTempRoomStats()
