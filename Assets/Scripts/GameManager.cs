@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading;
+using System.Threading.Tasks;
 using TMPro;
 using System.Linq;
 public enum TurnTypes {Player, Enemy, Resolve}
@@ -34,7 +36,7 @@ public class GameManager : MonoBehaviour
     private TextMeshProUGUI enemySpeedText;
     private TextMeshProUGUI playerAPText;
     private TextMeshProUGUI enemyAPText;
-    public bool IsSimulation;
+    public bool IsSimulation=true;
     public int turnCounter = 0;
     public PrefabHolder prefabHolder;
     public TreeNode gameTree;
@@ -59,7 +61,7 @@ public class GameManager : MonoBehaviour
         this.enemySpeedText = GameObject.Find("EnemySpeedText").GetComponent<TextMeshProUGUI>();
         this.playerAPText = GameObject.Find("PlayerAPText").GetComponent<TextMeshProUGUI>();
         this.enemyAPText = GameObject.Find("EnemyAPText").GetComponent<TextMeshProUGUI>();
-        IsSimulation=false;
+        IsSimulation=true;
         StartCoroutine(StartGame());
 
     }
@@ -85,16 +87,18 @@ public class GameManager : MonoBehaviour
         }
         if (IsSimulation)
         {
+            BuildAShip();
+            //FinishTurn();
             int limit = 10;
             int counter = 0;
-            while(counter < limit && playerRooms[RoomType.Reactor][0].health > 0 && enemyRooms[RoomType.Reactor][0].health > 0)
+            while(counter < limit )
             {
                 counter ++;
-                
-                ResolveActions();
+                UnityEngine.Debug.Log("Howdy");
+                // ResolveActions();
 
-                ResetTempStats();
-                ResetTurnActions();
+                // ResetTempStats();
+                // ResetTurnActions();
 
                 // ----  End of Round  ---
 
@@ -169,7 +173,7 @@ public class GameManager : MonoBehaviour
             .ToList();
         // Create a new Ship
         EnemySpaceship newShip = Instantiate(prefabHolder.enemySpaceshipPrefab, new Vector3(2, 2, 0), Quaternion.identity);        
-        
+        newShip.ResetAP();
         // Setup Basic Rooms
         addRoom(RoomType.Reactor, xPos, yPos, newShip.transform);
         roomTypes.Remove(RoomType.Reactor);
@@ -220,9 +224,10 @@ public class GameManager : MonoBehaviour
 
     public void SimulatePlayerTurn()
     {
-        Dictionary<int, List<CardAction>> allCardCombinations = new Dictionary<int, List<CardAction>>();
-        GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, playerShip.AP, playerHand.GetCards());
-
+        long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+         
+        List<CardAction>[] allCardCombinations = GenerateCardCombinationsRandom(playerShip.AP, playerHand.GetCards(),true);
+        long p_milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond -milliseconds;
         // string result = "";
         // foreach(List<CardAction> cardCombo in allCardCombinations)
         // {
@@ -230,16 +235,18 @@ public class GameManager : MonoBehaviour
         //     result += "\n";
         // }
         // UnityEngine.Debug.Log(result);
-
+        UnityEngine.Debug.Log("Time to compute:"+p_milliseconds.ToString());
         UnityEngine.Debug.Log("Player Turns");
-        UnityEngine.Debug.Log(allCardCombinations.Values.SelectMany(x => x).ToList().Count);
+        // UnityEngine.Debug.Log(allCardCombinations.Count);
+        // int lenRan = allCardCombinations[UnityEngine.Random.Range(0,allCardCombinations.Count)].Count;
+        // UnityEngine.Debug.Log("Random Turn played "+lenRan.ToString()+" cards");
     }
 
     public void SimulateEnemyTurn()
     {
         long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-        Dictionary<int, List<CardAction>> allCardCombinations = new Dictionary<int, List<CardAction>>();
-        GenerateCardCombinations(new List<CardAction>(), 0, allCardCombinations, enemyShip.AP, enemyHand.GetCards());
+         
+        List<CardAction>[] allCardCombinations = GenerateCardCombinationsRandom(enemyShip.AP, enemyHand.GetCards(),false);
         long p_milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond -milliseconds;
         // string result = "";
         // foreach(List<CardAction> cardCombo in allCardCombinations)
@@ -250,13 +257,103 @@ public class GameManager : MonoBehaviour
         // UnityEngine.Debug.Log(result);
         UnityEngine.Debug.Log("Time to compute:"+p_milliseconds.ToString());
         UnityEngine.Debug.Log("Enemy Turns");
-        UnityEngine.Debug.Log(allCardCombinations.Values.SelectMany(x => x).ToList().Count);
+        //UnityEngine.Debug.Log(allCardCombinations.Count);
+        //int lenRan = allCardCombinations[UnityEngine.Random.Range(0,allCardCombinations.Count)].Count;
+        //UnityEngine.Debug.Log("Random Turn played "+lenRan.ToString()+" cards");
     }
     
+
+
+    public List<CardAction>[] GenerateCardCombinationsRandom(float ap, List<Card> cardPool, bool isPlayer){
+        // This method will be called a lot of times so it is important to be efficient. however, for some ships and cards the number of actions >10,000 so I decided to randomly sample some actions instead 
+        // as it is relatively quick 
+        int numCombos = 5000; // number of random samples
+        List<CardAction>[] combinations = new  List<CardAction>[numCombos]; // array that holds possible turns, an array as we need to be threadsafe which a list is not
+        var hashes = new List<int>(); // useful for debugging and seeing if we are getting unique turns
+        
+        System.Random rnd = new System.Random(); // not technically thread safe but seems to work _/'(o_o)'\_
+              
+        
+        List<Room> enemyRoomList = enemyShip.GetRoomList(); // make a local reference so we don't have to keep calling functions
+        List<Room> playerRoomList = playerShip.GetRoomList();
+        int enemyRoomsLen = enemyRoomList.Count; 
+        int playerRoomsLen = playerRoomList.Count;
+        Room[] enemyRooms = new Room[enemyRoomsLen]; // made into arrays to increase access speed
+        Room[] playerRooms = new Room[playerRoomsLen];
+        for(int i = 0;i<enemyRoomsLen;i++){
+            enemyRooms[i] = enemyRoomList[i];
+        }
+
+        for(int i = 0;i<playerRoomsLen;i++){
+            playerRooms[i] = playerRoomList[i];
+        }
+        // parralel for loop
+        Parallel.For(0,numCombos, i =>{
+            //var rnd = new System.Random(Thread.CurrentThread.ManagedThreadId); 
+            List<CardAction> turn = new List<CardAction>();
+            List<Card> c_cardPool = new List<Card>(cardPool);
+             float remainingAp = ap;
+            while(remainingAp>0 && c_cardPool.Count>0 && turn.Count<6){
+                // randomly pick card
+                int randIndex = rnd.Next(0,c_cardPool.Count);
+                CardAction t_cardAction = c_cardPool[randIndex].cardAction;
+                
+                if(!t_cardAction.CanBeUsed(remainingAp)){
+                    continue;
+                }
+                remainingAp-=t_cardAction.cost;
+                if(t_cardAction.cooldown>0){
+                    c_cardPool.Remove(t_cardAction.card);
+                }
+                t_cardAction = t_cardAction.Clone();
+                if(t_cardAction.needsTarget){
+                    
+                    // randomly pick room
+                    if((t_cardAction.offensive && isPlayer) || (!(t_cardAction.offensive)&&!isPlayer)){
+                        randIndex = rnd.Next(0,enemyRoomsLen);
+                        t_cardAction.affectedRoom = enemyRooms[randIndex];
+                    }
+                    else{
+                        randIndex = rnd.Next(0,playerRoomsLen);
+                        t_cardAction.affectedRoom = playerRooms[randIndex];
+                    }
+                    
+                    
+                }
+                
+                turn.Add(t_cardAction);
+                
+            }
+           
+            combinations[i]=turn;
+        });
+
+        // for(int i =0;i<numCombos;i++){
+        //     int hash = GenerateCardCombinationHash(combinations[i]);
+        //     if(!hashes.Contains(hash)){
+        //         hashes.Add(hash);
+        //     }
+        // }
+
+
+        UnityEngine.Debug.Log(hashes.Count.ToString()+" Unique turns");
+        
+        return combinations;
+    
+
+    }
+
+
+
     public void GenerateCardCombinations(List<CardAction> currentCombination, int index, Dictionary<int, List<CardAction>> allCardCombinations, float APLeft, List<Card> cardPool)
     {
+        if(currentCombination.Count>6){
+            return;
+        }
 
-        
+        if(allCardCombinations.Count>1000){
+            return;
+        }
 
         if (index == cardPool.Count)
         {

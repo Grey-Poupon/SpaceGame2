@@ -50,9 +50,10 @@ MonoBehaviour:
   customCursor: {fileID: 2800000, guid: 8c89ed5746a4faa48bb97701cc2f2e35, type: 3}
   playerShip: {fileID: 0}
   enemyShip: {fileID: 0}
-  IsSimulation: 0
+  IsSimulation: 1
   turnCounter: 0
   prefabHolder: {fileID: 7844012429974346726, guid: 0e149a05afca5c04d8c69525512fcc8e, type: 3}
+  activeIntentLines: []
 --- !u!114 &-4211033996496049455
 MonoBehaviour:
   m_ObjectHideFlags: 0
