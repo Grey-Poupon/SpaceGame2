@@ -89,12 +89,14 @@ public class GameManager : MonoBehaviour
         {
             BuildAShip();
             //FinishTurn();
-            int limit = 10;
+            int limit = 100;
             int counter = 0;
+            long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        
             while(counter < limit )
             {
                 counter ++;
-                UnityEngine.Debug.Log("Howdy");
+                //UnityEngine.Debug.Log("Howdy");
                 // ResolveActions();
 
                 // ResetTempStats();
@@ -102,17 +104,19 @@ public class GameManager : MonoBehaviour
 
                 // ----  End of Round  ---
 
-                float value = playerRooms[RoomType.Reactor][0].health / playerRooms[RoomType.Reactor][0].getMaxHealth();
+                //float value = playerRooms[RoomType.Reactor][0].health / playerRooms[RoomType.Reactor][0].getMaxHealth();
 
                 // ---- Start of Round ---
 
                 SimulateEnemyTurn();
 
-                UpdateHandStats();
+                //UpdateHandStats();
 
                 SimulatePlayerTurn();
-                break;
+                
             }
+            long p_milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond -milliseconds;
+            UnityEngine.Debug.Log("Time to compute:"+p_milliseconds.ToString()); 
             UnityEngine.Debug.Log("It's the END of the SIMULATION ! THe MaTrIx ItS CoLaPsInG :%SZDSX");
         }
         else
@@ -224,10 +228,10 @@ public class GameManager : MonoBehaviour
 
     public void SimulatePlayerTurn()
     {
-        long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        //long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
          
-        List<CardAction>[] allCardCombinations = GenerateCardCombinationsRandom(playerShip.AP, playerHand.GetCards(),true);
-        long p_milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond -milliseconds;
+        List<MinCardAction>[] allCardCombinations = GenerateCardCombinationsRandom(playerShip.AP, playerHand.GetCards(),true);
+        //long p_milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond -milliseconds;
         // string result = "";
         // foreach(List<CardAction> cardCombo in allCardCombinations)
         // {
@@ -235,8 +239,8 @@ public class GameManager : MonoBehaviour
         //     result += "\n";
         // }
         // UnityEngine.Debug.Log(result);
-        UnityEngine.Debug.Log("Time to compute:"+p_milliseconds.ToString());
-        UnityEngine.Debug.Log("Player Turns");
+       // UnityEngine.Debug.Log("Time to compute:"+p_milliseconds.ToString());
+        //UnityEngine.Debug.Log("Player Turns");
         // UnityEngine.Debug.Log(allCardCombinations.Count);
         // int lenRan = allCardCombinations[UnityEngine.Random.Range(0,allCardCombinations.Count)].Count;
         // UnityEngine.Debug.Log("Random Turn played "+lenRan.ToString()+" cards");
@@ -244,10 +248,9 @@ public class GameManager : MonoBehaviour
 
     public void SimulateEnemyTurn()
     {
-        long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-         
-        List<CardAction>[] allCardCombinations = GenerateCardCombinationsRandom(enemyShip.AP, enemyHand.GetCards(),false);
-        long p_milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond -milliseconds;
+        
+        List<MinCardAction>[] allCardCombinations = GenerateCardCombinationsRandom(enemyShip.AP, enemyHand.GetCards(),false);
+        
         // string result = "";
         // foreach(List<CardAction> cardCombo in allCardCombinations)
         // {
@@ -255,8 +258,8 @@ public class GameManager : MonoBehaviour
         //     result += "\n";
         // }
         // UnityEngine.Debug.Log(result);
-        UnityEngine.Debug.Log("Time to compute:"+p_milliseconds.ToString());
-        UnityEngine.Debug.Log("Enemy Turns");
+        
+        //UnityEngine.Debug.Log("Enemy Turns");
         //UnityEngine.Debug.Log(allCardCombinations.Count);
         //int lenRan = allCardCombinations[UnityEngine.Random.Range(0,allCardCombinations.Count)].Count;
         //UnityEngine.Debug.Log("Random Turn played "+lenRan.ToString()+" cards");
@@ -264,15 +267,18 @@ public class GameManager : MonoBehaviour
     
 
 
-    public List<CardAction>[] GenerateCardCombinationsRandom(float ap, List<Card> cardPool, bool isPlayer){
+    public List<MinCardAction>[] GenerateCardCombinationsRandom(float ap, List<Card> cardPool, bool isPlayer){
         // This method will be called a lot of times so it is important to be efficient. however, for some ships and cards the number of actions >10,000 so I decided to randomly sample some actions instead 
         // as it is relatively quick 
-        int numCombos = 5000; // number of random samples
-        List<CardAction>[] combinations = new  List<CardAction>[numCombos]; // array that holds possible turns, an array as we need to be threadsafe which a list is not
-        var hashes = new List<int>(); // useful for debugging and seeing if we are getting unique turns
+        int numCombos = 500; // number of random samples
+        List<MinCardAction>[] combinations = new  List<MinCardAction>[numCombos]; // array that holds possible turns, an array as we need to be threadsafe which a list is not
+        //var hashes = new List<int>(); // useful for debugging and seeing if we are getting unique turns
         
         System.Random rnd = new System.Random(); // not technically thread safe but seems to work _/'(o_o)'\_
-              
+        List<CardAction> cardActions = new List<CardAction>();
+        foreach(var card in cardPool){
+            cardActions.Add(card.cardAction);
+        }
         
         List<Room> enemyRoomList = enemyShip.GetRoomList(); // make a local reference so we don't have to keep calling functions
         List<Room> playerRoomList = playerShip.GetRoomList();
@@ -290,38 +296,41 @@ public class GameManager : MonoBehaviour
         // parralel for loop
         Parallel.For(0,numCombos, i =>{
             //var rnd = new System.Random(Thread.CurrentThread.ManagedThreadId); 
-            List<CardAction> turn = new List<CardAction>();
-            List<Card> c_cardPool = new List<Card>(cardPool);
+            var turn = new List<MinCardAction>();
+            List<CardAction> c_cardActions = new List<CardAction>(cardActions);
              float remainingAp = ap;
-            while(remainingAp>0 && c_cardPool.Count>0 && turn.Count<6){
+            while(remainingAp>0 && c_cardActions.Count>0 && turn.Count<6){
                 // randomly pick card
-                int randIndex = rnd.Next(0,c_cardPool.Count);
-                CardAction t_cardAction = c_cardPool[randIndex].cardAction;
+                int randIndex = rnd.Next(0,c_cardActions.Count);
+                CardAction t_cardAction = c_cardActions[randIndex];
                 
                 if(!t_cardAction.CanBeUsed(remainingAp)){
+                    c_cardActions.Remove(t_cardAction);
                     continue;
                 }
-                remainingAp-=t_cardAction.cost;
-                if(t_cardAction.cooldown>0){
-                    c_cardPool.Remove(t_cardAction.card);
+                else if(t_cardAction.cooldown>0){
+                    c_cardActions.Remove(t_cardAction);
                 }
-                t_cardAction = t_cardAction.Clone();
+                remainingAp-=t_cardAction.cost;
+                
+                MinCardAction m_cardAction = t_cardAction.QuickClone();
                 if(t_cardAction.needsTarget){
                     
                     // randomly pick room
                     if((t_cardAction.offensive && isPlayer) || (!(t_cardAction.offensive)&&!isPlayer)){
                         randIndex = rnd.Next(0,enemyRoomsLen);
-                        t_cardAction.affectedRoom = enemyRooms[randIndex];
+                        m_cardAction.targetRoom = enemyRooms[randIndex];
                     }
                     else{
                         randIndex = rnd.Next(0,playerRoomsLen);
-                        t_cardAction.affectedRoom = playerRooms[randIndex];
+                        m_cardAction.targetRoom = playerRooms[randIndex];
                     }
                     
                     
                 }
                 
-                turn.Add(t_cardAction);
+                
+                turn.Add(m_cardAction);
                 
             }
            
@@ -334,9 +343,7 @@ public class GameManager : MonoBehaviour
         //         hashes.Add(hash);
         //     }
         // }
-
-
-        UnityEngine.Debug.Log(hashes.Count.ToString()+" Unique turns");
+        // UnityEngine.Debug.Log(hashes.Count.ToString()+" Unique turns");
         
         return combinations;
     

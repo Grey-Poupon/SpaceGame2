@@ -3,6 +3,18 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 
+
+    public class MinCardAction{
+
+        public CardAction ca;
+        public Room targetRoom;
+
+        public MinCardAction(CardAction ca){
+            this.ca = ca;
+            targetRoom = ca.affectedRoom;
+        } 
+
+    }
 public abstract class CardAction{ 
 
     private Dictionary<Type, List<CombatEffect>> effectsByType;
@@ -84,6 +96,18 @@ public abstract class CardAction{
         clone.AttachToEffect();
         return clone;
     } 
+        public MinCardAction QuickClone()
+    {
+        MinCardAction minCardAction = new MinCardAction(this);
+        return minCardAction;
+    }
+
+
+
+
+
+
+
     public static void CloneFrom(CardAction clone, CardAction toClone){}
 
     public void AttachToEffect()
