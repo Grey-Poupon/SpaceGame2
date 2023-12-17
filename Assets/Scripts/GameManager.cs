@@ -16,8 +16,6 @@ public class GameManager
     public GameManagerController gameManagerController;
 
     public TurnTypes turn = TurnTypes.Enemy;
-    public Texture2D customCursor;
-
     public Card selectedCard;
     public Hand playerHand;
     
@@ -350,12 +348,6 @@ public class GameManager
             if (makePrefabs)
             {
                 // _Instantiate a new card prefab & set its parent as the playerHand
-                UnityEngine.Debug.Log(gameManagerController != null);
-                UnityEngine.Debug.Log(gameManagerController.prefabHolder != null);
-                UnityEngine.Debug.Log(gameManagerController.prefabHolder.cardPrefab != null);
-                UnityEngine.Debug.Log(playerHand != null);
-                UnityEngine.Debug.Log(playerHand.parent != null);
-                UnityEngine.Debug.Log(playerHand.parent.transform != null);
                 CardController cardController = (CardController) gameManagerController._Instantiate(gameManagerController.prefabHolder.cardPrefab, playerHand.parent.transform);
                 cardController.Setup(card);
                 card.Setup(cardController);
@@ -815,7 +807,7 @@ public class GameManager
 
     public void PickCard(Card card)
     {
-        Cursor.SetCursor(customCursor, new Vector2(customCursor.width / 2, customCursor.height / 2), CursorMode.ForceSoftware);
+        gameManagerController.SetCursor();
         selectedCard = card;
         card.cardController.gameObject.SetActive(false);
         
@@ -837,7 +829,7 @@ public class GameManager
         
         
         selectedCard = null;
-        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        gameManagerController.SetCursor(true);
     }
 
     public void DeselectCard()
@@ -847,7 +839,7 @@ public class GameManager
             selectedCard.cardController.gameObject.SetActive(true);
             selectedCard = null;
         }     
-        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        gameManagerController.SetCursor(true);
     }
 
     public void ShowPotentialPassiveEffects()

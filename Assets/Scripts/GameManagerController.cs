@@ -18,6 +18,8 @@ public class GameManagerController : MonoBehaviour
     public TextMeshProUGUI enemyAPText;
 
     public PrefabHolder prefabHolder;
+    public Texture2D customCursor;
+
 
     private void Awake()
     {
@@ -103,5 +105,16 @@ public class GameManagerController : MonoBehaviour
     public UnityEngine.Object _Instantiate(UnityEngine.Object original, Vector3 position, Quaternion rotation, Transform parent)
     {
         return Instantiate(original, position, rotation, parent);
+    }
+    public void SetCursor(bool setToNull=false)
+    {
+        if (setToNull)
+        {   
+            Cursor.SetCursor(customCursor, new Vector2(customCursor.width / 2, customCursor.height / 2), CursorMode.ForceSoftware);
+        }
+        else
+        {
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        }
     }
 }
