@@ -98,6 +98,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0e12fb9fd298344192d45c0ac9776de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  OnFireIcon: {fileID: 0}
   isPlayer: 0
   roomType: 0
 --- !u!60 &2100422316822432950
@@ -161,7 +162,7 @@ GameObject:
   - component: {fileID: 8179568139883801092}
   m_Layer: 0
   m_Name: EnemySpaceship
-  m_TagString: Untagged
+  m_TagString: enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -191,11 +192,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 7119008164241329880}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 52f078558b5373f49bd513f2de2c16b2, type: 3}
+  m_Script: {fileID: 11500000, guid: 1748b53a67047b24191b386f6b7a3472, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultAP: 3
-  AP: 3
-  defaultSpeed: 0
-  speed: 0
-  enemyShipPrefab: {fileID: 7119008164241329880}

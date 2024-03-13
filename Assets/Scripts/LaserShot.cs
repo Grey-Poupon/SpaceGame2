@@ -50,7 +50,7 @@ public class LaserShot : MonoBehaviour
                 Instantiate(explosion, newPosition, Quaternion.identity);
 
                 // Tell the game manager you hit
-                GameManager.Instance.RegisterAttackComplete(target, "Laser");
+                GameManagerController.Instance.RegisterAttackComplete(target, "Laser");
                 
                 // Destroy the laser
                 Destroy(gameObject);

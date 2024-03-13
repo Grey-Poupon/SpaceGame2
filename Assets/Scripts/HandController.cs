@@ -14,8 +14,8 @@ public class HandController : MonoBehaviour
         playerHand.layoutGroup = layoutGroup;
         playerHand.parent = this;
 
-        GameManager.Instance.RegisterPlayerHand(playerHand);
-        GameManager.Instance.RegisterEnemyHand(new Hand());
+        GameManagerController.Instance.RegisterPlayerHand(playerHand);
+        GameManagerController.Instance.RegisterEnemyHand(new Hand());
         layoutGroup = GetComponent<HorizontalLayoutGroup>();
         Organise();
     }
@@ -39,6 +39,16 @@ public class Hand
     {
         return cardsByAction[actionType];
     }
+
+    public Hand Clone(){
+        Hand c_hand = new Hand();
+        List<Card> cards = GetCards();
+        foreach(Card card in cards){
+            c_hand.AddCard(card.Clone());
+        }
+        return c_hand;
+    }
+
     public void Clear(){
         cards.Clear();
         cardsByAction.Clear();

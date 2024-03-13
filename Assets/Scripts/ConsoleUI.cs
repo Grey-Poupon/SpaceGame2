@@ -18,15 +18,15 @@ public class ConsoleUI : MonoBehaviour
     {   
         if (inputText.ToLower() == "end")
         {
-            GameManager.Instance.FinishTurn();
+            GameManagerController.Instance.FinishTurn();
         }
         List<string> cardNames = new List<string>();
-        foreach (Card card in GameManager.Instance.playerHand.GetCards())
+        foreach (Card card in GameManagerController.Instance.playerHand.GetCards())
         {
             cardNames.Add(card.cardAction.name);
             if (inputText.ToLower() == card.cardAction.name.ToLower())
             {
-                GameManager.Instance.PickCard(card);
+                GameManagerController.Instance.PickCard(card);
                 break;
             }
         }

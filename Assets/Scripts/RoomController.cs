@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System;
 
 public class RoomController : MonoBehaviour
 {
@@ -15,14 +16,14 @@ public class RoomController : MonoBehaviour
     public RoomType roomType;
     void Start()
     {
-        isPlayer = transform.parent.GetComponent<MonoBehaviour>() is PlayerSpaceship;
+        isPlayer = ((SpaceshipController) transform.parent.GetComponent<MonoBehaviour>()).spaceship.isPlayer;
         OnFireIcon = transform.Find("OnFireIcon").gameObject;
         if (isPlayer) Setup(roomType);
     }
     public void Setup(RoomType roomType)
     {
         if (room == null){room = createRoom(roomType, !isPlayer);}
-        GameManager.Instance.RegisterRoom(room, isPlayer);
+        GameManagerController.Instance.RegisterRoom(room, isPlayer);
         room.spriteRenderer = GetComponent<SpriteRenderer>();
 
         Transform canvas = transform.Find("Canvas");
@@ -42,9 +43,9 @@ public class RoomController : MonoBehaviour
     }
     void OnMouseDown()
     {
-        if (GameManager.Instance.selectedCard != null)
+        if (GameManagerController.Instance.selectedCard != null)
         {
-            GameManager.Instance.RoomClicked(Camera.main.ScreenToWorldPoint(Input.mousePosition), room);
+            GameManagerController.Instance.RoomClicked(Camera.main.ScreenToWorldPoint(Input.mousePosition), room);
         }
         else
         {
@@ -104,7 +105,7 @@ public class Room
     public RoomController parent;
     public List<CardAction> actions;
     public RoomType roomType;
-    protected float maxHealth;
+    public float maxHealth;
     public float health;
     public float defence = 0;
     public float incomingDamage = 0;
@@ -118,10 +119,35 @@ public class Room
     public TextMeshProUGUI Shield;
     public List<CombatEffect> effectsApplied = new List<CombatEffect>();
 
-    public SpaceShip getParentShip(bool invert = false)
+    public string ID;
+
+    public Room Clone(){
+        List<CardAction> actions = new List<CardAction>();
+        foreach(CardAction action in this.actions){
+            actions.Add(action.Clone());
+        }
+        Room c_room = new Room(actions,roomType,maxHealth);
+        c_room.defence = this.defence;
+        c_room.incomingDamage = this.incomingDamage;
+        c_room.disabled = this.disabled;
+        c_room.destroyed = this.destroyed;
+        c_room.health = this.health;
+        List<CombatEffect> c_effectsApplied = new List<CombatEffect>();
+        foreach(CombatEffect effect in effectsApplied){
+            CombatEffect clonedEffect = effect.Clone();
+            CardAction clonedAction = clonedEffect.action.Clone();
+            clonedEffect.action = clonedAction;
+            clonedAction.affectedRoom = c_room;
+            c_effectsApplied.Add(clonedEffect);
+        }
+        c_room.effectsApplied = c_effectsApplied;
+        return c_room;
+    }
+
+    public Spaceship getParentShip(bool invert = false)
     {
-        if (parent.isPlayer != invert){return GameManager.Instance.playerShip;}
-        return GameManager.Instance.enemyShip;
+        if (parent.isPlayer != invert){return GameManagerController.Instance.playerShip;}
+        return GameManagerController.Instance.enemyShip;
     }
     public float getHealth()
     {
@@ -134,7 +160,9 @@ public class Room
     public void setHealth(float newHealth)
     {
         health = newHealth;
-        Health.text = newHealth.ToString();
+        if(Health!=null){
+            Health.text = newHealth.ToString();
+        }
     }
     public void takeDamage(float damage)
     {
@@ -157,6 +185,9 @@ public class Room
     }
     public void updateHealthGraphics()
     {
+        if(Health==null){
+            return;
+        }
         Health.text = health.ToString();
         if (health==0)
         {
@@ -167,17 +198,24 @@ public class Room
     public void IncreaseDefence(float adjustment)
     {
         defence += adjustment;
-        Shield.text = defence.ToString();
+        
+        
     }
     public void DecreaseDefence(float adjustment)
     {
         defence += adjustment;
-        Shield.text = defence.ToString();
+        if(Shield!=null){
+            Shield.text = defence.ToString();
+        }
+        
     }
     public void IncreaseAttackIntent(float damage)
     {
         incomingDamage += damage;
-        Attack.text = incomingDamage.ToString();
+        if(Attack!=null){
+            Attack.text = incomingDamage.ToString();    
+        }
+        
     }
     public void heal(float healing)
     {
@@ -215,6 +253,10 @@ public class Room
     }
     public void UpdateHealthBar()
     {
+        if(Health==null){
+            return;
+        }
+
         if (getHealth() == 0)
         {
             spriteRenderer.color = new Color(0.0f, 0.0f, 0.0f); // Black
@@ -249,6 +291,9 @@ public class Room
     }
     public void UpdateTextGraphics()
     {
+        if(Title==null){
+            return;
+        }
         Title.text = roomType.ToString();
         Attack.text = incomingDamage.ToString();
         Shield.text = defence.ToString();
@@ -261,6 +306,8 @@ public class Room
         this.roomType = type;
         this.maxHealth = maxHealth;
         this.health = maxHealth;
+        Guid newGuid = Guid.NewGuid();
+        this.ID = type.ToString() + "_" + Convert.ToBase64String(newGuid.ToByteArray());
     }
 
 }

@@ -34,13 +34,13 @@ public class KeyboardController : MonoBehaviour
             
             if (control == Control.FinishTurn)
             {
-                GameManager.Instance.FinishTurn();
+                GameManagerController.Instance.FinishTurn();
             }
             else if(control == Control.Reset){
-                GameManager.Instance.RestartTurn();
+                GameManagerController.Instance.RestartTurn();
             }
             else if(control == Control.Undo){
-                GameManager.Instance.UndoAction();
+                GameManagerController.Instance.UndoAction();
             }
             
         }
@@ -54,7 +54,7 @@ public class KeyboardController : MonoBehaviour
             {
                 return;
             }
-            GameManager.Instance.DeselectCard();
+            GameManagerController.Instance.DeselectCard();
         }  
         
     }

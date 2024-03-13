@@ -20,6 +20,14 @@ public class Card
         this.cardAction = cardAction;
         this.cardAction.card = this;
     }
+
+
+    public Card Clone(){
+        CardAction c_cardAction = cardAction.Clone();
+        Card c_card = new Card(c_cardAction);
+        c_card.turnsUntilReady = this.turnsUntilReady;
+        return c_card;
+    }
     public void UpdateText()
     {
         this.cardController.UpdateText(cardAction);
@@ -92,11 +100,11 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
 
             if (cardRectTransform.anchoredPosition.y > disappearDistance && card.turnsUntilReady==0)
             {  
-                if(card.CanBeUsed(GameManager.Instance.playerShip.AP)){
-                    GameManager.Instance.PickCard(card);
+                if(card.CanBeUsed(GameManagerController.Instance.playerShip.AP)){
+                    GameManagerController.Instance.PickCard(card);
                 }
                 else{
-                    UnityEngine.Debug.Log(card.cardAction.name + " Was not played because: Disabled: " + card.cardAction.sourceRoom.disabled + "| Destroyed: " + card.cardAction.sourceRoom.destroyed + (card.turnsUntilReady!=0 ? "| Action: Not Ready" : "| Action: Ready") + "| Enough AP: " + (card.cardAction.cost <= GameManager.Instance.playerShip.AP).ToString());
+                    UnityEngine.Debug.Log(card.cardAction.name + " Was not played because: Disabled: " + card.cardAction.sourceRoom.disabled + "| Destroyed: " + card.cardAction.sourceRoom.destroyed + (card.turnsUntilReady!=0 ? "| Action: Not Ready" : "| Action: Ready") + "| Enough AP: " + (card.cardAction.cost <= GameManagerController.Instance.playerShip.AP).ToString());
                     // if they can't play card reset
                     card.cardController.gameObject.SetActive(false);
                     card.cardController.gameObject.SetActive(true);
@@ -119,7 +127,7 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             LayoutRebuilder.MarkLayoutForRebuild(GetComponentInParent<RectTransform>());
             return;
         }
-        isDragging = GameManager.Instance.turn == TurnTypes.Player;
+        isDragging = GameManagerController.Instance.turn == TurnTypes.Player;
         if (isDragging)
         {
             offset = cardRectTransform.position - Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -136,7 +144,7 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
         //     // Check if the card should disappear (you can adjust the threshold)
         //     if (cardRectTransform.anchoredPosition.y > -450)
         //     {  
-        //         GameManager.Instance.PickCard(this);
+        //         GameManagerController.Instance.PickCard(this);
         //     }
         // }
     }

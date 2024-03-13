@@ -137,7 +137,7 @@ public class DamageEffect : CombatEffect
         action.affectedRoom.IncreaseAttackIntent(damage);
         if (!affectsSelf)
         {
-            GameManager.Instance.DrawIntentLine(
+            GameManagerController.Instance.DrawIntentLine(
                 action.sourceRoom.parent.transform.position,
                 action.affectedRoom.parent.transform.position,
                 0.4f);   
@@ -189,8 +189,8 @@ public class FreeLaserEffect : CombatEffect
         bool affectsPlayer = this.action.sourceRoom.isPlayer;
         CardAction action = new FreeLaserAction();
         action.sourceRoom = affectedRoom.getParentShip().GetRooms()[RoomType.Laser][0];
-        List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
-        GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
+        List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
+        GameManagerController.Instance.AddCardsToHand(cards, affectsPlayer);
     }
     
     public override void ShowPotentialEffect()
@@ -220,11 +220,14 @@ public class OnFireEffect : CombatEffect
         //     0           1          0
         //     1           0          0 
         //     1           1          1 
-        bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
-        CardAction action = new StopFireAction();
-        action.sourceRoom = affectedRoom;
-        List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
-        GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
+
+        if(duration==startDuration){
+            bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
+            CardAction action = new StopFireAction();
+            action.sourceRoom = affectedRoom;
+            List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
+            GameManagerController.Instance.AddCardsToHand(cards, affectsPlayer);
+        }   
 
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
@@ -274,14 +277,14 @@ public class APEffect : CombatEffect
 
     public override void TriggerEffect()
     {
-        if (affectsSelf == action.sourceRoom.isPlayer) {GameManager.Instance.playerShip.AdjustAP(change);}
-        else {GameManager.Instance.enemyShip.AdjustAP(change);}
+        if (affectsSelf == action.sourceRoom.isPlayer) {GameManagerController.Instance.playerShip.AdjustAP(change);}
+        else {GameManagerController.Instance.enemyShip.AdjustAP(change);}
     }
     
     public override void ShowPotentialEffect()
     {
-        if (affectsSelf == action.sourceRoom.isPlayer) {GameManager.Instance.playerShip.AdjustAP(change);}
-        else {GameManager.Instance.enemyShip.AdjustAP(change);}
+        if (affectsSelf == action.sourceRoom.isPlayer) {GameManagerController.Instance.playerShip.AdjustAP(change);}
+        else {GameManagerController.Instance.enemyShip.AdjustAP(change);}
     }
     public APEffect(){}
 }
@@ -298,14 +301,14 @@ public class SpeedEffect : CombatEffect
 
     public override void TriggerEffect()
     {
-        if (affectsSelf == action.sourceRoom.isPlayer) {GameManager.Instance.playerShip.AdjustSpeed(change);}
-        else {GameManager.Instance.enemyShip.AdjustSpeed(change);}
+        if (affectsSelf == action.sourceRoom.isPlayer) {GameManagerController.Instance.playerShip.AdjustSpeed(change);}
+        else {GameManagerController.Instance.enemyShip.AdjustSpeed(change);}
     }
     
     public override void ShowPotentialEffect()
     {
-        if (affectsSelf == action.sourceRoom.isPlayer) {GameManager.Instance.playerShip.AdjustSpeed(change);}
-        else {GameManager.Instance.enemyShip.AdjustSpeed(change);}
+        if (affectsSelf == action.sourceRoom.isPlayer) {GameManagerController.Instance.playerShip.AdjustSpeed(change);}
+        else {GameManagerController.Instance.enemyShip.AdjustSpeed(change);}
     }
     public SpeedEffect(){}
 }
@@ -325,8 +328,8 @@ public class ChargeBatteriesEffect : CombatEffect
         bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
         CardAction action = new DischargeChargeBatteriesAction();
         action.sourceRoom = this.action.sourceRoom;
-        List<Card> cards = GameManager.Instance.MakeCards(new List<CardAction>{action});
-        GameManager.Instance.AddCardsToHand(cards, affectsPlayer);
+        List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
+        GameManagerController.Instance.AddCardsToHand(cards, affectsPlayer);
     }
     
     public override void ShowPotentialEffect()

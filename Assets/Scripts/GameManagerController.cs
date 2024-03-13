@@ -16,21 +16,26 @@ public class GameManagerController : MonoBehaviour
     public TextMeshProUGUI enemySpeedText;
     public TextMeshProUGUI playerAPText;
     public TextMeshProUGUI enemyAPText;
-
+    public ISMCTS ISMCTS;
     public PrefabHolder prefabHolder;
     public Texture2D customCursor;
+    public List<Move> moves;
+    public List<Move> untriedMoves;
+    public static GameManager Instance;
+
+
 
 
     private void Awake()
     {
-        if (GameManager.Instance == null)
+        if (GameManagerController.Instance == null)
         {
-            GameManager.Instance = new GameManager();
-            GameManager.Instance.gameManagerController = this;
-            Start();
+            GameManagerController.Instance = new GameManager();
+            GameManagerController.Instance.gameManagerController = this;
+            Start1();
         }
     }
-    private void Start()
+    private void Start1()
     {
         playerTurnActionsText = GameObject.Find("PlayerActionList").GetComponent<TextMeshProUGUI>();
         enemyTurnActionsText = GameObject.Find("EnemyActionList").GetComponent<TextMeshProUGUI>();
@@ -38,8 +43,8 @@ public class GameManagerController : MonoBehaviour
         enemySpeedText = GameObject.Find("EnemySpeedText").GetComponent<TextMeshProUGUI>();
         playerAPText = GameObject.Find("PlayerAPText").GetComponent<TextMeshProUGUI>();
         enemyAPText = GameObject.Find("EnemyAPText").GetComponent<TextMeshProUGUI>();
-        GameManager.Instance.IsSimulation=false;
-        StartCoroutine(GameManager.Instance.StartGame());
+        GameManagerController.Instance.IsSimulation=false;
+        StartCoroutine(GameManagerController.Instance.StartGame());
 
     }
 
@@ -62,25 +67,25 @@ public class GameManagerController : MonoBehaviour
     }
     public void UpdateUIText()
     {
-        playerAPText.text    = GameManager.Instance.playerShip.AP.ToString();
-        enemyAPText.text     = GameManager.Instance.enemyShip.AP.ToString();
-        playerSpeedText.text = GameManager.Instance.playerShip.speed.ToString();
-        enemySpeedText.text  = GameManager.Instance.enemyShip.speed.ToString();
+        playerAPText.text    = GameManagerController.Instance.playerShip.AP.ToString();
+        enemyAPText.text     = GameManagerController.Instance.enemyShip.AP.ToString();
+        playerSpeedText.text = GameManagerController.Instance.playerShip.speed.ToString();
+        enemySpeedText.text  = GameManagerController.Instance.enemyShip.speed.ToString();
     }
 
     public void UpdateAPGraphics(bool isPlayer)
     {
-        if (isPlayer) playerAPText.text = GameManager.Instance.playerShip.AP.ToString();
-        else           enemyAPText.text = GameManager.Instance.enemyShip.AP.ToString();
+        if (isPlayer) playerAPText.text = GameManagerController.Instance.playerShip.AP.ToString();
+        else           enemyAPText.text = GameManagerController.Instance.enemyShip.AP.ToString();
     }
     public void UpdateSpeedGraphics(bool isPlayer)
     {
-        if (isPlayer) playerSpeedText.text = GameManager.Instance.playerShip.speed.ToString();
-        else           enemySpeedText.text = GameManager.Instance.enemyShip.speed.ToString();
+        if (isPlayer) playerSpeedText.text = GameManagerController.Instance.playerShip.speed.ToString();
+        else           enemySpeedText.text = GameManagerController.Instance.enemyShip.speed.ToString();
     }
     public void ClearIntentLines()
     {
-        foreach (IntentLine intentLine in GameManager.Instance.activeIntentLines) Destroy(intentLine.gameObject);
+        foreach (IntentLine intentLine in GameManagerController.Instance.activeIntentLines) Destroy(intentLine.gameObject);
     }
     public void _StartCoroutine(IEnumerator routine)
     {

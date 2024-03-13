@@ -3,6 +3,18 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 
+
+    public class MinCardAction{
+
+        public CardAction ca;
+        public Room targetRoom;
+
+        public MinCardAction(CardAction ca){
+            this.ca = ca;
+            targetRoom = ca.affectedRoom;
+        } 
+
+    }
 public abstract class CardAction{ 
 
     private Dictionary<Type, List<CombatEffect>> effectsByType;
@@ -14,6 +26,8 @@ public abstract class CardAction{
     public float cost;
     public string description;
     public bool needsTarget;
+
+    public bool offensive =false;
     public Card card;
 
 
@@ -22,7 +36,6 @@ public abstract class CardAction{
     public void Activate()
     {
         card.turnsUntilReady = cooldown;       
-
         foreach (CombatEffect effect in effects)
         {
             effect.ApplyEffect(affectedRoom);
@@ -72,6 +85,7 @@ public abstract class CardAction{
         clone.cooldown = this.cooldown;
         clone.card = this.card;
         clone.cost = this.cost;
+        clone.offensive = this.offensive;
         clone.description = this.description;
         clone.sourceRoom = this.sourceRoom;
         clone.affectedRoom = this.affectedRoom;
@@ -81,6 +95,18 @@ public abstract class CardAction{
         clone.AttachToEffect();
         return clone;
     } 
+        public MinCardAction QuickClone()
+    {
+        MinCardAction minCardAction = new MinCardAction(this);
+        return minCardAction;
+    }
+
+
+
+
+
+
+
     public static void CloneFrom(CardAction clone, CardAction toClone){}
 
     public void AttachToEffect()
@@ -100,6 +126,7 @@ public class LaserAction : CardAction
         this.effects = new List<CombatEffect>{new DamageEffect(1, false, 1)};
         AttachToEffect();
         this.name = "Laser";
+        this.offensive = true;
         this.cooldown = 0;
         this.cost = 1;
         this.description = "";
@@ -115,6 +142,7 @@ public class MissileAction : CardAction
         this.effects = new List<CombatEffect>{new DamageEffect(1, false, 2)};
         AttachToEffect();
         this.name = "Missile";
+        this.offensive = true;
         this.cooldown = 3;
         this.cost = 1;
         this.description = "";
@@ -130,6 +158,7 @@ public class FirebombAction : CardAction
         this.effects = new List<CombatEffect>{new OnFireEffect(100, false, 1)};
         AttachToEffect();
         this.name = "Fire Bomb";
+        this.offensive = true;
         this.cooldown = 1;
         this.cost = 1;
         this.description = "";
@@ -145,6 +174,7 @@ public class ShieldPiercerAction : CardAction
         this.effects = new List<CombatEffect>{new ShieldOnlyDamageEffect(1, false, 3)};
         AttachToEffect();
         this.name = "Shield Piercer";
+        this.offensive = true;
         this.cooldown = 0;
         this.cost = 2;
         this.description = "3 Damage Shields Only";
@@ -160,6 +190,7 @@ public class FocusedShieldAction : CardAction
         this.effects = new List<CombatEffect>{new ShieldEffect(2, true, 1)};
         AttachToEffect();
         this.name = "Focused Shield";
+        this.offensive = false;
         this.cooldown = 0;
         this.cost = 1;
         this.description = "";
@@ -172,6 +203,7 @@ public class GeneralShieldAction : CardAction
     {
         this.effects = new List<CombatEffect>{new GeneralShieldEffect(2, true, 1)};
         AttachToEffect();
+        this.offensive = false;
         this.name = "General Shield";
         this.cooldown = 2;
         this.cost = 1;
@@ -185,6 +217,7 @@ public class BigBoyShieldAction : CardAction
     {
         this.effects = new List<CombatEffect>{new ShieldEffect(2, true, 2)};
         AttachToEffect();
+        this.offensive = false;
         this.name = "Big Boy Shield";
         this.cooldown = 2;
         this.cost = 1;
@@ -198,6 +231,7 @@ public class SemiPermanentShieldAction : CardAction
     {
         this.effects = new List<CombatEffect>{new ShieldEffect(99, true, 1)};
         AttachToEffect();
+        this.offensive = false;
         this.name = "Semi Permanent Shield";
         this.cooldown = 1;
         this.cost = 1;
@@ -213,6 +247,7 @@ public class SpeedUpAction : CardAction
     {
         this.effects = new List<CombatEffect>{new SpeedEffect(1, true, 1)};
         AttachToEffect();
+        this.offensive = false;
         this.name = "Speed Up";
         this.cooldown = 0;
         this.cost = 1;
@@ -227,6 +262,7 @@ public class BigBoySpeedUpAction : CardAction
     {
         this.effects = new List<CombatEffect>{new SpeedEffect(1, true, 2)};
         AttachToEffect();
+        this.offensive = false;
         this.name = "Big Boy Speed Up";
         this.cooldown = 2;
         this.cost = 1;
@@ -241,6 +277,7 @@ public class EvasiveManeouvreAction : CardAction
     {
         this.effects = new List<CombatEffect>{new GeneralShieldEffect(1, true, 99)};
         AttachToEffect();
+        this.offensive = false;
         this.name = "Evasive Manoeuvre";
         this.cooldown = 3;
         this.cost = 3;
@@ -255,6 +292,7 @@ public class OverHeatAction : CardAction
     {
         this.effects = new List<CombatEffect>{new DamageEffect(1, true, 1), new SpeedEffect(1, true, 1)};
         AttachToEffect();
+        this.offensive = false;
         this.name = "Over Heat";
         this.cooldown = 0;
         this.cost = 0;
@@ -299,6 +337,8 @@ public class FreeLaserAction : CardAction
         AttachToEffect();
         this.name = "Free Laser";
         this.cooldown = 1;
+        this.offensive=true;
+
         this.cost = 0;
         this.description = "";
         this.needsTarget = true;
@@ -340,6 +380,7 @@ public class EMPAction : CardAction
         AttachToEffect();
         this.name = "EMP";
         this.cooldown = 3;
+        this.offensive=true;
         this.cost = 2;
         this.description = "Disable room NEXT turn";
         this.needsTarget = true;
@@ -353,6 +394,7 @@ public class StopFireAction : CardAction
         this.effects = new List<CombatEffect>{new StopFireEffect()};
         AttachToEffect();
         this.name = "Stop Fire";
+        this.offensive=false;
         this.cooldown = 100;
         this.cost = 1;
         this.description = "";
