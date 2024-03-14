@@ -17,7 +17,6 @@ public class RoomController : MonoBehaviour
     void Start()
     {
         isPlayer = ((SpaceshipController) transform.parent.GetComponent<MonoBehaviour>()).spaceship.isPlayer;
-        OnFireIcon = transform.Find("OnFireIcon").gameObject;
         if (isPlayer) Setup(roomType);
     }
     public void Setup(RoomType roomType)
@@ -146,8 +145,14 @@ public class Room
 
     public Spaceship getParentShip(bool invert = false)
     {
-        if (parent.isPlayer != invert){return GameManagerController.Instance.playerShip;}
-        return GameManagerController.Instance.enemyShip;
+        if (actions[0].state == null)
+        {
+            if (parent.isPlayer != invert){return GameManagerController.Instance.playerShip;}
+            return GameManagerController.Instance.enemyShip;
+        } else {
+            if (parent.isPlayer != invert){return actions[0].state.playerShip;}
+            return actions[0].state.enemyShip;
+        }
     }
     public float getHealth()
     {
@@ -249,7 +254,12 @@ public class Room
     }
     public void SetOnFireIcon(bool active)
     {
-        parent.OnFireIcon.SetActive(active);
+        if (parent != null){
+            if (parent.OnFireIcon == null){
+                parent.OnFireIcon = parent.transform.Find("OnFireIcon").gameObject;
+            }
+            parent.OnFireIcon.SetActive(active);
+        }
     }
     public void UpdateHealthBar()
     {

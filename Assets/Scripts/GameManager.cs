@@ -150,6 +150,7 @@ public class GameManager
 
     public void DrawIntentLine(Vector3 startPoint, Vector3 endPoint, float fuzziness=0)
     {
+        if (IsSimulation == true){return;}
         float getFuzzy(float fuzziness, float steps=2)
         {
             float point = UnityEngine.Random.Range(-fuzziness/2f, fuzziness/2f);
@@ -198,7 +199,7 @@ public class GameManager
         SpaceshipController newShip = (SpaceshipController) gameManagerController._Instantiate(gameManagerController.prefabHolder.enemySpaceshipPrefab, new Vector3(2, 2, 0), Quaternion.identity);        
         newShip.gameObject.tag = "enemy";
         newShip.init();
-        newShip.spaceship.ResetAP();
+        newShip.spaceship.ResetAP(IsSimulation);
         // Setup Basic Rooms
         addRoom(RoomType.Reactor, xPos, yPos, newShip.transform);
         roomTypes.Remove(RoomType.Reactor);
@@ -265,7 +266,7 @@ public class GameManager
         UnityEngine.Debug.Log(" - - - ENEMY - - - - ");
         GameManager gameState = this.Clone();
         gameState.IsSimulation =true;
-        Move bestMove = ISMCTS.Search(gameState, 5, 5);
+        Move bestMove = ISMCTS.Search(gameState, 100, 100);
         foreach (MinCardAction m_action in bestMove.cards){
             UnityEngine.Debug.Log(m_action.ca.name + " -> " + nameof(m_action.ca.affectedRoom.roomType));
         }
@@ -319,7 +320,7 @@ public class GameManager
                 }
                 remainingAp-=t_cardAction.cost;
                 
-                MinCardAction m_cardAction = t_cardAction.QuickClone();
+                MinCardAction m_cardAction = t_cardAction.QuickClone(this);
                 if(t_cardAction.needsTarget){
                     
                     // randomly pick room
@@ -942,12 +943,12 @@ public class GameManager
     public void ResetTempStats()
     {
         // Reset all temp stats for next turn
-        playerShip.ResetAP();
-        playerShip.ResetSpeed();
+        playerShip.ResetAP(IsSimulation);
+        playerShip.ResetSpeed(IsSimulation);
         playerShip.ResetTempRoomStats();
 
-        enemyShip.ResetAP();
-        enemyShip.ResetSpeed();
+        enemyShip.ResetAP(IsSimulation);
+        enemyShip.ResetSpeed(IsSimulation);
         enemyShip.ResetTempRoomStats();
         if (!IsSimulation) gameManagerController.ClearIntentLines();
     }
@@ -1035,7 +1036,7 @@ public class GameManager
 
     public void RestartTurn(){
         // need a way to reset GUI on rooms as current method will not remove shield no. , perhaps the showPotentialEffect looks through submitted actions?
-        playerShip.AdjustAP(playerShip.defaultAP-playerShip.AP);
+        playerShip.AdjustAP(playerShip.defaultAP-playerShip.AP, IsSimulation);
         foreach(CardAction action in playerTurnActions){
             if(action.cooldown>0){
                 action.card.cardController.gameObject.SetActive(true);
@@ -1057,7 +1058,7 @@ public class GameManager
         
         if(playerTurnActions.Count>0){
             CardAction lastAction = playerTurnActions[playerTurnActions.Count -1];
-            playerShip.AdjustAP(lastAction.cost);
+            playerShip.AdjustAP(lastAction.cost, IsSimulation);
             if(playerTurnActions.Count==1){
                 gameManagerController.playerTurnActionsText.text="";
             }
@@ -1081,12 +1082,12 @@ public class GameManager
         CardAction action = card.cardAction.Clone();
         if (!IsSimulation) ShowPotentialEffect(card.cardAction);
         if (isPlayer){ 
-            playerShip.AdjustAP(-action.cost);
+            playerShip.AdjustAP(-action.cost, IsSimulation);
             playerTurnActions.Add(action);
             if (!IsSimulation) gameManagerController.AddActionToTurnText(action, true);
         }
         else{
-            enemyShip.AdjustAP(-action.cost);
+            enemyShip.AdjustAP(-action.cost, IsSimulation);
             enemyTurnActions.Add(action);
             if (!IsSimulation) gameManagerController.AddActionToTurnText(action, false);
         }

@@ -9,9 +9,10 @@ using System.Linq;
         public CardAction ca;
         public Room targetRoom;
 
-        public MinCardAction(CardAction ca){
+        public MinCardAction(CardAction ca, GameManager state){
             this.ca = ca;
             targetRoom = ca.affectedRoom;
+            ca.state = state;
         } 
 
     }
@@ -26,7 +27,7 @@ public abstract class CardAction{
     public float cost;
     public string description;
     public bool needsTarget;
-
+    public GameManager state;
     public bool offensive =false;
     public Card card;
 
@@ -95,9 +96,8 @@ public abstract class CardAction{
         clone.AttachToEffect();
         return clone;
     } 
-        public MinCardAction QuickClone()
-    {
-        MinCardAction minCardAction = new MinCardAction(this);
+        public MinCardAction QuickClone(GameManager state){
+        MinCardAction minCardAction = new MinCardAction(this, state);
         return minCardAction;
     }
 

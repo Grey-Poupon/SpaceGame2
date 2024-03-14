@@ -12,25 +12,25 @@ public class Spaceship
     public float AP;
     public float defaultSpeed = 0;
     public float speed;
-    public void ResetAP()
+    public void ResetAP(bool IsSimulation=false)
     {
         AP = defaultAP;
-        if (GameManagerController.Instance != null){ GameManagerController.Instance.gameManagerController.UpdateAPGraphics(this.isPlayer);}
+        if (IsSimulation == false && GameManagerController.Instance != null){ GameManagerController.Instance.gameManagerController.UpdateAPGraphics(this.isPlayer);}
     }
-    public void ResetSpeed()
+    public void ResetSpeed(bool IsSimulation=false)
     {
         speed = defaultSpeed;
-        if (GameManagerController.Instance != null){ GameManagerController.Instance.gameManagerController.UpdateSpeedGraphics(this.isPlayer);}
+        if (IsSimulation == false && GameManagerController.Instance != null){ GameManagerController.Instance.gameManagerController.UpdateSpeedGraphics(this.isPlayer);}
     }
-    public void AdjustAP(float change)
+    public void AdjustAP(float change, bool IsSimulation=false)
     {
         AP += change;
-        if (GameManagerController.Instance != null){ GameManagerController.Instance.gameManagerController.UpdateAPGraphics(this.isPlayer);}
+        if (IsSimulation == false && GameManagerController.Instance != null){ GameManagerController.Instance.gameManagerController.UpdateAPGraphics(this.isPlayer);}
     }
-    public void AdjustSpeed(float change)
+    public void AdjustSpeed(float change, bool IsSimulation=false)
     {
         speed += change;
-        if (GameManagerController.Instance != null){ GameManagerController.Instance.gameManagerController.UpdateSpeedGraphics(this.isPlayer);}
+        if (IsSimulation == false && GameManagerController.Instance != null){ GameManagerController.Instance.gameManagerController.UpdateSpeedGraphics(this.isPlayer);}
     }
     
     public void ResetTempRoomStats()
