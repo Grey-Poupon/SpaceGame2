@@ -83,6 +83,14 @@ public class GameManager
         if (this.moves is null) {this.moves = _GenerateMoves().ToList();} 
         return this.moves;
     }
+    public Move GetRandomMove(){
+        if (this.turn == TurnTypes.Player){
+            return GenerateRandomMove(playerShip.AP, playerHand.GetCards(), playerRooms.Values.SelectMany(x => x).ToList(), enemyRooms.Values.SelectMany(x => x).ToList(), true);
+        }
+        else{
+            return GenerateRandomMove(enemyShip.AP, enemyHand.GetCards(), enemyRooms.Values.SelectMany(x => x).ToList(), playerRooms.Values.SelectMany(x => x).ToList(), false);
+        }
+    }
 
     public void DoMove(Move move){
         foreach (MinCardAction m_card in move.cards){
@@ -266,7 +274,7 @@ public class GameManager
         UnityEngine.Debug.Log(" - - - ENEMY - - - - ");
         GameManager gameState = this.Clone();
         gameState.IsSimulation =true;
-        Move bestMove = ISMCTS.Search(gameState, 100, 100);
+        Move bestMove = ISMCTS.Search(gameState, 1000, 20);
         foreach (MinCardAction m_action in bestMove.cards){
             UnityEngine.Debug.Log(m_action.ca.name + " -> " + nameof(m_action.ca.affectedRoom.roomType));
         }
@@ -274,6 +282,153 @@ public class GameManager
         DoMove(bestMove);
     }
     
+    public Move GenerateRandomMove(float ap, List<Card> cardPool, List<Room> yourRooms, List<Room> opponentRooms, bool isPlayer){
+        
+        
+        List<MinCardAction> turn = new List<MinCardAction>();
+        Dictionary <String, List<CardAction>> cardActions = new Dictionary <String, List<CardAction>>();
+        Dictionary <String, List<CardAction>> cardActionGroups = new Dictionary <String, List<CardAction>>();
+        // Roll Table
+        List<string> rollTable = new List<string>();
+        int idx = 0;
+
+        // Boost AP
+        foreach (Card card in cardPool){
+            if (card.cardAction.group == "AP" && card.cardAction.CanBeUsed(ap)){
+                card.cardAction.affectedRoom = yourRooms[0];
+                turn.Add(card.cardAction.QuickClone(this));
+                ap += card.cardAction.GetEffectsByType(typeof(APEffect)).Sum(ap => ((APEffect)ap).change);
+            }
+        }
+        if (ap < 1){return new Move(turn);}
+        // Group usable cards
+        foreach (Card card in cardPool){
+            if (card.CanBeUsed(ap)){
+                if (!cardActions.ContainsKey(card.cardAction.name)){
+                    cardActions[card.cardAction.name] = new List<CardAction>();
+                }
+                if (!cardActionGroups.ContainsKey(card.cardAction.group)){
+                    cardActionGroups[card.cardAction.group] = new List<CardAction>();
+                }
+                cardActions[card.cardAction.name].Add(card.cardAction);
+                cardActionGroups[card.cardAction.group].Add(card.cardAction);
+                
+                // Build roll table
+                if (!rollTable.Any(value => value.Contains(card.cardAction.group))){
+                    if        (card.cardAction.group == "Offensive"){for (int i = 0; i < 4; i++){rollTable.Add("Offensive");}
+                    } else if (card.cardAction.group == "Shield")   {for (int i = 0; i < 4; i++){rollTable.Add("Shield");}
+                    } else if (card.cardAction.group == "Special")  {for (int i = 0; i < 2; i++){rollTable.Add("Special");}
+                    //} else if (card.cardAction.group == "Speed")    {for (int i = 0; i < 4; i++){rollTable.Add("Speed");}
+                    }
+                    idx = rollTable.Count;
+                }
+            }
+        }
+
+        // Find Targets
+            // Targeting
+            // Randomly pick from a set of "good" options
+            // 1: Lowest (Health + Shield)
+            // 2: Lowest Health
+            // 3: Highest Damage
+            // 4: Laser
+            // 5: Reactor
+            // 6: Random
+        float lowestHealth = 99;
+        float lowestHealthShield = 99;
+        float highestDamage = -99;
+        Room lowestHealthRoom = null;
+        Room lowestHealthShieldRoom = null;
+        Room highestDamageRoom = null;
+        List<Room> opponentLaserRooms = new List<Room>();
+        List<Room> opponentReactorRooms = new List<Room>();
+
+        foreach (Room room in opponentRooms){
+            if (room.health < lowestHealth){
+                lowestHealth = room.health;
+                lowestHealthRoom = room;
+            }
+            if (room.health + room.defence < lowestHealthShield){
+                lowestHealthShield = room.health + room.defence;
+                lowestHealthShieldRoom = room;
+            }
+            float totalDamage = room.actions
+            .Where(action => action.group == "Offensive")
+            .Sum(action => action.GetEffectsByType(typeof(DamageEffect))
+            .Sum(effect => ((DamageEffect)effect).damage));
+            if (totalDamage != null && totalDamage > highestDamage){
+                highestDamage = totalDamage;
+                highestDamageRoom = room;
+            }
+            if (room.roomType == RoomType.Laser){
+                opponentLaserRooms.Add(room);
+            }
+            if (room.roomType == RoomType.Reactor){
+                opponentReactorRooms.Add(room);
+            }
+        }
+
+        List<Room> inDangerRooms = new List<Room>();
+        foreach (Room room in yourRooms){
+            if(room.health + room.defence <= highestDamage){
+                inDangerRooms.Add(room);
+            }
+        }
+
+
+
+
+
+
+        int speedupRoll = -99;
+        while (ap > 0){
+            // Speed up first
+            if (speedupRoll == -99 && cardActionGroups.ContainsKey("Speed")){
+                // Spend a MAX of a Third of AP on Speed Ups
+                int maxSpeedActions = (int)(cardActionGroups["Speed"].Count > ap / 3 ? cardActionGroups["Speed"].Count : ap / 3);
+                speedupRoll = (int)UnityEngine.Random.Range(-maxSpeedActions, maxSpeedActions);
+                for (int i =0; i < speedupRoll; i++){
+                    CardAction t_ca = cardActionGroups["Speed"][UnityEngine.Random.Range(0, cardActionGroups["Speed"].Count)];
+                    t_ca.affectedRoom = yourRooms[0];
+                    if (t_ca.CanBeUsed(ap)){
+                        ap -= t_ca.cost;
+                        turn.Add(t_ca.QuickClone(this));
+                    }
+                }
+            }
+
+            // Roll on table
+            string group = rollTable[UnityEngine.Random.Range(0, rollTable.Count - 1)];
+            MinCardAction action = cardActionGroups[group][UnityEngine.Random.Range(0, cardActionGroups[group].Count)].QuickClone(this);
+
+            // Targeting, Hopefully smart
+            if(action.ca.group == "Offensive"){
+                int target = UnityEngine.Random.Range(1, 6);
+                if      (target == 1){ action.ca.affectedRoom = lowestHealthShieldRoom;}
+                else if (target == 2){ action.ca.affectedRoom = lowestHealthRoom;}
+                else if (target == 3){ action.ca.affectedRoom = highestDamageRoom;}
+                else if (target == 4){ action.ca.affectedRoom = opponentLaserRooms[UnityEngine.Random.Range(0, opponentLaserRooms.Count)];}
+                else if (target == 5){ action.ca.affectedRoom = opponentReactorRooms[UnityEngine.Random.Range(0, opponentReactorRooms.Count)];}
+                else if (target == 6){ action.ca.affectedRoom = opponentRooms[UnityEngine.Random.Range(0, opponentRooms.Count)];}
+            }
+            else if (action.ca.group == "Shield"){
+                if (inDangerRooms.Count > 0){ action.ca.affectedRoom = inDangerRooms[UnityEngine.Random.Range(0, inDangerRooms.Count)];}
+                else {                        action.ca.affectedRoom = yourRooms[UnityEngine.Random.Range(0, yourRooms.Count)];}
+            }
+            else{
+                if (action.ca.offensive){
+                    action.ca.affectedRoom = opponentRooms[UnityEngine.Random.Range(0, opponentRooms.Count)];
+                } else {
+                    action.ca.affectedRoom = yourRooms[UnityEngine.Random.Range(0, yourRooms.Count)];
+                }
+            }
+            ap -= action.ca.cost;
+            turn.Add(action);
+        }
+        return new Move(turn);
+
+    }
+
     public Move[] GenerateMoves(float ap, List<Card> cardPool, bool isPlayer){
         // This method will be called a lot of times so it is important to be efficient. however, for some ships and cards the number of actions >10,000 so I decided to randomly sample some actions instead 
         // as it is relatively quick 
@@ -356,8 +511,7 @@ public class GameManager
 
     }
 
-    public void GenerateCardCombinations(List<CardAction> currentCombination, int index, Dictionary<int, List<CardAction>> allCardCombinations, float APLeft, List<Card> cardPool)
-    {
+    public void GenerateCardCombinations(List<CardAction> currentCombination, int index, Dictionary<int, List<CardAction>> allCardCombinations, float APLeft, List<Card> cardPool){
         if(currentCombination.Count>6){
             return;
         }
@@ -618,30 +772,40 @@ public class GameManager
 
     public void ResolveActions()
     {
-
+        bool playerFirst = true;
 
         // Decide Who goes first
         System.Random random = new System.Random();
-        // foreach (CardAction action in enemyTurnActions)
-        // {
-        //     foreach (SpeedEffect effect in action.GetEffectsByType(typeof(SpeedEffect)))
-        //     {
-        //         effect.TriggerEffect();
-        //     }
-        // }
+        if (IsSimulation){
+            foreach (CardAction action in enemyTurnActions)
+            {
+                foreach (SpeedEffect effect in action.GetEffectsByType(typeof(SpeedEffect)))
+                {
+                    effect.TriggerEffect();
+                }
+            }
 
-        // foreach (CardAction action in playerTurnActions)
-        // {
-        //     foreach (SpeedEffect effect in action.GetEffectsByType(typeof(SpeedEffect)))
-        //     {
-        //         effect.TriggerEffect();
-        //     }
-        // }
-        bool playerFirst = (playerShip.speed > enemyShip.speed) ? true :
-                                (enemyShip.speed > playerShip.speed) ? false :
-                                   (random.Next(2) == 0) ? true : false;
-        if (playerFirst){UnityEngine.Debug.Log("Player First");}
-        else{UnityEngine.Debug.Log("Enemy First");}
+            foreach (CardAction action in playerTurnActions)
+            {
+                foreach (SpeedEffect effect in action.GetEffectsByType(typeof(SpeedEffect)))
+                {
+                    effect.TriggerEffect();
+                }
+            }
+            playerFirst = (playerShip.speed > enemyShip.speed) ? true :
+                        (enemyShip.speed > playerShip.speed) ? false :
+                            (random.Next(2) == 0) ? true : false;
+            playerShip.ResetSpeed();
+            enemyShip.ResetSpeed();
+        }
+        else{
+            playerFirst = (playerShip.speed > enemyShip.speed) ? true :
+                (enemyShip.speed > playerShip.speed) ? false :
+                    (random.Next(2) == 0) ? true : false;
+        }
+
+        //if (playerFirst){UnityEngine.Debug.Log("Player First");}
+        //else{UnityEngine.Debug.Log("Enemy First");}
 
         // Activate Each Action
         if (playerFirst)
@@ -1111,5 +1275,3 @@ public class GameManager
 
     }
 }
-
-

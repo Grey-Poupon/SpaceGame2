@@ -66,19 +66,13 @@ public class Node {
         return untriedMoves;
     }
 
-    public Node UCBSelectChild(List<Move> legalMoves, float exploration=0.7f){
+    public Node UCBSelectChild(float exploration=0.7f){
             // Use the UCB1 formula to select a child node, filtered by the given list of legal moves.
             //             exploration is a constant balancing between exploitation and exploration, with default value 0.7 (approximately sqrt(2) / 2)
 
-        List<Node> legalChildren = new List<Node>();
-        foreach(Node child in childNodes){
-            if(legalMoves.Contains(child.move)){
-                legalChildren.Add(child);
-            }
-        }
+        Node bestChild = childNodes[0];
         float s = 0;
-        Node bestChild = legalChildren[0];
-        foreach(Node legalChild in legalChildren){
+        foreach(Node legalChild in childNodes){
             float t_s = (float)legalChild.wins / (float)legalChild.visits + exploration * Mathf.Sqrt(Mathf.Log(legalChild.avails) / (float)legalChild.visits);
             if(t_s>s){
                 s=t_s;
@@ -108,35 +102,27 @@ public class Node {
 }
 
 public class ISMCTS{
-    public static Move Search(GameManager rootstate, int itermax, int maxDepth = 10){
+    public static Move Search(GameManager rootstate, int itermax, int maxDepth = 10,  int explorationLimit=500){
         Node rootnode = new Node();
         for(int i =0;i<itermax;i++){
             Node node = rootnode;
             GameManager state = rootstate.Clone();
-            List<Move> moves = state.GetMoves();
-            // Select
-            while(moves.Count>0 && node.GetUntriedMoves(moves).Count==0){
-                node = node.UCBSelectChild(moves);
+
+            // Select, Replace this conditional with a Limit as we will never fully sample the solution space
+            while(node.childNodes.Count > explorationLimit){
+                node = node.UCBSelectChild();
                 state.DoMove(node.move);
-                moves= state.GetMoves();
-            }
-            List<Move> untriedMoves = node.GetUntriedMoves(moves);
-            // Expand
-            if(untriedMoves.Count>0){
-                Move m = untriedMoves[ UnityEngine.Random.Range(0, untriedMoves.Count)];
-                int player = state.turn == TurnTypes.Player ? 1 : 0;
-                state.DoMove(m);
-                node = node.AddChild(m,player);
             }
 
             // Simulate 
             int iterCount = 0;
-            while(moves.Count>0 && iterCount < maxDepth){
+            while(iterCount < maxDepth){
                 iterCount++;
-                moves = state.GetMoves();
-                Move m = moves[UnityEngine.Random.Range(0, moves.Count)];
+                Move m = state.GetRandomMove();
                 state.DoMove(m);
+                node = node.AddChild(m,state.turn == TurnTypes.Player ? 1 : 0);
             }
+            
             
             // Backpropagate
             while(node!=null){
@@ -155,5 +141,3 @@ public class ISMCTS{
 
     } 
 }
-
-

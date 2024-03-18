@@ -102,9 +102,23 @@ public class GeneralShieldEffect : CombatEffect
     }
     public override void TriggerEffect()
     {
-        foreach(Room room in action.sourceRoom.getParentShip().GetRoomList())
-        {
-            room.IncreaseDefence(increase);
+        if (action.state == null){
+            foreach(Room room in action.sourceRoom.getParentShip().GetRoomList())
+            {
+                room.IncreaseDefence(increase);
+            }
+        } else {
+            if (action.sourceRoom.isPlayer){
+                foreach(Room room in action.state.playerRooms.Values.SelectMany(x => x).ToList())
+                {
+                    room.IncreaseDefence(increase);
+                }
+            } else {
+                foreach(Room room in action.state.enemyRooms.Values.SelectMany(x => x).ToList())
+                {
+                    room.IncreaseDefence(increase);
+                }
+            }
         }
     }
     
@@ -188,7 +202,7 @@ public class FreeLaserEffect : CombatEffect
         //     1           1          1 
         bool affectsPlayer = this.action.sourceRoom.isPlayer;
         CardAction freeAction = new FreeLaserAction();
-        action.sourceRoom = affectedRoom.getParentShip().GetRooms()[RoomType.Laser][0];
+        action.sourceRoom = affectedRoom;
         if (action.state == null){
             List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{freeAction},affectsPlayer && action.state == null);
             GameManagerController.Instance.AddCardsToHand(cards, affectsPlayer);
