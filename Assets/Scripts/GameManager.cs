@@ -15,19 +15,14 @@ public enum TurnTypes {Player, Enemy, Resolve}
 public class GameManager
 {
     public GameManagerController gameManagerController;
-
     public TurnTypes turn = TurnTypes.Enemy;
     public Card selectedCard;
     public Hand playerHand;
-    
     public Hand enemyHand;
-
     public Spaceship playerShip;
     public Spaceship enemyShip;
     public Dictionary<RoomType, List<Room>> playerRooms = new Dictionary<RoomType, List<Room>>();
-  
     public Dictionary<RoomType, List<Room>> enemyRooms = new Dictionary<RoomType, List<Room>>();
-
     public List<CardAction> playerTurnActions = new List<CardAction>();
     public List<CardAction> enemyTurnActions = new List<CardAction>();
     public bool IsSimulation;
@@ -274,7 +269,7 @@ public class GameManager
         UnityEngine.Debug.Log(" - - - ENEMY - - - - ");
         GameManager gameState = this.Clone();
         gameState.IsSimulation =true;
-        Move bestMove = ISMCTS.Search(gameState, 1000, 20);
+        Move bestMove = ISMCTS.Search(gameState, 100, 20);
         foreach (MinCardAction m_action in bestMove.cards){
             UnityEngine.Debug.Log(m_action.ca.name + " -> " + nameof(m_action.ca.affectedRoom.roomType));
         }
@@ -337,9 +332,9 @@ public class GameManager
         float lowestHealth = 99;
         float lowestHealthShield = 99;
         float highestDamage = -99;
-        Room lowestHealthRoom = null;
-        Room lowestHealthShieldRoom = null;
-        Room highestDamageRoom = null;
+        Room lowestHealthRoom = opponentRooms[0];
+        Room lowestHealthShieldRoom = opponentRooms[0];
+        Room highestDamageRoom = opponentRooms[0];
         List<Room> opponentLaserRooms = new List<Room>();
         List<Room> opponentReactorRooms = new List<Room>();
 
@@ -746,6 +741,7 @@ public class GameManager
             turnCounter ++;
         }
     }
+
     public void SimulateEndTurn(){
         if (turn == TurnTypes.Player)
         {
@@ -1257,8 +1253,6 @@ public class GameManager
         }
     }
 
-
-    
     public void UpdateHandStats()
     {
         //UnityEngine.Debug.Log(string.Join(" & ", playerHand.GetCards().Select(obj=>obj.cardAction.name + ":"+obj.turnsUntilReady.ToString()).ToList()));

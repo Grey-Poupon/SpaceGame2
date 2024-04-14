@@ -27,12 +27,13 @@ public class RoomController : MonoBehaviour
 
         Transform canvas = transform.Find("Canvas");
 
-        room.Title  = canvas.Find("Title").GetComponent<TextMeshProUGUI>();
-        room.Attack = canvas.Find("Attack").GetComponent<TextMeshProUGUI>();
-        room.Shield = canvas.Find("Shield").GetComponent<TextMeshProUGUI>();
-        room.Health = canvas.Find("Health").GetComponent<TextMeshProUGUI>();
-
-        room.UpdateTextGraphics();
+        if (room.Title != null){
+            room.Title  = canvas.Find("Title").GetComponent<TextMeshProUGUI>();
+            room.Attack = canvas.Find("Attack").GetComponent<TextMeshProUGUI>();
+            room.Shield = canvas.Find("Shield").GetComponent<TextMeshProUGUI>();
+            room.Health = canvas.Find("Health").GetComponent<TextMeshProUGUI>();
+            room.UpdateTextGraphics();
+        }
         room.parent = this;
         room.isPlayer = isPlayer;
     }

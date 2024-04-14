@@ -84,6 +84,7 @@ public abstract class CardAction{
         clone.affectedRoom = this.affectedRoom;
         clone.needsTarget = this.needsTarget;
         clone.card.turnsUntilReady = this.card.turnsUntilReady;
+        clone.state = this.state;
         clone.CreateEffectLookups();
         clone.AttachToEffect();
         return clone;
