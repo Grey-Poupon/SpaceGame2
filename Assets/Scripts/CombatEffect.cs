@@ -244,12 +244,12 @@ public class OnFireEffect : CombatEffect
             bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
             CardAction action = new StopFireAction();
             action.sourceRoom = affectedRoom;
-            if (action.state == null){
-                List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{action},affectsPlayer && action.state == null);
+            if (this.action.state == null){
+                List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{action},affectsPlayer);
                 GameManagerController.Instance.AddCardsToHand(cards, affectsPlayer);
             } else {
-                List<Card> cards = action.state.MakeCards(new List<CardAction>{action},affectsPlayer && action.state == null);
-                action.state.AddCardsToHand(cards, affectsPlayer);
+                List<Card> cards = this.action.state.MakeCards(new List<CardAction>{action}, false);
+                this.action.state.AddCardsToHand(cards, affectsPlayer);
             }
         }   
 

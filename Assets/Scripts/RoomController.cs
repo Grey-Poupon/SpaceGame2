@@ -27,7 +27,7 @@ public class RoomController : MonoBehaviour
 
         Transform canvas = transform.Find("Canvas");
 
-        if (room.Title != null){
+        if (room.Title == null && canvas != null){
             room.Title  = canvas.Find("Title").GetComponent<TextMeshProUGUI>();
             room.Attack = canvas.Find("Attack").GetComponent<TextMeshProUGUI>();
             room.Shield = canvas.Find("Shield").GetComponent<TextMeshProUGUI>();
