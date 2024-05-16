@@ -86,6 +86,7 @@ public class GameManagerController : MonoBehaviour
     public void ClearIntentLines()
     {
         foreach (IntentLine intentLine in GameManagerController.Instance.activeIntentLines) Destroy(intentLine.gameObject);
+        GameManagerController.Instance.activeIntentLines = new List<IntentLine>();
     }
     public void _StartCoroutine(IEnumerator routine)
     {
@@ -113,6 +114,7 @@ public class GameManagerController : MonoBehaviour
     }
     public void SetCursor(bool setToNull=false)
     {
+        setToNull = !setToNull;
         if (setToNull)
         {   
             Cursor.SetCursor(customCursor, new Vector2(customCursor.width / 2, customCursor.height / 2), CursorMode.ForceSoftware);

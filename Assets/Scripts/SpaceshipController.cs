@@ -82,7 +82,7 @@ public class SpaceshipController : MonoBehaviour{
             GameManagerController.Instance.RegisterPlayerShip(this.spaceship);
         }
         if (gameObject.tag.Contains("enemy")){
-            this.spaceship = new Spaceship(3, 0, true);
+            this.spaceship = new Spaceship(3, 0, false);
             this.spaceship.ResetTempRoomStats();
             GameManagerController.Instance.RegisterEnemyShip(this.spaceship);
         }

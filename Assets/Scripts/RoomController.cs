@@ -78,12 +78,12 @@ public class RoomController : MonoBehaviour
         batteryActions         .AddRange(new List<CardAction> {new ChargeBatteriesAction()});
         EMPActions             .AddRange(new List<CardAction> {new EMPAction()});
         
-        if (getEveryRoom)
-        {
-            laserActions   .AddRange(new List<CardAction> {new BuffEnergyWeaponAction()});
-            shieldActions  .AddRange(new List<CardAction> {new GeneralShieldAction(), new BigBoyShieldAction(), new SemiPermanentShieldAction()});
-            engineActions  .AddRange(new List<CardAction> {new BigBoySpeedUpAction(), new OverHeatAction()});
-        }
+        // if (getEveryRoom)
+        // {
+        //     laserActions   .AddRange(new List<CardAction> {new BuffEnergyWeaponAction()});
+        //     shieldActions  .AddRange(new List<CardAction> {new GeneralShieldAction(), new BigBoyShieldAction(), new SemiPermanentShieldAction()});
+        //     engineActions  .AddRange(new List<CardAction> {new BigBoySpeedUpAction(), new OverHeatAction()});
+        // }
         
         if      (roomType == RoomType.Laser)            {return new Room(laserActions,            roomType, 5);}
         else if (roomType == RoomType.Shield)           {return new Room(shieldActions,           roomType, 3);}

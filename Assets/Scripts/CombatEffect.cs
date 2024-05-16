@@ -202,13 +202,13 @@ public class FreeLaserEffect : CombatEffect
         //     1           1          1 
         bool affectsPlayer = this.action.sourceRoom.isPlayer;
         CardAction freeAction = new FreeLaserAction();
-        action.sourceRoom = affectedRoom;
-        if (action.state == null){
-            List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{freeAction},affectsPlayer && action.state == null);
+        freeAction.sourceRoom = affectedRoom;
+        if (this.action.state == null){
+            List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{freeAction},affectsPlayer);
             GameManagerController.Instance.AddCardsToHand(cards, affectsPlayer);
         } else {
-            List<Card> cards = action.state.MakeCards(new List<CardAction>{freeAction},affectsPlayer && action.state == null);
-            action.state.AddCardsToHand(cards, affectsPlayer);
+            List<Card> cards = action.state.MakeCards(new List<CardAction>{freeAction},false);
+            this.action.state.AddCardsToHand(cards, affectsPlayer);
         }
     }
     
@@ -256,7 +256,7 @@ public class OnFireEffect : CombatEffect
         affectedRoom.takeDamage(damage);
         affectedRoom.updateHealthGraphics();
         affectedRoom.UpdateTextGraphics();
-        if (action.state == null){ affectedRoom.SetOnFireIcon(true);}
+        if (this.action.state == null){ affectedRoom.SetOnFireIcon(true);}
     }
     
     public override void LastEffect()
@@ -336,10 +336,10 @@ public class SpeedEffect : CombatEffect
     public override void TriggerEffect()
     {
         if (action.state == null){
-            if (affectsSelf == action.sourceRoom.isPlayer) {GameManagerController.Instance.playerShip.AdjustAP(change);}
+            if (affectsSelf == action.sourceRoom.isPlayer) {GameManagerController.Instance.playerShip.AdjustSpeed(change);}
             else {GameManagerController.Instance.enemyShip.AdjustSpeed(change);}
         } else {
-            if (affectsSelf == action.sourceRoom.isPlayer) {action.state.playerShip.AdjustAP(change, true);}
+            if (affectsSelf == action.sourceRoom.isPlayer) {action.state.playerShip.AdjustSpeed(change, true);}
             else {action.state.enemyShip.AdjustSpeed(change, true);}
         }
     }
@@ -347,10 +347,10 @@ public class SpeedEffect : CombatEffect
     public override void ShowPotentialEffect()
     {
         if (action.state == null){
-            if (affectsSelf == action.sourceRoom.isPlayer) {GameManagerController.Instance.playerShip.AdjustAP(change);}
+            if (affectsSelf == action.sourceRoom.isPlayer) {GameManagerController.Instance.playerShip.AdjustSpeed(change);}
             else {GameManagerController.Instance.enemyShip.AdjustSpeed(change);}
         } else {
-            if (affectsSelf == action.sourceRoom.isPlayer) {action.state.playerShip.AdjustAP(change, true);}
+            if (affectsSelf == action.sourceRoom.isPlayer) {action.state.playerShip.AdjustSpeed(change, true);}
             else {action.state.enemyShip.AdjustSpeed(change, true);}
         }    }
     public SpeedEffect(){}
@@ -371,12 +371,12 @@ public class ChargeBatteriesEffect : CombatEffect
         bool affectsPlayer = this.affectsSelf == this.action.sourceRoom.isPlayer;
         CardAction action = new DischargeChargeBatteriesAction();
         action.sourceRoom = this.action.sourceRoom;
-        if (action.state == null){
-            List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{action},affectsPlayer && action.state == null);
+        if (this.action.state == null){
+            List<Card> cards = GameManagerController.Instance.MakeCards(new List<CardAction>{action},affectsPlayer && this.action.state == null);
             GameManagerController.Instance.AddCardsToHand(cards, affectsPlayer);
         } else {
-            List<Card> cards = action.state.MakeCards(new List<CardAction>{action},affectsPlayer);
-            action.state.AddCardsToHand(cards, affectsPlayer);        }
+            List<Card> cards = this.action.state.MakeCards(new List<CardAction>{action},false);
+            this.action.state.AddCardsToHand(cards, affectsPlayer);        }
     }
     
     public override void ShowPotentialEffect()
