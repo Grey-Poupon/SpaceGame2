@@ -81,7 +81,7 @@ public class ShieldEffect : CombatEffect
     }
     public override void TriggerEffect()
     {
-        affectedRoom.IncreaseDefence(increase);
+        //affectedRoom.IncreaseDefence(increase);
     }
     
     public override void ShowPotentialEffect()
@@ -231,7 +231,12 @@ public class OnFireEffect : CombatEffect
         this.damage = damage;
     }
 
-    public override void TriggerEffect(){}
+    public override void TriggerEffect(){
+        affectedRoom.takeDamage(damage);
+        affectedRoom.updateHealthGraphics();
+        affectedRoom.UpdateTextGraphics();
+
+    }
     public override void FirstEffect()
     {
         // AffectsSelf isPlayer AffectsPlayer
@@ -252,10 +257,6 @@ public class OnFireEffect : CombatEffect
                 this.action.state.AddCardsToHand(cards, affectsPlayer);
             }
         }   
-
-        affectedRoom.takeDamage(damage);
-        affectedRoom.updateHealthGraphics();
-        affectedRoom.UpdateTextGraphics();
         if (this.action.state == null){ affectedRoom.SetOnFireIcon(true);}
     }
     

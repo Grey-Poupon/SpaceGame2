@@ -4,28 +4,42 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System;
-
+using UnityEngine.UI;
 public class RoomController : MonoBehaviour
 {
     public static RoomController RoomPrefab;
     public GameObject OnFireIcon;
     private Room room;
     public bool isPlayer;
-
-    
+    public GameObject healthBar;
+    public GameObject shieldBar;
+    public Renderer healthBarRenderer;
+    public Renderer shieldBarRenderer;
     public RoomType roomType;
     void Start()
     {
         isPlayer = ((SpaceshipController) transform.parent.GetComponent<MonoBehaviour>()).spaceship.isPlayer;
-        if (isPlayer) Setup(roomType);
+        Setup(roomType);
     }
     public void Setup(RoomType roomType)
     {
         if (room == null){room = createRoom(roomType, !isPlayer);}
         GameManagerController.Instance.RegisterRoom(room, isPlayer);
         room.spriteRenderer = GetComponent<SpriteRenderer>();
+        if (healthBar == null || shieldBar == null){
+            float a  = 1;
+        }
+        healthBarRenderer = healthBar.GetComponent<Renderer>();
+        shieldBarRenderer = shieldBar.GetComponent<Renderer>();
+
+        // Create a new material instance for this GameObject
+        healthBarRenderer.material = new Material(healthBarRenderer.material);
+        shieldBarRenderer.material = new Material(shieldBarRenderer.material);
 
         Transform canvas = transform.Find("Canvas");
+
+        room.parent = this;
+        room.isPlayer = isPlayer;
 
         if (room.Title == null && canvas != null){
             room.Title  = canvas.Find("Title").GetComponent<TextMeshProUGUI>();
@@ -34,12 +48,14 @@ public class RoomController : MonoBehaviour
             room.Health = canvas.Find("Health").GetComponent<TextMeshProUGUI>();
             room.UpdateTextGraphics();
         }
-        room.parent = this;
-        room.isPlayer = isPlayer;
     }
     void Update()
     {
-        
+        // Update the alpha based on the direction of fading
+    }
+
+    void SetAlpha(float alpha)
+    {
     }
     void OnMouseDown()
     {
@@ -166,9 +182,7 @@ public class Room
     public void setHealth(float newHealth)
     {
         health = newHealth;
-        if(Health!=null){
-            Health.text = newHealth.ToString();
-        }
+        UpdateTextGraphics();
     }
     public void takeDamage(float damage)
     {
@@ -191,10 +205,7 @@ public class Room
     }
     public void updateHealthGraphics()
     {
-        if(Health==null){
-            return;
-        }
-        Health.text = health.ToString();
+        UpdateTextGraphics();
         if (health==0)
         {
             onDestroy();
@@ -204,23 +215,22 @@ public class Room
     public void IncreaseDefence(float adjustment)
     {
         defence += adjustment;
-        
+        UpdateTextGraphics();
         
     }
     public void DecreaseDefence(float adjustment)
     {
         defence += adjustment;
-        if(Shield!=null){
-            Shield.text = defence.ToString();
-        }
+        UpdateTextGraphics();
         
     }
     public void IncreaseAttackIntent(float damage)
     {
         incomingDamage += damage;
-        if(Attack!=null){
-            Attack.text = incomingDamage.ToString();    
-        }
+        UpdateTextGraphics();
+        parent.shieldBarRenderer.material.SetFloat("_FlashingSegments", Math.Min(this.incomingDamage, this.defence) );
+        parent.healthBarRenderer.material.SetFloat("_FlashingSegments", Math.Max(this.incomingDamage - this.defence, 0));
+
         
     }
     public void heal(float healing)
@@ -267,7 +277,6 @@ public class Room
         if(Health==null){
             return;
         }
-
         if (getHealth() == 0)
         {
             spriteRenderer.color = new Color(0.0f, 0.0f, 0.0f); // Black
@@ -302,13 +311,18 @@ public class Room
     }
     public void UpdateTextGraphics()
     {
-        if(Title==null){
-            return;
+        if(Title!=null){
+            Title.text = roomType.ToString();
         }
-        Title.text = roomType.ToString();
-        Attack.text = incomingDamage.ToString();
-        Shield.text = defence.ToString();
-        Health.text = health.ToString();
+        parent.healthBarRenderer.material.SetFloat("_NumberOfSegments", this.getMaxHealth());
+        parent.healthBarRenderer.material.SetFloat("_FlashingSegments", Math.Max(this.incomingDamage - this.defence, 0));
+        parent.healthBarRenderer.material.SetFloat("_FlashingOffset", this.defence);
+        parent.healthBarRenderer.material.SetFloat("_RemovedSegments", this.getMaxHealth() - this.getHealth());
+
+        parent.shieldBarRenderer.material.SetFloat("_NumberOfSegments", this.getMaxHealth());
+        parent.shieldBarRenderer.material.SetFloat("_FlashingSegments", Math.Min(this.incomingDamage, this.defence) );
+        parent.shieldBarRenderer.material.SetFloat("_RemovedSegments", this.getMaxHealth() - this.defence);
+
     }
     public Room(List<CardAction> actions, RoomType type, float maxHealth)
     {

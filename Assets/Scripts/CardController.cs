@@ -98,6 +98,7 @@ public class CardController : MonoBehaviour, IPointerDownHandler, IPointerUpHand
             // Update the card's position
             cardRectTransform.position = newPosition;
 
+            UnityEngine.Debug.Log(card.cardAction.name + " Distance: " + disappearDistance + " - ready in: "+ card.turnsUntilReady);
             if (cardRectTransform.anchoredPosition.y > disappearDistance && card.turnsUntilReady==0)
             {  
                 if(card.CanBeUsed(GameManagerController.Instance.playerShip.AP)){

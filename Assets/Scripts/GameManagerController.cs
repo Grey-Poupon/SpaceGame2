@@ -16,6 +16,7 @@ public class GameManagerController : MonoBehaviour
     public TextMeshProUGUI enemySpeedText;
     public TextMeshProUGUI playerAPText;
     public TextMeshProUGUI enemyAPText;
+    public TextMeshProUGUI GameOverText;
     public ISMCTS ISMCTS;
     public PrefabHolder prefabHolder;
     public Texture2D customCursor;
@@ -43,6 +44,16 @@ public class GameManagerController : MonoBehaviour
         enemySpeedText = GameObject.Find("EnemySpeedText").GetComponent<TextMeshProUGUI>();
         playerAPText = GameObject.Find("PlayerAPText").GetComponent<TextMeshProUGUI>();
         enemyAPText = GameObject.Find("EnemyAPText").GetComponent<TextMeshProUGUI>();
+        GameOverText = GameObject.Find("GameOverText").GetComponent<TextMeshProUGUI>();
+
+        playerTurnActionsText.text = "";
+        enemyTurnActionsText.text = "";
+        playerSpeedText.text = "0";
+        enemySpeedText.text = "0";
+        playerAPText.text = "0";
+        enemyAPText.text = "0";
+        GameOverText.text = "";
+
         GameManagerController.Instance.IsSimulation=false;
         StartCoroutine(GameManagerController.Instance.StartGame());
 
@@ -124,4 +135,17 @@ public class GameManagerController : MonoBehaviour
             Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         }
     }
+
+    public void PlayerWin(){
+        GameOverText.text = "You win!";
+    }
+    public void EnemyWin(){
+        GameOverText.text = "You lose!";
+    }
+    public void Restart(){
+        GameManagerController.Instance = null;
+        Awake();
+    }
+    
+
 }

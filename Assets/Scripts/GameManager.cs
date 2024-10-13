@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using System.Linq;
-public enum TurnTypes {Player, Enemy, Resolve}
+public enum TurnTypes {Player, Enemy, Resolve, PlayerWin, EnemyWin }
 
 
 public class GameManager
@@ -722,12 +722,17 @@ public class GameManager
         if (turn == TurnTypes.Resolve)
         {
             ResolveActions();
-            if(enemyRooms[RoomType.Reactor][0].health<=0){
-                enemyShip.onDestroy();
-            }
             ResetTempStats();
             ResetTurnActions();
             turn = TurnTypes.Enemy;
+            if(enemyRooms[RoomType.Reactor][0].health<=0){
+                enemyShip.onDestroy();
+                turn = TurnTypes.PlayerWin;
+            }
+            else if (playerRooms[RoomType.Reactor][0].health<=0){
+                playerShip.onDestroy();
+                turn = TurnTypes.EnemyWin;
+            }
             
         }
         if (turn == TurnTypes.Enemy)
@@ -739,6 +744,12 @@ public class GameManager
             UpdateRoomText();
             turn = TurnTypes.Player;
             turnCounter ++;
+        }
+        if (turn == TurnTypes.PlayerWin){
+            gameManagerController.PlayerWin();
+        }
+        if (turn == TurnTypes.EnemyWin){
+            gameManagerController.EnemyWin();
         }
     }
 
@@ -870,7 +881,7 @@ public class GameManager
     public void EnemyChooseActions()
     {
         //EnemyChooseRandomActions();
-        MCTSEnemyTurn();
+        EnemyAIAttackOrRandom();
         #if UNITY_EDITOR
             //UnityEditor.EditorApplication.isPlaying = false;
         #else
@@ -1267,5 +1278,9 @@ public class GameManager
         foreach(Room room in playerShip.GetRoomList()){room.UpdateTextGraphics();}
         foreach(Room room in enemyShip.GetRoomList()){room.UpdateTextGraphics();}
 
+    }
+
+    public bool IsGameOver(){
+        return turn == TurnTypes.PlayerWin || turn == TurnTypes.EnemyWin;
     }
 }

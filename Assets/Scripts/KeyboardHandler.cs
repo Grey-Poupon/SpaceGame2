@@ -28,6 +28,12 @@ public class KeyboardController : MonoBehaviour
     void OnGUI()
     {
         Event e = Event.current;
+        if (GameManagerController.Instance.IsGameOver()){
+            if (e.isKey && e.type == EventType.KeyUp && KeyboardControls.ContainsKey(e.keyCode)){
+                GameManagerController.Instance.gameManagerController.Restart();
+            }
+            return;
+        }
         if (e.isKey && e.type == EventType.KeyUp && KeyboardControls.ContainsKey(e.keyCode))
         {
             Control control = KeyboardControls[e.keyCode];
