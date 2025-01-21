@@ -7,6 +7,7 @@ using System;
 
 public class Spaceship
 {
+    public SpaceshipController controller;
     public bool isPlayer;
     public float defaultAP = 3;
     public float AP;
@@ -80,11 +81,13 @@ public class SpaceshipController : MonoBehaviour{
         if (gameObject.tag.Contains("player")){
             this.spaceship = new Spaceship(3, 0, true);
             GameManagerController.Instance.RegisterPlayerShip(this.spaceship);
+            this.spaceship.controller = this;
         }
         if (gameObject.tag.Contains("enemy")){
             this.spaceship = new Spaceship(3, 0, false);
             this.spaceship.ResetTempRoomStats();
             GameManagerController.Instance.RegisterEnemyShip(this.spaceship);
+            this.spaceship.controller = this;
         }
     }
 }

@@ -404,7 +404,7 @@ public class DisableRoomEffect : CombatEffect
         affectedRoom.disabled = true;
         foreach (CardAction action in affectedRoom.actions)
         {
-            if (action.card.cardController) action.card.cardController.gameObject.SetActive(false);
+            if (action.card.cardController) action.card.cardController.ToggleTransparency(true);
         }
     }
 
@@ -413,7 +413,7 @@ public class DisableRoomEffect : CombatEffect
         affectedRoom.disabled = false;
         foreach (CardAction action in affectedRoom.actions)
         {
-            if (action.card.cardController) action.card.cardController.gameObject.SetActive(true);
+            if (action.card.cardController) action.card.cardController.ToggleTransparency(false);
         }
     }
     

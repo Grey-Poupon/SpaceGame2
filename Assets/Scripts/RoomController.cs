@@ -25,10 +25,8 @@ public class RoomController : MonoBehaviour
     {
         if (room == null){room = createRoom(roomType, !isPlayer);}
         GameManagerController.Instance.RegisterRoom(room, isPlayer);
+
         room.spriteRenderer = GetComponent<SpriteRenderer>();
-        if (healthBar == null || shieldBar == null){
-            float a  = 1;
-        }
         healthBarRenderer = healthBar.GetComponent<Renderer>();
         shieldBarRenderer = shieldBar.GetComponent<Renderer>();
 
@@ -245,7 +243,7 @@ public class Room
             destroyed = false;
             foreach(CardAction action in actions)
             {
-                if (action.IsReady()){action.card.cardController.gameObject.SetActive(true);}
+                if (action.IsReady()){action.card.cardController.ToggleTransparency(false);}
             }
         }
         setHealth(newHealth);
@@ -258,7 +256,7 @@ public class Room
         if (isPlayer){
             foreach(CardAction action in actions)
             {
-                action.card.cardController.gameObject.SetActive(false);
+                action.card.cardController.ToggleTransparency(true);
             }
         }        //UnityEngine.Debug.Log("Room Destroyed");
 
