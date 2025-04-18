@@ -1,23 +1,23 @@
-using System.Threading;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
+public class MinCardAction
+{
+    public CardAction ca;
+    public Room targetRoom;
 
-    public class MinCardAction{
-
-        public CardAction ca;
-        public Room targetRoom;
-
-        public MinCardAction(CardAction ca, GameManager state){
-            this.ca = ca;
-            targetRoom = ca.affectedRoom;
-            ca.state = state;
-        } 
-
+    public MinCardAction(CardAction ca, GameManager state)
+    {
+        this.ca = ca;
+        targetRoom = ca.affectedRoom;
+        ca.state = state;
     }
-public abstract class CardAction{ 
+}
 
+public abstract class CardAction
+{
     private Dictionary<Type, List<CombatEffect>> effectsByType;
     public List<CombatEffect> effects;
     public Room sourceRoom;
@@ -28,50 +28,65 @@ public abstract class CardAction{
     public string description;
     public bool needsTarget;
     public GameManager state;
-    public bool offensive =false;
+    public bool offensive = false;
     public Card card;
     public string group;
 
-
-
-
-    public void Activate(){
-        card.turnsUntilReady = cooldown;       
-        foreach (CombatEffect effect in effects){
+    public void Activate()
+    {
+        card.turnsUntilReady = cooldown;
+        foreach (CombatEffect effect in effects)
+        {
             effect.ApplyEffect(affectedRoom);
         }
     }
 
-    public void SetAffectedRoom(Room target){
-            affectedRoom = target;
-            foreach (CombatEffect effect in effects) effect.affectedRoom = target;
+    public void SetAffectedRoom(Room target)
+    {
+        affectedRoom = target;
+        foreach (CombatEffect effect in effects)
+            effect.affectedRoom = target;
     }
 
-    public List<CombatEffect> GetEffectsByType(Type type){
-        if (this.effectsByType == null){CreateEffectLookups();}
-        if (!this.effectsByType.ContainsKey(type)){
+    public List<CombatEffect> GetEffectsByType(Type type)
+    {
+        if (this.effectsByType == null)
+        {
+            CreateEffectLookups();
+        }
+        if (!this.effectsByType.ContainsKey(type))
+        {
             this.effectsByType[type] = new List<CombatEffect>();
         }
         return this.effectsByType[type];
     }
 
-    public void CreateEffectLookups(){
+    public void CreateEffectLookups()
+    {
         this.effectsByType = new Dictionary<Type, List<CombatEffect>>();
-        foreach (CombatEffect effect in effects){
-            if (!this.effectsByType.ContainsKey(effect.GetType())) { this.effectsByType[effect.GetType()] = new List<CombatEffect>();}
+        foreach (CombatEffect effect in effects)
+        {
+            if (!this.effectsByType.ContainsKey(effect.GetType()))
+            {
+                this.effectsByType[effect.GetType()] = new List<CombatEffect>();
+            }
 
             this.effectsByType[effect.GetType()].Add(effect);
         }
     }
-    public bool IsReady(){
+
+    public bool IsReady()
+    {
         return !sourceRoom.destroyed && !sourceRoom.disabled && card.turnsUntilReady == 0;
     }
-    public bool CanBeUsed(float AP){
+
+    public bool CanBeUsed(float AP)
+    {
         return IsReady() && cost <= AP;
     }
 
-    public CardAction Clone(){
-        
+    public CardAction Clone()
+    {
         CardAction clone = (CardAction)Activator.CreateInstance(this.GetType());
         clone.effects = this.effects.Select(eff => eff.Clone()).ToList();
         clone.name = this.name;
@@ -88,22 +103,20 @@ public abstract class CardAction{
         clone.CreateEffectLookups();
         clone.AttachToEffect();
         return clone;
-    } 
-        public MinCardAction QuickClone(GameManager state){
+    }
+
+    public MinCardAction QuickClone(GameManager state)
+    {
         MinCardAction minCardAction = new MinCardAction(this, state);
         return minCardAction;
     }
 
+    public static void CloneFrom(CardAction clone, CardAction toClone) { }
 
-
-
-
-
-
-    public static void CloneFrom(CardAction clone, CardAction toClone){}
-
-    public void AttachToEffect(){
-        foreach(CombatEffect effect in effects){
+    public void AttachToEffect()
+    {
+        foreach (CombatEffect effect in effects)
+        {
             effect.action = this;
         }
     }
@@ -112,8 +125,9 @@ public abstract class CardAction{
 // +1 dmg
 public class LaserAction : CardAction
 {
-    public LaserAction(){
-        this.effects = new List<CombatEffect>{new DamageEffect(1, false, 1)};
+    public LaserAction()
+    {
+        this.effects = new List<CombatEffect> { new DamageEffect(1, false, 1) };
         AttachToEffect();
         this.name = "Laser";
         this.offensive = true;
@@ -128,8 +142,9 @@ public class LaserAction : CardAction
 // +2 dmg (cooldown)
 public class MissileAction : CardAction
 {
-    public MissileAction(){
-        this.effects = new List<CombatEffect>{new DamageEffect(1, false, 2)};
+    public MissileAction()
+    {
+        this.effects = new List<CombatEffect> { new DamageEffect(1, false, 2) };
         AttachToEffect();
         this.name = "Missile";
         this.offensive = true;
@@ -144,8 +159,9 @@ public class MissileAction : CardAction
 // (add extinguish card to enemy hand +1 dmg if not spent and potential for spread)
 public class FirebombAction : CardAction
 {
-    public FirebombAction(){
-        this.effects = new List<CombatEffect>{new OnFireEffect(100, false, 1)};
+    public FirebombAction()
+    {
+        this.effects = new List<CombatEffect> { new OnFireEffect(100, false, 1) };
         AttachToEffect();
         this.name = "Fire Bomb";
         this.offensive = true;
@@ -160,8 +176,9 @@ public class FirebombAction : CardAction
 // piercer (extra dmg to shields)
 public class ShieldPiercerAction : CardAction
 {
-    public ShieldPiercerAction(){
-        this.effects = new List<CombatEffect>{new ShieldOnlyDamageEffect(1, false, 3)};
+    public ShieldPiercerAction()
+    {
+        this.effects = new List<CombatEffect> { new ShieldOnlyDamageEffect(1, false, 3) };
         AttachToEffect();
         this.name = "Shield Piercer";
         this.offensive = true;
@@ -173,11 +190,11 @@ public class ShieldPiercerAction : CardAction
     }
 }
 
-
 public class FocusedShieldAction : CardAction
 {
-    public FocusedShieldAction(){
-        this.effects = new List<CombatEffect>{new ShieldEffect(2, true, 1)};
+    public FocusedShieldAction()
+    {
+        this.effects = new List<CombatEffect> { new ShieldEffect(2, true, 1) };
         AttachToEffect();
         this.name = "Focused Shield";
         this.offensive = false;
@@ -188,10 +205,12 @@ public class FocusedShieldAction : CardAction
         this.group = "Shield";
     }
 }
+
 public class GeneralShieldAction : CardAction
 {
-    public GeneralShieldAction(){
-        this.effects = new List<CombatEffect>{new GeneralShieldEffect(2, true, 1)};
+    public GeneralShieldAction()
+    {
+        this.effects = new List<CombatEffect> { new GeneralShieldEffect(2, true, 1) };
         AttachToEffect();
         this.offensive = false;
         this.name = "General Shield";
@@ -202,10 +221,12 @@ public class GeneralShieldAction : CardAction
         this.group = "Shield";
     }
 }
+
 public class BigBoyShieldAction : CardAction
 {
-    public BigBoyShieldAction(){
-        this.effects = new List<CombatEffect>{new ShieldEffect(2, true, 2)};
+    public BigBoyShieldAction()
+    {
+        this.effects = new List<CombatEffect> { new ShieldEffect(2, true, 2) };
         AttachToEffect();
         this.offensive = false;
         this.name = "Big Boy Shield";
@@ -216,10 +237,12 @@ public class BigBoyShieldAction : CardAction
         this.group = "Shield";
     }
 }
+
 public class SemiPermanentShieldAction : CardAction
 {
-    public SemiPermanentShieldAction(){
-        this.effects = new List<CombatEffect>{new ShieldEffect(99, true, 1)};
+    public SemiPermanentShieldAction()
+    {
+        this.effects = new List<CombatEffect> { new ShieldEffect(99, true, 1) };
         AttachToEffect();
         this.offensive = false;
         this.name = "Semi Permanent Shield";
@@ -230,12 +253,12 @@ public class SemiPermanentShieldAction : CardAction
         this.group = "Shield";
     }
 }
-	
-    
+
 public class SpeedUpAction : CardAction
 {
-    public SpeedUpAction(){
-        this.effects = new List<CombatEffect>{new SpeedEffect(1, true, 1)};
+    public SpeedUpAction()
+    {
+        this.effects = new List<CombatEffect> { new SpeedEffect(1, true, 1) };
         AttachToEffect();
         this.offensive = false;
         this.name = "Speed Up";
@@ -246,11 +269,13 @@ public class SpeedUpAction : CardAction
         this.group = "Speed";
     }
 }
+
 // (cooldown)
 public class BigBoySpeedUpAction : CardAction
 {
-    public BigBoySpeedUpAction(){
-        this.effects = new List<CombatEffect>{new SpeedEffect(1, true, 2)};
+    public BigBoySpeedUpAction()
+    {
+        this.effects = new List<CombatEffect> { new SpeedEffect(1, true, 2) };
         AttachToEffect();
         this.offensive = false;
         this.name = "Big Boy Speed Up";
@@ -261,11 +286,13 @@ public class BigBoySpeedUpAction : CardAction
         this.group = "Speed";
     }
 }
+
 // (Immunity Frames)
 public class EvasiveManeouvreAction : CardAction
 {
-    public EvasiveManeouvreAction(){
-        this.effects = new List<CombatEffect>{new GeneralShieldEffect(1, true, 99)};
+    public EvasiveManeouvreAction()
+    {
+        this.effects = new List<CombatEffect> { new GeneralShieldEffect(1, true, 99) };
         AttachToEffect();
         this.offensive = false;
         this.name = "Evasive Manoeuvre";
@@ -276,11 +303,17 @@ public class EvasiveManeouvreAction : CardAction
         this.group = "Speed";
     }
 }
+
 // (Dmg room for extra speed)
 public class OverHeatAction : CardAction
 {
-    public OverHeatAction(){
-        this.effects = new List<CombatEffect>{new DamageEffect(1, true, 1), new SpeedEffect(1, true, 1)};
+    public OverHeatAction()
+    {
+        this.effects = new List<CombatEffect>
+        {
+            new DamageEffect(1, true, 1),
+            new SpeedEffect(1, true, 1)
+        };
         AttachToEffect();
         this.offensive = false;
         this.name = "Over Heat";
@@ -295,8 +328,9 @@ public class OverHeatAction : CardAction
 // +1 AP (cooldown)
 public class OverdriveAction : CardAction
 {
-    public OverdriveAction(){
-        this.effects = new List<CombatEffect>{new APEffect(1, true, 1)};
+    public OverdriveAction()
+    {
+        this.effects = new List<CombatEffect> { new APEffect(1, true, 1) };
         AttachToEffect();
         this.name = "Over Drive";
         this.cooldown = 3;
@@ -306,11 +340,13 @@ public class OverdriveAction : CardAction
         this.group = "AP";
     }
 }
+
 // energy weapons (cooldown)
 public class BuffEnergyWeaponAction : CardAction
 {
-    public BuffEnergyWeaponAction(){
-        this.effects = new List<CombatEffect>{new FreeLaserEffect(1, true)};
+    public BuffEnergyWeaponAction()
+    {
+        this.effects = new List<CombatEffect> { new FreeLaserEffect(1, true) };
         AttachToEffect();
         this.name = "Buff Energy Weapon";
         this.cooldown = 2;
@@ -320,14 +356,16 @@ public class BuffEnergyWeaponAction : CardAction
         this.group = "Special";
     }
 }
+
 public class FreeLaserAction : CardAction
 {
-    public FreeLaserAction(){
-        this.effects = new List<CombatEffect>{new DamageEffect(1, false, 1)};
+    public FreeLaserAction()
+    {
+        this.effects = new List<CombatEffect> { new DamageEffect(1, false, 1) };
         AttachToEffect();
         this.name = "Free Laser";
         this.cooldown = 1;
-        this.offensive=true;
+        this.offensive = true;
 
         this.cost = 0;
         this.description = "";
@@ -335,11 +373,13 @@ public class FreeLaserAction : CardAction
         this.group = "Offensive";
     }
 }
+
 // (-AP +AP card)
 public class ChargeBatteriesAction : CardAction
 {
-    public ChargeBatteriesAction(){
-        this.effects = new List<CombatEffect>{new ChargeBatteriesEffect(1, true, 1)};
+    public ChargeBatteriesAction()
+    {
+        this.effects = new List<CombatEffect> { new ChargeBatteriesEffect(1, true, 1) };
         AttachToEffect();
         this.name = "Charge Batteries";
         this.cooldown = 1;
@@ -349,10 +389,12 @@ public class ChargeBatteriesAction : CardAction
         this.group = "Special";
     }
 }
+
 public class DischargeChargeBatteriesAction : CardAction
 {
-    public DischargeChargeBatteriesAction(){
-        this.effects = new List<CombatEffect>{new APEffect(1, true, 1)};
+    public DischargeChargeBatteriesAction()
+    {
+        this.effects = new List<CombatEffect> { new APEffect(1, true, 1) };
         AttachToEffect();
         this.name = "Discharge Batteries";
         this.cooldown = 99;
@@ -362,15 +404,17 @@ public class DischargeChargeBatteriesAction : CardAction
         this.group = "AP";
     }
 }
+
 // (both players skip a turn)
 public class EMPAction : CardAction
 {
-    public EMPAction(){
-        this.effects = new List<CombatEffect>{new DisableRoomEffect(2, false)};
+    public EMPAction()
+    {
+        this.effects = new List<CombatEffect> { new DisableRoomEffect(2, false) };
         AttachToEffect();
         this.name = "EMP";
         this.cooldown = 3;
-        this.offensive=true;
+        this.offensive = true;
         this.cost = 2;
         this.description = "Disable room NEXT turn";
         this.needsTarget = true;
@@ -380,11 +424,12 @@ public class EMPAction : CardAction
 
 public class StopFireAction : CardAction
 {
-    public StopFireAction(){
-        this.effects = new List<CombatEffect>{new StopFireEffect()};
+    public StopFireAction()
+    {
+        this.effects = new List<CombatEffect> { new StopFireEffect() };
         AttachToEffect();
         this.name = "Stop Fire";
-        this.offensive=false;
+        this.offensive = false;
         this.cooldown = 100;
         this.cost = 1;
         this.description = "";

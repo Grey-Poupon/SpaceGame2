@@ -130,7 +130,7 @@ public class CardController : MonoBehaviour
         this.card = card;
         UpdateText(card.cardAction);
     }
-        public void SetTransparency(float alpha)
+    public void SetTransparency(float alpha)
     {
 
         alpha = Mathf.Clamp01(alpha);
@@ -158,7 +158,8 @@ public class CardController : MonoBehaviour
         float targetAlpha = on ? 0.5f : 1f;
         SetTransparency(targetAlpha);
     }
-    public void destroy(){
+    public void destroy()
+    {
         Destroy(this.gameObject);
     }
 }

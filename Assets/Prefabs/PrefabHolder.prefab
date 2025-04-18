@@ -48,4 +48,16 @@ MonoBehaviour:
   laserPrefab: {fileID: -4835875760688866906, guid: 63a2bc48e01a6d34d886bcd05fa379b2, type: 3}
   cardPrefab: {fileID: 8005968517823585062, guid: 4538fd0a545b8814fbac91ce317397e6, type: 3}
   enemySpaceshipPrefab: {fileID: 8179568139883801092, guid: b55dfed2d545eb4458c1df51598997b3, type: 3}
+  playerSpaceshipPrefab: {fileID: 6583857996552166319, guid: cfa4957b3786b484188896fa355e6389, type: 3}
   intentLine: {fileID: -6245241404246918751, guid: f9a43004681a1a04aac6f90489186ca7, type: 3}
+  prefabList:
+  - key: FireBomb
+    prefab: {fileID: 6595642993086559788, guid: c5f86893f6279de45ba485468244b9a4, type: 3}
+  - key: Laser
+    prefab: {fileID: 6595642993086559788, guid: 35e45a27a6094ad4f81abed44ee63f18, type: 3}
+  - key: Overdrive
+    prefab: {fileID: 6595642993086559788, guid: 02fd4bf13231b2e4485922cb5c1322eb, type: 3}
+  - key: Shield
+    prefab: {fileID: 6595642993086559788, guid: f8052eba63421e143934ec1433764beb, type: 3}
+  - key: SpeedUp
+    prefab: {fileID: 6595642993086559788, guid: 1c1bbe6794b45244eb1df11820e4a1e9, type: 3}

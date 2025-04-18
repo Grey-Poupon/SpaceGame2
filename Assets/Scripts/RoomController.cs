@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
@@ -310,7 +311,7 @@ public class Room
     public void UpdateTextGraphics()
     {
         if(Title!=null){
-            Title.text = roomType.ToString();
+            Title.text = Regex.Replace(roomType.ToString(), "(?<!^)([A-Z])", " $1");
         }
         parent.healthBarRenderer.material.SetFloat("_NumberOfSegments", this.getMaxHealth());
         parent.healthBarRenderer.material.SetFloat("_FlashingSegments", Math.Max(this.incomingDamage - this.defence, 0));

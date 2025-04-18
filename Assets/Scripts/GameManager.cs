@@ -246,28 +246,7 @@ public class GameManager
             rootRoom.name = roomType.ToString() + " Room";
             rootRoom.Setup(roomType);
         }
-        float xBound = 3;
-        float yBound = 1;
-        float xPos = 0;
-        float yPos = 0;
-        int numRooms = 5;
 
-        // The number of rooms is kinda random because the basic rooms may not be in the 5 rooms defined here
-        // so it could be anywhere from 5 to 9 rooms
-        List<(float, float)> directions = new List<(float, float)>()
-        {
-            (1, 0),
-            (0, 1),
-            (-1, 0),
-            (0, -1)
-        };
-        HashSet<(float, float)> roomLocations = new HashSet<(float, float)>();
-        List<RoomType> roomTypes = RoomType
-            .GetValues(typeof(RoomType))
-            .Cast<RoomType>()
-            .OrderBy(e => UnityEngine.Random.value)
-            .Take(numRooms)
-            .ToList();
         // Create a new Ship
         SpaceshipController newShip = (SpaceshipController)
             gameManagerController._Instantiate(
@@ -276,61 +255,43 @@ public class GameManager
                 Quaternion.identity
             );
         newShip.gameObject.tag = "enemy";
-        newShip.init();
         newShip.spaceship.ResetAP(IsSimulation);
-        // Setup Basic Rooms
-        addRoom(RoomType.Reactor, xPos, yPos, newShip.transform);
-        roomTypes.Remove(RoomType.Reactor);
-        roomLocations.Add((xPos, yPos));
+        newShip.init();
 
-        addRoom(RoomType.Laser, xPos + 1, yPos, newShip.transform);
-        roomTypes.Remove(RoomType.Laser);
-        roomLocations.Add((xPos + 1, yPos));
+        int numRooms = UnityEngine.Random.Range(4, Mathf.Min(newShip.validRoomPositions.Count, 6));
 
-        addRoom(RoomType.Engine, xPos, yPos + 1, newShip.transform);
-        roomTypes.Remove(RoomType.Engine);
-        roomLocations.Add((xPos, yPos + 1));
+        float xPos = -3;
+        float yPos = 0;
 
-        addRoom(RoomType.Shield, xPos + 2, yPos, newShip.transform);
-        roomTypes.Remove(RoomType.Shield);
-        roomLocations.Add((xPos + 2, yPos));
 
-        while (roomTypes.Count > 0)
+        // Randomly select room types
+        List<RoomType> roomTypes = RoomType
+            .GetValues(typeof(RoomType))
+            .Cast<RoomType>()
+            .OrderBy(e => UnityEngine.Random.value)
+            .Take(numRooms)
+            .ToList();
+
+        if (!roomTypes.Contains(RoomType.Reactor))
         {
-            // Define all valid locations I.E. not overlapping
-            List<(float, float)> validLocations = directions
-                .Select(direction => (xPos + direction.Item1, yPos + direction.Item2))
-                .Where(position =>
-                    !roomLocations.Contains(position)
-                    && Math.Abs(position.Item1) <= xBound
-                    && Math.Abs(position.Item2) <= yBound
-                )
-                .ToList();
+            roomTypes.Add(RoomType.Reactor);
+            roomTypes.RemoveAt(0);
+        }
 
-            // If there are not valid locations we fucked up
-            if (validLocations.Count == 0)
+
+        for (int i = 0; i < roomTypes.Count; i++)
+        {
+            if (i < newShip.validRoomPositions.Count)
             {
-                UnityEngine.Debug.Log(
-                    "Yeah, the ship factory got caught in a dead end, so write better code, NOW!"
-                );
-                break;
+                xPos = newShip.validRoomPositions[i].x;
+                yPos = newShip.validRoomPositions[i].y;
             }
 
-            // Choose a random valid location and move the pointers to this so
-            // we can generate from here next loop
-            int idx = UnityEngine.Random.Range(0, validLocations.Count);
-            xPos = validLocations[idx].Item1;
-            yPos = validLocations[idx].Item2;
-
-            // Choose a random room type from the remaining options
-            idx = UnityEngine.Random.Range(0, roomTypes.Count);
-
             // Make the room
-            addRoom(roomTypes[idx], xPos, yPos, newShip.transform);
-            roomLocations.Add((xPos, yPos));
-            roomTypes.RemoveAt(idx);
+            addRoom(roomTypes[i], xPos, yPos, newShip.transform);
         }
     }
+
     public void BuildAPlayerShip()
     {
         playerRooms.Clear();
@@ -352,20 +313,19 @@ public class GameManager
         SpaceshipController newShip = (SpaceshipController)
             gameManagerController._Instantiate(
                 gameManagerController.prefabHolder.playerSpaceshipPrefab,
-                new Vector3(-7, 12.5f, 4),
+                new Vector3(-6, 10, 4),
                 Quaternion.identity
             );
         newShip.gameObject.tag = "player";
         newShip.init();
         newShip.spaceship.ResetAP(IsSimulation);
-        
-        // Setup Basic Rooms
-        addRoom(RoomType.Reactor, -1, -1, newShip.transform);
-        addRoom(RoomType.Laser,   -1, -2, newShip.transform);
-        addRoom(RoomType.Engine,  -1, -3, newShip.transform);
-        addRoom(RoomType.Shield,  -1, -4, newShip.transform);
-        addRoom(RoomType.Firebomb,-1, -5, newShip.transform);
 
+        // Setup Basic Rooms
+        addRoom(RoomType.Reactor,  -1.75f, 0, newShip.transform);
+        addRoom(RoomType.Laser,    2, 0, newShip.transform);
+        addRoom(RoomType.Firebomb, 0, 0, newShip.transform);
+        addRoom(RoomType.Engine,   -1.75f, 2, newShip.transform);
+        addRoom(RoomType.Shield,   -1.75f, -2, newShip.transform);
     }
 
     public void SimulatePlayerTurn()
@@ -913,12 +873,39 @@ public class GameManager
             Card card = new Card(action);
             if (makePrefabs)
             {
+                string prefabName = "";
+                UnityEngine.Object prefab = null;
+                if (action is LaserAction)
+                    prefabName = "Laser";
+                if (action is FirebombAction)
+                    prefabName = "FireBomb";
+                if (action is FocusedShieldAction)
+                    prefabName = "Shield";
+                if (action is SpeedUpAction)
+                    prefabName = "SpeedUp";
+                if (action is OverdriveAction)
+                    prefabName = "Overdrive";
+
+                foreach (PrefabEntry entry in gameManagerController.prefabHolder.prefabList)
+                {
+                    if (entry.key == prefabName)
+                        prefab = entry.prefab;
+                }
+
+                if (prefab is null)
+                {
+                    prefab = gameManagerController.prefabHolder.cardPrefab;
+                }
+
                 // _Instantiate a new card prefab & set its parent as the playerHand
                 CardController cardController = (CardController)
-                    gameManagerController._Instantiate(
-                        gameManagerController.prefabHolder.cardPrefab,
-                        gameManagerController.PlayerCardContainer.transform
-                    );
+                    (
+                        (GameObject)
+                            gameManagerController._Instantiate(
+                                prefab,
+                                gameManagerController.PlayerCardContainer.transform
+                            )
+                    ).GetComponent<CardController>();
                 cardController.Setup(card);
                 card.Setup(cardController);
             }

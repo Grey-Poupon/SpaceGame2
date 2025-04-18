@@ -11,7 +11,7 @@ public class Hand
     private Dictionary<Type, List<Card>> cardsByAction = new Dictionary<Type, List<Card>>();
     public List<Card> GetCardsByAction(Type actionType)
     {
-        return cardsByAction[actionType];
+        return cardsByAction[actionType] ?? new List<Card>();
     }
 
     public Hand Clone()
