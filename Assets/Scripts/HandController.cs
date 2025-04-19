@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using System.Linq;
 
 public class Hand
 {
@@ -11,7 +11,10 @@ public class Hand
     private Dictionary<Type, List<Card>> cardsByAction = new Dictionary<Type, List<Card>>();
     public List<Card> GetCardsByAction(Type actionType)
     {
-        return cardsByAction[actionType] ?? new List<Card>();
+        if (!cardsByAction.ContainsKey(actionType)){
+            return new List<Card>();
+        }
+        return cardsByAction[actionType];
     }
 
     public Hand Clone()

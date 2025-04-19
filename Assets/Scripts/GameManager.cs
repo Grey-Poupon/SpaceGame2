@@ -251,7 +251,7 @@ public class GameManager
         SpaceshipController newShip = (SpaceshipController)
             gameManagerController._Instantiate(
                 gameManagerController.prefabHolder.enemySpaceshipPrefab,
-                new Vector3(4, 11, 4),
+                new Vector3(4, 11, 5),
                 Quaternion.identity
             );
         newShip.gameObject.tag = "enemy";
@@ -313,7 +313,7 @@ public class GameManager
         SpaceshipController newShip = (SpaceshipController)
             gameManagerController._Instantiate(
                 gameManagerController.prefabHolder.playerSpaceshipPrefab,
-                new Vector3(-6, 10, 4),
+                new Vector3(-6, 10, 5),
                 Quaternion.identity
             );
         newShip.gameObject.tag = "player";
@@ -943,6 +943,7 @@ public class GameManager
     {
         Vector3 targetPosition = action.affectedRoom.parent.transform.position;
         Vector3 origin = action.sourceRoom.parent.transform.position;
+        origin.z = origin.z - 1;
         Room target = action.affectedRoom;
 
         if (playerShip != null)

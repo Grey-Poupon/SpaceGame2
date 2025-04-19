@@ -146,9 +146,7 @@ public class SpaceshipController : MonoBehaviour
         float stepX = Mathf.Max(0.1f, rt.rect.width / fidelity);
         float stepY = Mathf.Max(0.1f, rt.rect.height / fidelity);
         Vector2 start = shipBounds.min;
-        UnityEngine.Debug.Log(
-            $"Bounds Center: {shipBounds.center} Extent: {shipBounds.extents} Min: {shipBounds.min} Max: {shipBounds.max}"
-        );
+
 
         float GridOffsetX = 0;
         float GridOffsetY = 0;
@@ -163,7 +161,6 @@ public class SpaceshipController : MonoBehaviour
                 float posX = start.x + (stepX * x);
                 float posY = start.y + (stepY * y);
                 Vector2 potentialPos = new Vector2(posX, posY);
-                UnityEngine.Debug.Log($"{x} - {y}");
 
                 Rect testRect = new Rect(
                     potentialPos.x,
@@ -179,7 +176,6 @@ public class SpaceshipController : MonoBehaviour
                 }
             }
         }
-        UnityEngine.Debug.Log($"Found {validPlacementCenters.Count} potential valid room centers.");
         PlaceRooms(rt.rect, stepX, stepY, validPlacementCenters);
     }
 
@@ -215,7 +211,7 @@ public class SpaceshipController : MonoBehaviour
         if (!boundary.OverlapPoint(p9))
             collisions += 1;
 
-        DrawRectangle(rect, Color.red, collisions < 1);
+        // DrawRectangle(rect, Color.red, collisions < 1);
         return collisions < 1;
     }
 
@@ -255,7 +251,6 @@ public class SpaceshipController : MonoBehaviour
             i++;
             if (i > 1000)
                 break;
-            UnityEngine.Debug.Log($"{validPlacementCenters.Count} valid places left");
             Rect roomLocation = validPlacementCenters.ElementAt(
                 UnityEngine.Random.Range(0, validPlacementCenters.Count)
             );
@@ -283,7 +278,6 @@ public class SpaceshipController : MonoBehaviour
 
             validRoomPositions.Add(transform.InverseTransformPoint(roomLocation.center));
             placedRects.Add(roomLocation);
-            UnityEngine.Debug.Log($"Placing at -> {roomLocation.x}, {roomLocation.y}");
         }
     }
 }
