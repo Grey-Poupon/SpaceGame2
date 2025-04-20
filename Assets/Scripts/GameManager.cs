@@ -28,8 +28,7 @@ public class GameManager
     public Hand enemyHand;
     public Spaceship playerShip;
     public Spaceship enemyShip;
-    public Dictionary<RoomType, List<Room>> playerRooms = new Dictionary<RoomType, List<Room>>();
-    public Dictionary<RoomType, List<Room>> enemyRooms = new Dictionary<RoomType, List<Room>>();
+    public EnemyAI enemyAI;
     public List<CardAction> playerTurnActions = new List<CardAction>();
     public List<CardAction> enemyTurnActions = new List<CardAction>();
     public bool IsSimulation;
@@ -49,32 +48,8 @@ public class GameManager
         clone.IsSimulation = this.IsSimulation;
         clone.turnCounter = this.turnCounter;
 
-        clone.playerRooms = new Dictionary<RoomType, List<Room>>();
-        clone.enemyRooms = new Dictionary<RoomType, List<Room>>();
         clone.playerTurnActions = new List<CardAction>();
         clone.enemyTurnActions = new List<CardAction>();
-
-        foreach (var kvp in this.playerRooms)
-        {
-            List<Room> clonedRooms = new List<Room>();
-            foreach (var room in kvp.Value)
-            {
-                Room clonedRoom = (Room)room.Clone();
-                clonedRooms.Add(clonedRoom);
-            }
-            clone.playerRooms.Add(kvp.Key, clonedRooms);
-        }
-
-        foreach (var kvp in this.enemyRooms)
-        {
-            List<Room> clonedRooms = new List<Room>();
-            foreach (var room in kvp.Value)
-            {
-                Room clonedRoom = (Room)room.Clone();
-                clonedRooms.Add(clonedRoom);
-            }
-            clone.enemyRooms.Add(kvp.Key, clonedRooms);
-        }
 
         foreach (CardAction cardAction in this.playerTurnActions)
         {
@@ -106,8 +81,8 @@ public class GameManager
             return GenerateRandomMove(
                 playerShip.AP,
                 playerHand.GetCards(),
-                playerRooms.Values.SelectMany(x => x).ToList(),
-                enemyRooms.Values.SelectMany(x => x).ToList(),
+                playerShip.rooms.Values.SelectMany(x => x).ToList(),
+                enemyShip.rooms.Values.SelectMany(x => x).ToList(),
                 true
             );
         }
@@ -116,8 +91,8 @@ public class GameManager
             return GenerateRandomMove(
                 enemyShip.AP,
                 enemyHand.GetCards(),
-                enemyRooms.Values.SelectMany(x => x).ToList(),
-                playerRooms.Values.SelectMany(x => x).ToList(),
+                enemyShip.rooms.Values.SelectMany(x => x).ToList(),
+                playerShip.rooms.Values.SelectMany(x => x).ToList(),
                 false
             );
         }
@@ -150,31 +125,31 @@ public class GameManager
 
     public float GetResult(int player)
     {
-        if (playerRooms[RoomType.Reactor].Sum(room => room.health) <= 0)
+        if (playerShip.rooms[RoomType.Reactor].Sum(room => room.health) <= 0)
         {
             return player == 1 ? 0 : 1;
         }
-        if (enemyRooms[RoomType.Reactor].Sum(room => room.health) <= 0)
+        if (enemyShip.rooms[RoomType.Reactor].Sum(room => room.health) <= 0)
         {
             return player == 1 ? 1 : 0;
         }
         if (player == 0)
         {
-            float currentHealth = playerRooms
-                .Values.SelectMany(roomList => roomList)
+            float currentHealth = playerShip
+                .rooms.Values.SelectMany(roomList => roomList)
                 .Sum(room => room.health);
-            float maxHealth = playerRooms
-                .Values.SelectMany(roomList => roomList)
+            float maxHealth = playerShip
+                .rooms.Values.SelectMany(roomList => roomList)
                 .Sum(room => room.maxHealth);
             return 1 - currentHealth / maxHealth;
         }
         else
         {
-            float currentHealth = enemyRooms
-                .Values.SelectMany(roomList => roomList)
+            float currentHealth = enemyShip
+                .rooms.Values.SelectMany(roomList => roomList)
                 .Sum(room => room.health);
-            float maxHealth = enemyRooms
-                .Values.SelectMany(roomList => roomList)
+            float maxHealth = enemyShip
+                .rooms.Values.SelectMany(roomList => roomList)
                 .Sum(room => room.maxHealth);
             return 1 - currentHealth / maxHealth;
         }
@@ -182,9 +157,11 @@ public class GameManager
 
     public IEnumerator StartGame()
     {
-        RegisterPlayerHand(new Hand());
-        RegisterEnemyHand(new Hand());
-        BuildAPlayerShip();
+        this.playerHand = new Hand();
+        this.enemyHand = new Hand();
+        this.playerShip = BuildAPlayerShip().spaceship;
+        this.enemyShip = BuildAShip().spaceship;
+        this.enemyAI = new EnemyAI(playerShip, enemyShip, enemyHand);
 
         // Wait for 0.5 seconds
         while (playerShip == null || playerHand == null)
@@ -203,49 +180,36 @@ public class GameManager
                 card.turnsUntilReady = card.cardAction.cooldown + 1;
             }
         }
-        BuildAShip();
+
         FinishTurn();
     }
 
     public void DrawIntentLine(Vector3 startPoint, Vector3 endPoint, float fuzziness = 0)
     {
         return;
-        if (IsSimulation == true)
-        {
-            return;
-        }
-        float getFuzzy(float fuzziness, float steps = 2)
-        {
-            float point = UnityEngine.Random.Range(-fuzziness / 2f, fuzziness / 2f);
-            //float value = Mathf.Round(point * steps) / steps;
-            return point;
-        }
+        // if (IsSimulation == true)
+        // {
+        //     return;
+        // }
+        // float getFuzzy(float fuzziness, float steps = 2)
+        // {
+        //     float point = UnityEngine.Random.Range(-fuzziness / 2f, fuzziness / 2f);
+        //     //float value = Mathf.Round(point * steps) / steps;
+        //     return point;
+        // }
 
-        var fuzzyOffset = new Vector3(getFuzzy(fuzziness), getFuzzy(fuzziness), -1);
+        // var fuzzyOffset = new Vector3(getFuzzy(fuzziness), getFuzzy(fuzziness), -1);
 
-        IntentLine intentLine = (IntentLine)
-            gameManagerController._Instantiate(gameManagerController.prefabHolder.intentLine);
-        intentLine.DrawCurvedLine(startPoint + fuzzyOffset, endPoint + fuzzyOffset);
+        // IntentLine intentLine = (IntentLine)
+        //     gameManagerController._Instantiate(gameManagerController.prefabHolder.intentLine);
+        // intentLine.DrawCurvedLine(startPoint + fuzzyOffset, endPoint + fuzzyOffset);
 
-        activeIntentLines.Add(intentLine);
+        // activeIntentLines.Add(intentLine);
     }
 
-    public void BuildAShip()
+    public SpaceshipController BuildAShip()
     {
-        enemyRooms.Clear();
         enemyHand.Clear();
-        void addRoom(RoomType roomType, float xPos, float yPos, Transform parent)
-        {
-            // Setup Basic Rooms
-            RoomController rootRoom = (RoomController)
-                gameManagerController._Instantiate(
-                    gameManagerController.prefabHolder.roomPrefab,
-                    parent
-                );
-            rootRoom.transform.localPosition = new Vector3(xPos, yPos, 0);
-            rootRoom.name = roomType.ToString() + " Room";
-            rootRoom.Setup(roomType);
-        }
 
         // Create a new Ship
         SpaceshipController newShip = (SpaceshipController)
@@ -263,7 +227,6 @@ public class GameManager
         float xPos = -3;
         float yPos = 0;
 
-
         // Randomly select room types
         List<RoomType> roomTypes = RoomType
             .GetValues(typeof(RoomType))
@@ -278,7 +241,6 @@ public class GameManager
             roomTypes.RemoveAt(0);
         }
 
-
         for (int i = 0; i < roomTypes.Count; i++)
         {
             if (i < newShip.validRoomPositions.Count)
@@ -288,27 +250,15 @@ public class GameManager
             }
 
             // Make the room
-            addRoom(roomTypes[i], xPos, yPos, newShip.transform);
+            newShip.addRoom(roomTypes[i], xPos, yPos);
         }
+
+        return newShip;
     }
 
-    public void BuildAPlayerShip()
+    public SpaceshipController BuildAPlayerShip()
     {
-        playerRooms.Clear();
         playerHand.Clear();
-        void addRoom(RoomType roomType, float xPos, float yPos, Transform parent)
-        {
-            // Setup Basic Rooms
-            RoomController rootRoom = (RoomController)
-                gameManagerController._Instantiate(
-                    gameManagerController.prefabHolder.roomPrefab,
-                    parent
-                );
-            rootRoom.transform.localPosition = new Vector3(xPos, yPos, 0);
-            rootRoom.name = roomType.ToString() + " Room";
-            rootRoom.Setup(roomType);
-        }
-
         // Create a new Ship
         SpaceshipController newShip = (SpaceshipController)
             gameManagerController._Instantiate(
@@ -321,11 +271,13 @@ public class GameManager
         newShip.spaceship.ResetAP(IsSimulation);
 
         // Setup Basic Rooms
-        addRoom(RoomType.Reactor,  -1.75f, 0, newShip.transform);
-        addRoom(RoomType.Laser,    2, 0, newShip.transform);
-        addRoom(RoomType.Firebomb, 0, 0, newShip.transform);
-        addRoom(RoomType.Engine,   -1.75f, 2, newShip.transform);
-        addRoom(RoomType.Shield,   -1.75f, -2, newShip.transform);
+        newShip.addRoom(RoomType.Reactor, -1.75f, 0);
+        newShip.addRoom(RoomType.Laser, 2, 0);
+        newShip.addRoom(RoomType.Firebomb, 0, 0);
+        newShip.addRoom(RoomType.Engine, -1.75f, 2);
+        newShip.addRoom(RoomType.Shield, -1.75f, -2);
+
+        return newShip;
     }
 
     public void SimulatePlayerTurn()
@@ -476,7 +428,7 @@ public class GameManager
                         .GetEffectsByType(typeof(DamageEffect))
                         .Sum(effect => ((DamageEffect)effect).damage)
                 );
-            if (totalDamage != null && totalDamage > highestDamage)
+            if (totalDamage > highestDamage)
             {
                 highestDamage = totalDamage;
                 highestDamageRoom = room;
@@ -619,8 +571,8 @@ public class GameManager
             cardActions.Add(card.cardAction);
         }
 
-        List<Room> enemyRoomList = enemyRooms.Values.SelectMany(x => x).ToList(); // make a local reference so we don't have to keep calling functions
-        List<Room> playerRoomList = playerRooms.Values.SelectMany(x => x).ToList();
+        List<Room> enemyRoomList = enemyShip.rooms.Values.SelectMany(x => x).ToList(); // make a local reference so we don't have to keep calling functions
+        List<Room> playerRoomList = playerShip.rooms.Values.SelectMany(x => x).ToList();
         int enemyRoomsLen = enemyRoomList.Count;
         int playerRoomsLen = playerRoomList.Count;
         Room[] enemyRoomsArr = new Room[enemyRoomsLen]; // made into arrays to increase access speed
@@ -828,38 +780,15 @@ public class GameManager
         this.enemyShip = enemyShip;
     }
 
-    public void RegisterPlayerHand(Hand playerHand)
-    {
-        this.playerHand = playerHand;
-    }
-
-    public void RegisterEnemyHand(Hand enemyHand)
-    {
-        this.enemyHand = enemyHand;
-    }
-
     public void RegisterRoom(Room room, bool isPlayer)
     {
         if (isPlayer)
         {
-            if (!playerRooms.ContainsKey(room.roomType))
-            {
-                playerRooms[room.roomType] = new List<Room>();
-            }
-
-            playerRooms[room.roomType].Add(room);
-
             List<Card> cards = MakeCards(room.actions);
             AddCardsToHand(cards, isPlayer);
         }
         else
         {
-            if (!enemyRooms.ContainsKey(room.roomType))
-            {
-                enemyRooms[room.roomType] = new List<Room>();
-            }
-
-            enemyRooms[room.roomType].Add(room);
             List<Card> cards = MakeCards(room.actions, false);
             AddCardsToHand(cards, isPlayer);
         }
@@ -992,12 +921,12 @@ public class GameManager
             ResetTempStats();
             ResetTurnActions();
             turn = TurnTypes.Enemy;
-            if (enemyRooms[RoomType.Reactor][0].health <= 0)
+            if (enemyShip.rooms[RoomType.Reactor][0].health <= 0)
             {
                 enemyShip.onDestroy();
                 turn = TurnTypes.PlayerWin;
             }
-            else if (playerRooms[RoomType.Reactor][0].health <= 0)
+            else if (playerShip.rooms[RoomType.Reactor][0].health <= 0)
             {
                 playerShip.onDestroy();
                 turn = TurnTypes.EnemyWin;
@@ -1005,7 +934,7 @@ public class GameManager
         }
         if (turn == TurnTypes.Enemy)
         {
-            EnemyChooseActions();
+            enemyAI.ChooseActions(SubmitCard);
             ShowPotentialPassiveEffects();
             UpdateHandStats();
             gameManagerController.UpdateUIText();
@@ -1032,7 +961,7 @@ public class GameManager
         if (turn == TurnTypes.Resolve)
         {
             ResolveActions();
-            if (enemyRooms[RoomType.Reactor][0].health <= 0)
+            if (enemyShip.rooms[RoomType.Reactor][0].health <= 0)
             {
                 enemyShip.onDestroy();
             }
@@ -1093,13 +1022,13 @@ public class GameManager
         // Activate Each Action
         if (playerFirst)
         {
-            PlayOutActions(playerTurnActions, playerRooms);
-            PlayOutActions(enemyTurnActions, enemyRooms);
+            PlayOutActions(playerTurnActions, playerShip.rooms);
+            PlayOutActions(enemyTurnActions, enemyShip.rooms);
         }
         else
         {
-            PlayOutActions(enemyTurnActions, enemyRooms);
-            PlayOutActions(playerTurnActions, playerRooms);
+            PlayOutActions(enemyTurnActions, enemyShip.rooms);
+            PlayOutActions(playerTurnActions, playerShip.rooms);
         }
     }
 
@@ -1173,306 +1102,6 @@ public class GameManager
 
         if (!IsSimulation)
             gameManagerController._StartCoroutine(InvokeWeaponActionsWithDelay(weaponCalls));
-    }
-
-    public void EnemyChooseActions()
-    {
-        //EnemyChooseRandomActions();
-        EnemyAIAttackOrRandom();
-#if UNITY_EDITOR
-        //UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
-    }
-
-    public void EnemyAIOldStyle()
-    {
-        System.Random random = new System.Random();
-
-        // If i have a reactor Action take it
-        List<Card> APUps = enemyHand.GetCardsByAction(typeof(OverdriveAction));
-
-        if (APUps.Count > 0)
-        {
-            foreach (Card APCard in APUps)
-            {
-                if (APCard.CanBeUsed(enemyShip.AP))
-                {
-                    APCard.cardAction.affectedRoom = APCard.cardAction.sourceRoom;
-                    SubmitCard(APCard, false);
-                }
-            }
-        }
-        List<Card> laserCards = enemyHand.GetCardsByAction(typeof(LaserAction));
-        while (enemyShip.AP > 2 && laserCards.Count > 0)
-        {
-            foreach (Card laserCard in laserCards)
-            {
-                if (laserCard.CanBeUsed(enemyShip.AP))
-                {
-                    Room target = playerRooms[RoomType.Reactor][0];
-                    laserCard.cardAction.affectedRoom = target;
-                    foreach (CombatEffect effect in laserCard.cardAction.effects)
-                        effect.affectedRoom = target;
-                    SubmitCard(laserCard, false);
-                    break;
-                }
-            }
-        }
-        int c = 0;
-        List<Card> shieldCards = enemyHand.GetCardsByAction(typeof(FocusedShieldAction));
-        List<Card> speedUpCards = enemyHand.GetCardsByAction(typeof(SpeedUpAction));
-        while (enemyShip.AP > 0 && (shieldCards.Count + speedUpCards.Count) > 0)
-        {
-            List<Room> weaponsRooms = enemyRooms[RoomType.Laser]
-                .Where(obj => obj.health > 0)
-                .ToList();
-            List<Room> reactorRooms = enemyRooms[RoomType.Shield]
-                .Where(obj => obj.health > 0)
-                .ToList();
-            List<Room> shieldRooms = enemyRooms[RoomType.Reactor]
-                .Where(obj => obj.health > 0)
-                .ToList();
-
-            if (
-                random.Next(2) == 0
-                && (weaponsRooms.Count > 0 || reactorRooms.Count > 0 || shieldRooms.Count > 0)
-            )
-            {
-                foreach (Card shieldCard in shieldCards)
-                {
-                    if (shieldCard.CanBeUsed(enemyShip.AP))
-                    {
-                        Room target;
-                        if (weaponsRooms.Count > 0)
-                        {
-                            target = weaponsRooms[0];
-                        }
-                        else if (reactorRooms.Count > 0)
-                        {
-                            target = reactorRooms[0];
-                        }
-                        else
-                        {
-                            target = enemyShip.GetRoomList()[0];
-                        }
-                        shieldCard.cardAction.affectedRoom = target;
-                        foreach (CombatEffect effect in shieldCard.cardAction.effects)
-                            effect.affectedRoom = target;
-
-                        SubmitCard(shieldCard, false);
-                        break;
-                    }
-                }
-            }
-            else if (
-                enemyRooms.ContainsKey(RoomType.Engine)
-                && enemyRooms[RoomType.Engine].Any(item => item.health > 0)
-            )
-            {
-                foreach (Card speedUpCard in speedUpCards)
-                {
-                    speedUpCard.cardAction.affectedRoom = speedUpCard.cardAction.sourceRoom;
-                    ;
-                    SubmitCard(speedUpCard, false);
-                }
-            }
-            else
-            {
-                c += 1;
-                if (c > 10)
-                {
-                    break;
-                }
-            }
-        }
-    }
-
-    public void EnemyChooseRandomActions()
-    {
-        System.Random random = new System.Random();
-        List<Card> cards = new List<Card>(enemyHand.GetCards());
-
-        while (enemyShip.AP > 0)
-        {
-            int index = random.Next(cards.Count);
-            Card card = cards[index];
-            if (card.CanBeUsed(enemyShip.AP))
-            {
-                if (
-                    card.cardAction.needsTarget && card.cardAction is LaserAction
-                    || card.cardAction is MissileAction
-                    || card.cardAction is FreeLaserAction
-                    || card.cardAction is ShieldPiercerAction
-                    || card.cardAction is FirebombAction
-                    || card.cardAction is EMPAction
-                )
-                {
-                    List<Room> playerRooms = playerShip.GetRoomList();
-                    int roomindex = random.Next(playerRooms.Count);
-                    card.cardAction.SetAffectedRoom(playerRooms[roomindex]);
-                }
-                else
-                {
-                    card.cardAction.SetAffectedRoom(card.cardAction.sourceRoom);
-                }
-
-                SubmitCard(card, false);
-                if (card.cardAction.cooldown > 0)
-                {
-                    cards.Remove(card);
-                }
-            }
-        }
-    }
-
-    public void EnemyAIAllOutAttack()
-    {
-        List<Card> laserCards = enemyHand
-            .GetCardsByAction(typeof(LaserAction))
-            .Where(obj => obj.IsReady())
-            .ToList();
-        if (laserCards.Count > 0)
-        {
-            Card card = laserCards[0];
-            while (card.CanBeUsed(enemyShip.AP))
-            {
-                List<Room> targets = playerRooms[RoomType.Laser]
-                    .Where(obj => obj.health > 0)
-                    .ToList();
-                if (targets.Count == 0)
-                {
-                    break;
-                }
-
-                Room target = targets[0];
-                card.cardAction.affectedRoom = target;
-                foreach (CombatEffect effect in card.cardAction.effects)
-                    effect.affectedRoom = target;
-
-                SubmitCard(card, false);
-            }
-        }
-        else
-        {
-            EnemyChooseRandomActions();
-        }
-    }
-
-    public void EnemyAISemiPermanentShieldShip()
-    {
-        List<Card> SPShield = enemyHand
-            .GetCardsByAction(typeof(SemiPermanentShieldAction))
-            .Where(obj =>
-                !obj.cardAction.sourceRoom.destroyed && !obj.cardAction.sourceRoom.disabled
-            )
-            .ToList();
-        if (SPShield.Count > 0)
-        {
-            Card shield = SPShield[0];
-            shield.cardAction.cooldown = 0;
-            shield.cardAction.cost = 0;
-
-            foreach (Room target in enemyShip.GetRoomList())
-            {
-                shield.cardAction.affectedRoom = target;
-                foreach (CombatEffect effect in shield.cardAction.effects)
-                    effect.affectedRoom = target;
-
-                SubmitCard(shield, false);
-                SubmitCard(shield, false);
-                SubmitCard(shield, false);
-            }
-        }
-    }
-
-    public void EnemyAIEMP()
-    {
-        List<Card> emps = enemyHand
-            .GetCardsByAction(typeof(EMPAction))
-            .Where(obj =>
-                !obj.cardAction.sourceRoom.destroyed && !obj.cardAction.sourceRoom.disabled
-            )
-            .ToList();
-        if (emps.Count > 0)
-        {
-            Card emp = emps[0];
-            emp.turnsUntilReady = 0;
-            bool targetFound = false;
-
-            foreach (
-                Room target in playerRooms[RoomType.Laser]
-                    .Where(obj => !obj.destroyed && !obj.disabled)
-                    .ToList()
-            )
-            {
-                emp.cardAction.affectedRoom = target;
-                foreach (CombatEffect effect in emp.cardAction.effects)
-                    effect.affectedRoom = target;
-                SubmitCard(emp, false);
-                targetFound = true;
-                break;
-            }
-            if (!targetFound)
-            {
-                foreach (
-                    Room target in playerShip
-                        .GetRoomList()
-                        .Where(obj => !obj.destroyed && !obj.disabled)
-                        .ToList()
-                )
-                {
-                    emp.cardAction.affectedRoom = target;
-                    foreach (CombatEffect effect in emp.cardAction.effects)
-                        effect.affectedRoom = target;
-                    SubmitCard(emp, false);
-                    targetFound = true;
-                    break;
-                }
-            }
-        }
-    }
-
-    public void EnemyAIAttackDefend()
-    {
-        if (turnCounter % 2 == 0)
-        {
-            EnemyAIAllOutAttack();
-        }
-        else
-        {
-            EnemyAISemiPermanentShieldShip();
-        }
-    }
-
-    public void EnemyAIAttackOrRandom()
-    {
-        if (turnCounter % 2 == 0)
-        {
-            EnemyAIAllOutAttack();
-        }
-        else
-        {
-            EnemyChooseRandomActions();
-        }
-    }
-
-    public void EnemyAIEMPOrFiftyFifty()
-    {
-        if (turnCounter % 3 == 0)
-        {
-            EnemyAIEMP();
-            EnemyChooseRandomActions();
-        }
-        else if (turnCounter % 3 == 1)
-        {
-            EnemyAIAllOutAttack();
-        }
-        else
-        {
-            EnemyAISemiPermanentShieldShip();
-        }
     }
 
     public void ResetTempStats()

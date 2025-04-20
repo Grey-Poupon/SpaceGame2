@@ -11,7 +11,7 @@ public class RoomController : MonoBehaviour
 {
     public static RoomController RoomPrefab;
     public GameObject OnFireIcon;
-    private Room room;
+    public Room room;
     public bool isPlayer;
     public GameObject healthBar;
     public GameObject shieldBar;
@@ -33,7 +33,6 @@ public class RoomController : MonoBehaviour
         {
             room = createRoom(roomType, !isPlayer);
         }
-        GameManagerController.Instance.RegisterRoom(room, isPlayer);
 
         room.spriteRenderer = GetComponent<SpriteRenderer>();
         healthBarRenderer = healthBar.GetComponent<Renderer>();

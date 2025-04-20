@@ -64,24 +64,16 @@ public class Card
 
 public class CardController : MonoBehaviour
 {
-    public float disappearDistance = -450;
     public Card card;
     private Canvas canvas;
     private RectTransform cardRectTransform;
-    private bool isDragging = false;
-    private bool isPointing = false;
-    private bool isMouseOver = false;
-    private Vector3 offset;
     private TextMeshProUGUI Title;
     private TextMeshProUGUI Cooldown;
     private TextMeshProUGUI Cost;
     private TextMeshProUGUI Description;
     private SpriteRenderer[] childSprites;
-
     private TextMeshProUGUI[] childTexts;
 
-    [SerializeField]
-    private float defaultAlpha = 0.5f;
 
     void Start()
     {

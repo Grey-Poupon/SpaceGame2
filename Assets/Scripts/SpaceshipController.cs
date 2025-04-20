@@ -14,6 +14,14 @@ public class Spaceship
     public float AP;
     public float defaultSpeed = 0;
     public float speed;
+    public Dictionary<RoomType, List<Room>> rooms = new Dictionary<RoomType, List<Room>>();
+
+    public Spaceship(float defaultAP, float defaultSpeed, bool isPlayer)
+    {
+        this.defaultAP = defaultAP;
+        this.defaultSpeed = defaultSpeed;
+        this.isPlayer = isPlayer;
+    }
 
     public void ResetAP(bool IsSimulation = false)
     {
@@ -61,20 +69,9 @@ public class Spaceship
         }
     }
 
-    public Spaceship(float defaultAP, float defaultSpeed, bool isPlayer)
-    {
-        this.defaultAP = defaultAP;
-        this.defaultSpeed = defaultSpeed;
-        this.isPlayer = isPlayer;
-    }
-
     public Dictionary<RoomType, List<Room>> GetRooms()
     {
-        if (this.isPlayer)
-        {
-            return GameManagerController.Instance.playerRooms;
-        }
-        return GameManagerController.Instance.enemyRooms;
+        return rooms;
     }
 
     public List<Room> GetRoomList()
@@ -89,6 +86,16 @@ public class Spaceship
         Spaceship clone = new Spaceship(defaultAP, defaultSpeed, isPlayer);
         clone.AP = AP;
         clone.speed = speed;
+        foreach (var kvp in this.rooms)
+        {
+            List<Room> clonedRooms = new List<Room>();
+            foreach (var room in kvp.Value)
+            {
+                Room clonedRoom = (Room)room.Clone();
+                clonedRooms.Add(clonedRoom);
+            }
+            clone.rooms.Add(kvp.Key, clonedRooms);
+        }
         return clone;
     }
 }
@@ -146,7 +153,6 @@ public class SpaceshipController : MonoBehaviour
         float stepX = Mathf.Max(0.1f, rt.rect.width / fidelity);
         float stepY = Mathf.Max(0.1f, rt.rect.height / fidelity);
         Vector2 start = shipBounds.min;
-
 
         float GridOffsetX = 0;
         float GridOffsetY = 0;
@@ -279,5 +285,24 @@ public class SpaceshipController : MonoBehaviour
             validRoomPositions.Add(transform.InverseTransformPoint(roomLocation.center));
             placedRects.Add(roomLocation);
         }
+    }
+
+    public void addRoom(RoomType roomType, float xPos, float yPos)
+    {
+        // Setup Basic Rooms
+        RoomController roomController = (RoomController)
+            GameManagerController.Instance.gameManagerController._Instantiate(
+                GameManagerController.Instance.gameManagerController.prefabHolder.roomPrefab,
+                transform
+            );
+        roomController.transform.localPosition = new Vector3(xPos, yPos, 0);
+        roomController.name = roomType.ToString() + " Room";
+        roomController.Setup(roomType);
+        (
+            spaceship.rooms[roomType] =
+                spaceship.rooms.GetValueOrDefault(roomType) ?? new List<Room>()
+        ).Add(roomController.room);
+
+        GameManagerController.Instance.RegisterRoom(roomController.room, spaceship.isPlayer);
     }
 }
