@@ -18,10 +18,8 @@ public class GameManagerController : MonoBehaviour
     public TextMeshProUGUI enemyAPText;
     public TextMeshProUGUI GameOverText;
     public CardContainer PlayerCardContainer;
-    public ISMCTS ISMCTS;
     public PrefabHolder prefabHolder;
     public Texture2D customCursor;
-    public List<Move> moves;
     public List<Move> untriedMoves;
     public static GameManager Instance;
 
@@ -103,20 +101,20 @@ public class GameManagerController : MonoBehaviour
         enemySpeedText.text = GameManagerController.Instance.enemyShip.speed.ToString();
     }
 
-    public void UpdateAPGraphics(bool isPlayer)
+    public void UpdateAPGraphics(Spaceship spaceship)
     {
-        if (isPlayer)
-            playerAPText.text = GameManagerController.Instance.playerShip.AP.ToString();
+        if (spaceship.isPlayer)
+            playerAPText.text = spaceship.AP.ToString();
         else
-            enemyAPText.text = GameManagerController.Instance.enemyShip.AP.ToString();
+            enemyAPText.text = spaceship.AP.ToString();
     }
 
-    public void UpdateSpeedGraphics(bool isPlayer)
+    public void UpdateSpeedGraphics(Spaceship spaceship)
     {
-        if (isPlayer)
-            playerSpeedText.text = GameManagerController.Instance.playerShip.speed.ToString();
+        if (spaceship.isPlayer)
+            playerSpeedText.text = spaceship.speed.ToString();
         else
-            enemySpeedText.text = GameManagerController.Instance.enemyShip.speed.ToString();
+            enemySpeedText.text = spaceship.speed.ToString();
     }
 
     public void FinishTurn()

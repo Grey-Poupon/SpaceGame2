@@ -28,7 +28,7 @@ public class Spaceship
         AP = defaultAP;
         if (IsSimulation == false && GameManagerController.Instance != null)
         {
-            GameManagerController.Instance.gameManagerController.UpdateAPGraphics(this.isPlayer);
+            GameManagerController.Instance.gameManagerController.UpdateAPGraphics(this);
         }
     }
 
@@ -37,7 +37,7 @@ public class Spaceship
         speed = defaultSpeed;
         if (IsSimulation == false && GameManagerController.Instance != null)
         {
-            GameManagerController.Instance.gameManagerController.UpdateSpeedGraphics(this.isPlayer);
+            GameManagerController.Instance.gameManagerController.UpdateSpeedGraphics(this);
         }
     }
 
@@ -46,7 +46,7 @@ public class Spaceship
         AP += change;
         if (IsSimulation == false && GameManagerController.Instance != null)
         {
-            GameManagerController.Instance.gameManagerController.UpdateAPGraphics(this.isPlayer);
+            GameManagerController.Instance.gameManagerController.UpdateAPGraphics(this);
         }
     }
 
@@ -55,7 +55,7 @@ public class Spaceship
         speed += change;
         if (IsSimulation == false && GameManagerController.Instance != null)
         {
-            GameManagerController.Instance.gameManagerController.UpdateSpeedGraphics(this.isPlayer);
+            GameManagerController.Instance.gameManagerController.UpdateSpeedGraphics(this);
         }
     }
 
@@ -118,18 +118,18 @@ public class SpaceshipController : MonoBehaviour
             return;
         if (gameObject.tag.Contains("player"))
         {
-            this.spaceship = new Spaceship(3, 0, true);
-            GameManagerController.Instance.RegisterPlayerShip(this.spaceship);
-            this.spaceship.controller = this;
+            spaceship = new Spaceship(3, 0, true);
+            spaceship.controller = this;
+            spaceship.isPlayer = true;
         }
         if (gameObject.tag.Contains("enemy"))
         {
-            this.spaceship = new Spaceship(3, 0, false);
-            this.spaceship.ResetTempRoomStats();
-            GameManagerController.Instance.RegisterEnemyShip(this.spaceship);
-            this.spaceship.controller = this;
+            spaceship = new Spaceship(3, 0, false);
+            spaceship.ResetTempRoomStats();
+            spaceship.controller = this;
+            spaceship.isPlayer = false;
         }
-        this.roomPrefab = GameManagerController
+        roomPrefab = GameManagerController
             .Instance
             .gameManagerController
             .prefabHolder
@@ -137,7 +137,7 @@ public class SpaceshipController : MonoBehaviour
             .gameObject;
         if (gameObject.tag.Contains("enemy"))
         {
-            this.FindValidPlacementPoints();
+            FindValidPlacementPoints();
         }
     }
 

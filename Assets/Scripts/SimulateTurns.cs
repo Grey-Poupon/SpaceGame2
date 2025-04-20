@@ -1,29 +1,20 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 using UnityEngine;
 
 public class SimulateTurns
 {
-    // Start is called before the first frame update
+    void Start() { }
 
-
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
+    void Update() { }
 }
 
 public class Move
 {
     public List<MinCardAction> cards;
+
     public Move(List<MinCardAction> cards)
     {
         this.cards = cards;
@@ -34,14 +25,11 @@ public class Node
 {
     public Move move;
     public Node parentNode;
-
     public List<Node> childNodes;
     public float wins;
     public int visits;
     public int avails;
-
     public int playerJustMoved;
-
 
     public Node(Move move = null, Node parent = null, int playerMoved = -1)
     {
@@ -56,7 +44,6 @@ public class Node
 
     public List<Move> GetUntriedMoves(List<Move> legalMoves)
     {
-
         List<Move> triedMoves = new List<Move>();
         foreach (Node child in childNodes)
         {
@@ -83,7 +70,9 @@ public class Node
         float s = 0;
         foreach (Node legalChild in childNodes)
         {
-            float t_s = (float)legalChild.wins / (float)legalChild.visits + exploration * Mathf.Sqrt(Mathf.Log(legalChild.avails) / (float)legalChild.visits);
+            float t_s =
+                (float)legalChild.wins / (float)legalChild.visits
+                + exploration * Mathf.Sqrt(Mathf.Log(legalChild.avails) / (float)legalChild.visits);
             if (t_s > s)
             {
                 s = t_s;
@@ -92,13 +81,11 @@ public class Node
             legalChild.avails++;
         }
 
-
         return bestChild;
     }
 
     public Node AddChild(Move m, int playerMoved)
     {
-
         Node n = new Node(m, this, playerMoved);
         this.childNodes.Add(n);
         return n;
@@ -109,39 +96,43 @@ public class Node
         this.visits++;
         if (this.playerJustMoved != -1)
         {
-            this.wins += terminalState.GetResult(this.playerJustMoved);
+            this.wins += terminalState.simulationController.GetResult(this.playerJustMoved);
         }
-
     }
 }
 
 public class ISMCTS
 {
-    public static Move Search(GameManager rootstate, int itermax, int maxDepth = 10, int explorationLimit = 500)
+    public static Move Search(
+        GameManager rootstate,
+        int itermax,
+        int maxDepth = 10,
+        int explorationLimit = 500
+    )
     {
         Node rootnode = new Node();
         for (int i = 0; i < itermax; i++)
         {
             Node node = rootnode;
-            GameManager state = rootstate.Clone();
+            GameManager state = rootstate.simulationController.Clone();
+            SimulationController simulation = state.simulationController;
 
             // Select, Replace this conditional with a Limit as we will never fully sample the solution space
             while (node.childNodes.Count > explorationLimit)
             {
                 node = node.UCBSelectChild();
-                state.DoMove(node.move);
+                simulation.DoMove(node.move);
             }
 
-            // Simulate 
+            // Simulate
             int iterCount = 0;
             while (iterCount < maxDepth)
             {
                 iterCount++;
-                Move m = state.GetRandomMove();
-                state.DoMove(m);
+                Move m = simulation.GetRandomMove();
+                simulation.DoMove(m);
                 node = node.AddChild(m, state.turn == TurnTypes.Player ? 1 : 0);
             }
-
 
             // Backpropagate
             while (node != null)
@@ -149,7 +140,6 @@ public class ISMCTS
                 node.Update(state);
                 node = node.parentNode;
             }
-
         }
         Node best = rootnode.childNodes[0];
         foreach (Node child in rootnode.childNodes)
@@ -160,6 +150,5 @@ public class ISMCTS
             }
         }
         return best.move;
-
     }
 }
