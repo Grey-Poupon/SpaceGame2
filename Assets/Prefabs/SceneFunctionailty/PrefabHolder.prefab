@@ -52,12 +52,12 @@ MonoBehaviour:
   intentLine: {fileID: -6245241404246918751, guid: f9a43004681a1a04aac6f90489186ca7, type: 3}
   prefabList:
   - key: FireBomb
-    prefab: {fileID: 6595642993086559788, guid: c5f86893f6279de45ba485468244b9a4, type: 3}
+    prefab: {fileID: 5875319481502725069, guid: c926a4f3ea40ce94c9d2454249d23b58, type: 3}
   - key: Laser
-    prefab: {fileID: 6595642993086559788, guid: 35e45a27a6094ad4f81abed44ee63f18, type: 3}
+    prefab: {fileID: 9174885492308155237, guid: f303cab36ad62474abf9aa3dc5d38f13, type: 3}
   - key: Overdrive
-    prefab: {fileID: 6595642993086559788, guid: 02fd4bf13231b2e4485922cb5c1322eb, type: 3}
+    prefab: {fileID: 5550496363742548727, guid: 9b5c415ecbfc82b4e813347e8d3ddea4, type: 3}
   - key: Shield
-    prefab: {fileID: 6595642993086559788, guid: f8052eba63421e143934ec1433764beb, type: 3}
+    prefab: {fileID: 1564222493068298176, guid: fb8172cb56ebd67448d143810f3e6537, type: 3}
   - key: SpeedUp
-    prefab: {fileID: 6595642993086559788, guid: 1c1bbe6794b45244eb1df11820e4a1e9, type: 3}
+    prefab: {fileID: 8542577718229767925, guid: e15490662ab6e3348b66b2ffbef5bdb4, type: 3}
